@@ -1,12 +1,14 @@
 {
-  "name": "anthropic-agent-skills",
+  "name": "chyax98-skills",
   "owner": {
-    "name": "Keith Lazuka",
-    "email": "klazuka@anthropic.com"
+    "name": "chyax98",
+    "email": "chyax98@gmail.com"
   },
   "metadata": {
-    "description": "Anthropic example skills",
-    "version": "1.0.0"
+    "description": "Custom Claude Skills Collection - Learning and Development Tools",
+    "version": "1.0.0",
+    "homepage": "https://github.com/chyax98/skills",
+    "repository": "https://github.com/chyax98/skills.git"
   },
   "plugins": [
     {
@@ -37,6 +39,15 @@
         "./slack-gif-creator",
         "./theme-factory",
         "./brand-guidelines"
+      ]
+    },
+    {
+      "name": "learning-skills",
+      "description": "Transform learning content into beautiful HTML presentations with professional themes and interactive navigation",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./learning-to-html-presentation"
       ]
     }
   ]

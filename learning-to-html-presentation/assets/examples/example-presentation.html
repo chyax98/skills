@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Hooks 入门 - 示例演示文稿</title>
+  <style>
+    /* 内嵌 base.css 样式 */
+    :root {
+      --primary: #06b6d4;
+      --primary-dark: #0891b2;
+      --secondary: #6366f1;
+      --accent: #a855f7;
+      --background: #ffffff;
+      --surface: #f8fafc;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --border: #e2e8f0;
+      --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
+      --font-code: "Fira Code", "Consolas", monospace;
+      --space-xs: 0.5rem;
+      --space-sm: 1rem;
+      --space-md: 1.5rem;
+      --space-lg: 2rem;
+      --space-xl: 3rem;
+      --transition-fast: 200ms;
+      --transition-normal: 300ms;
+      --transition-slow: 500ms;
+      --easing: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text-primary);
+      background: var(--background);
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: var(--primary);
+      width: 0%;
+      transition: width var(--transition-normal) var(--easing);
+      z-index: 1000;
+    }
+
+    .presentation {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all var(--transition-slow) var(--easing);
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .slide.prev {
+      transform: translateX(-100%);
+    }
+
+    .slide-content {
+      max-width: 1280px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      margin-bottom: var(--space-lg);
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: var(--space-md);
+      color: var(--primary);
+    }
+
+    h3 {
+      font-size: 1.75rem;
+      margin-bottom: var(--space-sm);
+    }
+
+    p, li {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-sm);
+    }
+
+    ul {
+      margin-left: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+
+    li {
+      margin-bottom: var(--space-md);
+      line-height: 1.8;
+    }
+
+    ul li::marker {
+      color: var(--primary);
+    }
+
+    code {
+      font-family: var(--font-code);
+      background: var(--surface);
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: var(--space-md);
+      margin: var(--space-md) 0;
+      overflow-x: auto;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--surface);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: 100px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 999;
+    }
+
+    .controls button {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: var(--space-xs);
+      transition: color var(--transition-fast);
+    }
+
+    .controls button:hover {
+      color: var(--primary);
+    }
+
+    .controls button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .slide-number {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s var(--easing) forwards;
+      opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.2s; }
+    .delay-2 { animation-delay: 0.4s; }
+    .delay-3 { animation-delay: 0.6s; }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .highlight {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .slide { padding: 1.5rem; }
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.5rem; }
+      p, li { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <div class="presentation">
+    <!-- Slide 1: Cover -->
+    <section class="slide active" data-slide="1">
+      <div class="slide-content" style="justify-content: center; text-align: center;">
+        <h1 class="animate-fade-in">React Hooks 入门</h1>
+        <p class="animate-fade-in delay-1" style="font-size: 1.5rem;">让函数组件拥有状态和生命周期</p>
+        <div class="animate-fade-in delay-2" style="margin-top: var(--space-xl);">
+          <span style="margin-right: var(--space-md);">Claude AI</span>
+          <span>2025-10-21</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 2: What are Hooks -->
+    <section class="slide" data-slide="2">
+      <div class="slide-content">
+        <h2 class="animate-fade-in">什么是 Hooks?</h2>
+        <ul>
+          <li class="animate-fade-in delay-1">React 16.8 引入的新特性</li>
+          <li class="animate-fade-in delay-2">让函数组件可以使用 state 和其他 React 特性</li>
+          <li class="animate-fade-in delay-3">无需编写 class 组件</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Slide 3: useState Example -->
+    <section class="slide" data-slide="3">
+      <div class="slide-content">
+        <h2 class="animate-fade-in">useState Hook</h2>
+        <pre class="animate-fade-in delay-1"><code>import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;button onClick={() => setCount(count + 1)}&gt;
+      点击次数: {count}
+    &lt;/button&gt;
+  );
+}</code></pre>
+        <p class="animate-fade-in delay-2 text-center">在函数组件中添加状态管理</p>
+      </div>
+    </section>
+
+    <!-- Slide 4: Summary -->
+    <section class="slide" data-slide="4">
+      <div class="slide-content">
+        <h2 class="animate-fade-in text-center">核心要点</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-xl); margin-top: var(--space-xl);">
+          <div class="animate-fade-in delay-1 text-center">
+            <div style="width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin: 0 auto var(--space-md);">1</div>
+            <h3>简化代码</h3>
+            <p style="font-size: 1rem;">无需 class 组件</p>
+          </div>
+          <div class="animate-fade-in delay-2 text-center">
+            <div style="width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; margin: 0 auto var(--space-md);">2</div>
+            <h3>逻辑复用</h3>
+            <p style="font-size: 1rem;">更容易共享逻辑</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="controls">
+    <button class="prev">←</button>
+    <span class="slide-number">1 / 4</span>
+    <button class="next">→</button>
+    <button class="fullscreen">⛶</button>
+  </nav>
+
+  <script>
+    class Presentation {
+      constructor() {
+        this.currentSlide = 0;
+        this.slides = document.querySelectorAll('.slide');
+        this.totalSlides = this.slides.length;
+        this.controls = {
+          prev: document.querySelector('.prev'),
+          next: document.querySelector('.next'),
+          fullscreen: document.querySelector('.fullscreen'),
+          slideNumber: document.querySelector('.slide-number'),
+          progressBar: document.querySelector('.progress-bar')
+        };
+        this.init();
+      }
+
+      init() {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            this.next();
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            this.prev();
+          } else if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            this.toggleFullscreen();
+          }
+        });
+
+        this.controls.prev.addEventListener('click', () => this.prev());
+        this.controls.next.addEventListener('click', () => this.next());
+        this.controls.fullscreen.addEventListener('click', () => this.toggleFullscreen());
+
+        this.updateSlide();
+      }
+
+      next() {
+        if (this.currentSlide < this.totalSlides - 1) {
+          this.currentSlide++;
+          this.updateSlide();
+        }
+      }
+
+      prev() {
+        if (this.currentSlide > 0) {
+          this.currentSlide--;
+          this.updateSlide();
+        }
+      }
+
+      updateSlide() {
+        this.slides.forEach((slide, index) => {
+          slide.classList.remove('active', 'prev');
+          if (index === this.currentSlide) {
+            slide.classList.add('active');
+          } else if (index < this.currentSlide) {
+            slide.classList.add('prev');
+          }
+        });
+
+        this.controls.prev.disabled = this.currentSlide === 0;
+        this.controls.next.disabled = this.currentSlide === this.totalSlides - 1;
+        this.controls.slideNumber.textContent = `${this.currentSlide + 1} / ${this.totalSlides}`;
+
+        const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+        this.controls.progressBar.style.width = `${progress}%`;
+      }
+
+      toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    new Presentation();
+  </script>
+</body>
+</html>
