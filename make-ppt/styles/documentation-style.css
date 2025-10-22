@@ -1,0 +1,217 @@
+/* Documentation Style - 文档风格 📄 */
+
+/* 全局设置 - 紧凑，易读 */
+.reveal {
+    font-size: 26px;
+}
+
+/* 幻灯片容器 */
+.reveal .slides {
+    text-align: left;
+}
+
+.reveal .slides section {
+    padding: 25px;
+}
+
+/* 标题样式 - 文档式 */
+.reveal h1 {
+    font-size: 2.2em;
+    margin-bottom: 0.4em;
+    border-bottom: 2px solid #42b983;
+    padding-bottom: 0.2em;
+}
+
+.reveal h2 {
+    font-size: 1.7em;
+    margin-bottom: 0.4em;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.15em;
+}
+
+.reveal h3 {
+    font-size: 1.3em;
+    margin-bottom: 0.3em;
+}
+
+.reveal h4 {
+    font-size: 1.1em;
+    margin-bottom: 0.2em;
+    color: #666;
+}
+
+/* 段落 - 紧凑 */
+.reveal p {
+    font-size: 0.85em;
+    line-height: 1.6;
+    margin-bottom: 0.6em;
+}
+
+/* 列表 - 紧凑 */
+.reveal ul, .reveal ol {
+    font-size: 0.85em;
+    line-height: 1.5;
+    margin-left: 1.5em;
+}
+
+.reveal li {
+    margin-bottom: 0.3em;
+}
+
+/* 代码块 - 文档式 */
+.reveal pre {
+    width: 100%;
+    max-height: 400px;
+    font-size: 0.6em;
+    line-height: 1.4;
+    overflow: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.reveal code {
+    font-size: 0.85em;
+    padding: 2px 5px;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+/* 表格 - 文档式，紧凑 */
+.reveal table {
+    font-size: 0.7em;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.reveal table th {
+    background: #f0f0f0;
+    font-weight: bold;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.reveal table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.reveal table tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* 引用块 - 信息框样式 */
+.reveal blockquote {
+    font-size: 0.8em;
+    padding: 12px 20px;
+    border-left: 4px solid #42b983;
+    background: rgba(66, 185, 131, 0.05);
+    margin: 1em 0;
+}
+
+/* 链接 - 文档式 */
+.reveal a {
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+.reveal a:hover {
+    color: #004499;
+}
+
+/* 定义列表样式 */
+.reveal dt {
+    font-weight: bold;
+    margin-top: 0.5em;
+}
+
+.reveal dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+}
+
+/* API 签名样式 */
+.reveal .api-signature {
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+/* 参数列表样式 */
+.reveal .parameter-list {
+    list-style: none;
+    margin-left: 0;
+}
+
+.reveal .parameter-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.reveal .parameter-list .param-name {
+    font-weight: bold;
+    color: #0066cc;
+}
+
+.reveal .parameter-list .param-type {
+    color: #666;
+    font-style: italic;
+}
+
+/* 示例框样式 */
+.reveal .example {
+    background: rgba(255, 255, 200, 0.2);
+    padding: 15px;
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+.reveal .example::before {
+    content: "示例:";
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+/* 警告框样式 */
+.reveal .warning {
+    background: rgba(255, 200, 0, 0.1);
+    padding: 15px;
+    border-left: 4px solid #ffc800;
+    margin: 1em 0;
+}
+
+.reveal .warning::before {
+    content: "⚠️ 注意:";
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+/* 注释框样式 */
+.reveal .note {
+    background: rgba(0, 150, 255, 0.1);
+    padding: 15px;
+    border-left: 4px solid #0096ff;
+    margin: 1em 0;
+}
+
+.reveal .note::before {
+    content: "💡 提示:";
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+/* 目录样式 */
+.reveal .toc {
+    columns: 2;
+    column-gap: 2em;
+    font-size: 0.8em;
+}
+
+.reveal .toc li {
+    break-inside: avoid;
+}

@@ -1,0 +1,215 @@
+{
+  "priority_levels": {
+    "CRITICAL": {
+      "score_range": [10, 10],
+      "color": "#FF0000",
+      "icon": "🔴",
+      "description": "功能缺陷或严重安全问题,需要立即修复",
+      "categories": [
+        "功能完全缺失",
+        "核心业务逻辑错误",
+        "业务流程中断",
+        "数据一致性破坏",
+        "SQL 注入",
+        "硬编码密钥"
+      ],
+      "action": "立即修复,阻止发布"
+    },
+    "HIGH": {
+      "score_range": [7, 9],
+      "color": "#FF6600",
+      "icon": "🟠",
+      "description": "功能实现偏差或高影响运行时错误",
+      "categories": [
+        "功能实现不完整",
+        "与需求描述不符",
+        "关键逻辑分支缺失",
+        "NPE 风险",
+        "资源泄漏",
+        "并发问题"
+      ],
+      "action": "合并前必须修复"
+    },
+    "MEDIUM": {
+      "score_range": [4, 6],
+      "color": "#FFAA00",
+      "icon": "🟡",
+      "description": "中等影响的问题,可能影响用户体验",
+      "categories": [
+        "性能问题 (实际影响用户)",
+        "边界条件未处理",
+        "错误处理不完善",
+        "参数验证缺失"
+      ],
+      "action": "下一迭代修复"
+    },
+    "LOW": {
+      "score_range": [1, 3],
+      "color": "#FFFF00",
+      "icon": "🟢",
+      "description": "低影响问题,不影响功能但影响可维护性",
+      "categories": [
+        "代码格式问题",
+        "命名规范违反",
+        "注释缺失或不当",
+        "轻微性能优化",
+        "日志级别不当",
+        "代码重复"
+      ],
+      "action": "技术债务,适时优化"
+    }
+  },
+
+  "defect_pattern_mapping": {
+    "functional_defects": {
+      "missing_functionality": {
+        "severity": "CRITICAL",
+        "score": 10,
+        "keywords": ["需求功能未实现", "关键功能缺失", "必需功能不存在"]
+      },
+      "incorrect_business_logic": {
+        "severity": "CRITICAL",
+        "score": 10,
+        "keywords": ["业务逻辑错误", "流程顺序错误", "规则实现错误"]
+      },
+      "incomplete_implementation": {
+        "severity": "HIGH",
+        "score": 8,
+        "keywords": ["功能不完整", "分支缺失", "边界条件未处理"]
+      },
+      "requirement_deviation": {
+        "severity": "HIGH",
+        "score": 8,
+        "keywords": ["与需求不符", "实现偏差", "规格不匹配"]
+      }
+    },
+
+    "high_impact_bugs": {
+      "npe_risk": {
+        "severity": "HIGH",
+        "score": 8,
+        "keywords": ["NPE", "NullPointerException", "null 未检查"]
+      },
+      "resource_leak": {
+        "severity": "HIGH",
+        "score": 8,
+        "keywords": ["资源泄漏", "连接未关闭", "流未关闭"]
+      },
+      "sql_injection": {
+        "severity": "CRITICAL",
+        "score": 10,
+        "keywords": ["SQL 注入", "字符串拼接 SQL", "未参数化查询"]
+      },
+      "hardcoded_secret": {
+        "severity": "CRITICAL",
+        "score": 10,
+        "keywords": ["硬编码密码", "硬编码密钥", "敏感信息泄露"]
+      },
+      "concurrency_issue": {
+        "severity": "MEDIUM",
+        "score": 6,
+        "keywords": ["并发问题", "线程安全", "竞态条件"]
+      }
+    },
+
+    "data_consistency": {
+      "transaction_missing": {
+        "severity": "HIGH",
+        "score": 9,
+        "keywords": ["缺少事务", "无事务保护", "数据不一致风险"]
+      },
+      "validation_missing": {
+        "severity": "MEDIUM",
+        "score": 5,
+        "keywords": ["验证缺失", "参数未验证", "数据格式未检查"]
+      }
+    },
+
+    "performance_issues": {
+      "n_plus_1_query": {
+        "severity": "MEDIUM",
+        "score": 6,
+        "keywords": ["N+1 查询", "循环查询数据库", "批量查询缺失"]
+      },
+      "string_concatenation_in_loop": {
+        "severity": "MEDIUM",
+        "score": 5,
+        "keywords": ["循环中字符串拼接", "StringBuilder 缺失"]
+      },
+      "unnecessary_object_creation": {
+        "severity": "LOW",
+        "score": 2,
+        "keywords": ["不必要对象创建", "new String()", "自动装箱"]
+      }
+    },
+
+    "code_quality": {
+      "naming_convention": {
+        "severity": "LOW",
+        "score": 1,
+        "keywords": ["命名不规范", "驼峰命名", "变量名过短"]
+      },
+      "formatting_issue": {
+        "severity": "LOW",
+        "score": 1,
+        "keywords": ["格式问题", "缩进不一致", "空格缺失"]
+      },
+      "missing_javadoc": {
+        "severity": "LOW",
+        "score": 2,
+        "keywords": ["Javadoc 缺失", "注释不完整", "API 文档缺失"]
+      },
+      "code_duplication": {
+        "severity": "LOW",
+        "score": 3,
+        "keywords": ["代码重复", "重复逻辑", "DRY 违反"]
+      }
+    }
+  },
+
+  "scoring_rules": {
+    "functional_correctness_weight": 0.5,
+    "runtime_stability_weight": 0.3,
+    "code_quality_weight": 0.2,
+
+    "modifiers": {
+      "affects_critical_path": {
+        "multiplier": 1.5,
+        "description": "影响关键业务流程"
+      },
+      "affects_data_integrity": {
+        "multiplier": 1.3,
+        "description": "影响数据完整性"
+      },
+      "affects_security": {
+        "multiplier": 1.5,
+        "description": "影响安全性"
+      },
+      "easy_to_fix": {
+        "multiplier": 0.8,
+        "description": "容易修复"
+      }
+    }
+  },
+
+  "report_templates": {
+    "issue_format": {
+      "title": "[{severity}] {defect_type}: {short_description}",
+      "sections": [
+        "Requirement (需求引用)",
+        "Implementation Status (实现状态)",
+        "Impact (影响说明)",
+        "Location (代码位置)",
+        "Current Code (当前代码)",
+        "Fix Suggestion (修复建议)",
+        "Explanation (解释说明)"
+      ]
+    },
+
+    "severity_thresholds": {
+      "block_merge": ["CRITICAL"],
+      "require_review": ["CRITICAL", "HIGH"],
+      "track_as_debt": ["MEDIUM", "LOW"]
+    }
+  }
+}

@@ -1,0 +1,82 @@
+/* Speech Style - 演讲风格 🎤 */
+
+/* 全局设置 - 大字体，视觉冲击 */
+.reveal {
+    font-size: 32px;
+}
+
+/* 标题样式 - 醒目突出 */
+.reveal h1 {
+    font-size: 3em;
+    text-transform: uppercase;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+}
+
+.reveal h2 {
+    font-size: 2.2em;
+    margin-bottom: 0.4em;
+}
+
+.reveal h3 {
+    font-size: 1.6em;
+    margin-bottom: 0.3em;
+}
+
+/* 段落 - 简洁明了 */
+.reveal p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 1em;
+}
+
+/* 列表 - 间距大，易读 */
+.reveal ul, .reveal ol {
+    font-size: 1em;
+    line-height: 2;
+    margin-left: 2em;
+}
+
+.reveal li {
+    margin-bottom: 0.8em;
+}
+
+/* 代码块 - 适中大小 */
+.reveal pre {
+    width: 90%;
+    font-size: 0.9em;
+    line-height: 1.4;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.reveal code {
+    font-size: 0.9em;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+/* 强调文本 - 高亮 */
+.reveal strong {
+    color: #42b983;
+    font-weight: bold;
+}
+
+/* 引用块 - 醒目 */
+.reveal blockquote {
+    font-size: 1.1em;
+    padding: 20px 30px;
+    border-left: 8px solid #42b983;
+    background: rgba(66, 185, 131, 0.1);
+}
+
+/* 表格 - 简洁 */
+.reveal table {
+    font-size: 0.85em;
+}
+
+/* Fragment 动画优化 */
+.reveal .fragment {
+    transition: all 0.3s ease;
+}
