@@ -1,0 +1,408 @@
+/* ==========================================
+   LeetCode Narrative Learning - 古典人文风格
+   ========================================== */
+
+/* 字体定义 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* 色彩系统 - 古典暖色调 */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-code: #282a36;
+
+    --text-primary: #e8d5b7;
+    --text-secondary: #c4b5a0;
+    --text-muted: #8b8275;
+
+    --accent-primary: #ffb86c;
+    --accent-secondary: #f1fa8c;
+    --accent-tertiary: #bd93f9;
+
+    --border-color: #4a4539;
+
+    /* 字体系统 */
+    --font-serif: 'Noto Serif SC', 'KingHwa_OldSong', serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* 间距系统 */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+}
+
+/* 全局样式 */
+body {
+    background: var(--bg-primary);
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    line-height: 1.8;
+}
+
+.reveal {
+    font-family: var(--font-serif);
+}
+
+.reveal .slides {
+    text-align: left;
+}
+
+/* 标题样式 */
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: var(--space-md);
+    text-transform: none;
+}
+
+.reveal h1 {
+    font-size: 3rem;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--accent-primary);
+    padding-bottom: var(--space-md);
+}
+
+.reveal h2 {
+    font-size: 2.2rem;
+    color: var(--accent-primary);
+    margin-top: var(--space-lg);
+}
+
+.reveal h3 {
+    font-size: 1.6rem;
+    color: var(--accent-secondary);
+}
+
+.reveal h4 {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+}
+
+/* 段落样式 */
+.reveal p {
+    font-size: 1.2rem;
+    line-height: 2;
+    margin-bottom: var(--space-md);
+    color: var(--text-primary);
+}
+
+/* 列表样式 */
+.reveal ul,
+.reveal ol {
+    margin: var(--space-md) 0;
+    padding-left: var(--space-lg);
+}
+
+.reveal li {
+    font-size: 1.1rem;
+    line-height: 1.9;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.reveal li::marker {
+    color: var(--accent-primary);
+}
+
+/* 引用样式 */
+.reveal blockquote {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--accent-primary);
+    padding: var(--space-md) var(--space-lg);
+    margin: var(--space-lg) 0;
+    font-style: italic;
+    color: var(--text-secondary);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.reveal blockquote p {
+    font-size: 1.3rem;
+    line-height: 1.9;
+}
+
+/* 代码样式 */
+.reveal code {
+    font-family: var(--font-mono);
+    background: var(--bg-code);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent-secondary);
+}
+
+.reveal pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    overflow-x: auto;
+}
+
+.reveal pre code {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    background: transparent;
+    padding: 0;
+    color: #f8f8f2;
+    display: block;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* 强调样式 */
+.reveal strong {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.reveal em {
+    color: var(--accent-secondary);
+    font-style: italic;
+}
+
+/* 链接样式 */
+.reveal a {
+    color: var(--accent-tertiary);
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.reveal a:hover {
+    color: var(--accent-secondary);
+}
+
+/* 分隔线 */
+.reveal hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: var(--space-xl) 0;
+}
+
+/* 自定义类 - 封面页 */
+.cover-slide {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+}
+
+.cover-slide h1 {
+    font-size: 3.5rem;
+    margin-bottom: var(--space-lg);
+    border: none;
+}
+
+.cover-slide .subtitle {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.cover-slide .difficulty {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-primary);
+    border-radius: 20px;
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+/* 自定义类 - 难度标签 */
+.difficulty-easy {
+    border-color: #50fa7b;
+    color: #50fa7b;
+}
+
+.difficulty-medium {
+    border-color: #ffb86c;
+    color: #ffb86c;
+}
+
+.difficulty-hard {
+    border-color: #ff5555;
+    color: #ff5555;
+}
+
+/* 自定义类 - ASCII Art */
+.ascii-art {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--space-lg);
+    margin: var(--space-md) 0;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--accent-secondary);
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* 自定义类 - 思想卡片 */
+.insight-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, #3a3a3a 100%);
+    border-left: 4px solid var(--accent-primary);
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.insight-card h3 {
+    margin-top: 0;
+    color: var(--accent-primary);
+}
+
+/* 自定义类 - 相关题目 */
+.related-problems {
+    display: grid;
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+}
+
+.problem-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-tertiary);
+    padding: var(--space-md);
+    border-radius: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.problem-item:hover {
+    transform: translateX(8px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.problem-item .problem-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.problem-item .problem-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.problem-item .problem-connection {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+    font-style: italic;
+}
+
+/* 自定义类 - ��考资料 */
+.references {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.reference-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: var(--space-md);
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.reference-item .icon {
+    font-size: 1.5rem;
+    margin-right: var(--space-md);
+    color: var(--accent-primary);
+}
+
+.reference-item .content {
+    flex: 1;
+}
+
+.reference-item .title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.reference-item .description {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* 自定义类 - Takeaway */
+.takeaway-box {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: var(--space-lg);
+    margin: var(--space-lg) 0;
+}
+
+.takeaway-box h3 {
+    margin-top: 0;
+    color: var(--accent-primary);
+    text-align: center;
+}
+
+.takeaway-box ul {
+    list-style: none;
+    padding: 0;
+}
+
+.takeaway-box li {
+    padding-left: var(--space-lg);
+    position: relative;
+    margin-bottom: var(--space-md);
+}
+
+.takeaway-box li::before {
+    content: "✦";
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary);
+    font-size: 1.3rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .reveal h1 {
+        font-size: 2.5rem;
+    }
+
+    .reveal h2 {
+        font-size: 1.8rem;
+    }
+
+    .reveal p,
+    .reveal li {
+        font-size: 1rem;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    body {
+        background: white;
+    }
+
+    .reveal .slides section {
+        page-break-after: always;
+    }
+}
