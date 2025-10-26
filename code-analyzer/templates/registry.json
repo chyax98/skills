@@ -1,0 +1,54 @@
+{
+  "templates": [
+    {
+      "id": "java-springboot",
+      "name": "Java + SpringBoot",
+      "description": "Java 项目使用 SpringBoot 框架",
+      "detect_files": ["pom.xml", "build.gradle"],
+      "detect_dependencies": ["spring-boot-starter"],
+      "detect_annotations": ["@SpringBootApplication"],
+      "supported_versions": ["2.x", "3.x"],
+      "paths": {
+        "defect_rules": "templates/java-springboot/defect-rules.md",
+        "prompts": "templates/java-springboot/prompts.md"
+      },
+      "priority": 1
+    },
+    {
+      "id": "python-django",
+      "name": "Python + Django",
+      "description": "Python 项目使用 Django 框架",
+      "detect_files": ["requirements.txt", "manage.py", "pyproject.toml"],
+      "detect_dependencies": ["Django"],
+      "detect_code_patterns": ["from django", "import django"],
+      "supported_versions": ["3.x", "4.x", "5.x"],
+      "paths": {
+        "defect_rules": "templates/python-django/defect-rules.md",
+        "prompts": "templates/python-django/prompts.md"
+      },
+      "priority": 2
+    },
+    {
+      "id": "nodejs-express",
+      "name": "Node.js + Express",
+      "description": "Node.js 项目使用 Express 框架",
+      "detect_files": ["package.json"],
+      "detect_dependencies": ["express"],
+      "detect_code_patterns": ["require('express')", "from 'express'"],
+      "supported_versions": ["4.x", "5.x"],
+      "paths": {
+        "defect_rules": "templates/nodejs-express/defect-rules.md",
+        "prompts": "templates/nodejs-express/prompts.md"
+      },
+      "priority": 3
+    }
+  ],
+  "fallback": {
+    "id": "generic",
+    "name": "通用模板",
+    "description": "未识别技术栈时使用通用规则",
+    "paths": {
+      "defect_rules": "templates/generic/defect-rules.md"
+    }
+  }
+}
