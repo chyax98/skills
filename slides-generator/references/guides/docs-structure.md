@@ -6,11 +6,20 @@
 
 ```
 slides-generator/
-├── SKILL.md                    # Skill 主文档
-├── SLIDEV_QUICK_REF.md        # Slidev 快速参考 (精简)
-├── SLIDEV_DOCS_INDEX.md       # Slidev 文档索引 (完整)
-├── FRONTEND_SPEC.md            # 前端处理规范
-├── README.md                   # 项目说明
+├── SKILL.md                     # Skill 主文档
+├── README.md                    # 项目说明
+├── templates/                   # 场景模板 (4个)
+│   ├── teaching.md             # 教学场景
+│   ├── research.md             # 调研场景
+│   ├── algorithm.md            # 算法场景
+│   └── project-analysis.md     # 项目解析场景
+├── references/                  # 参考文档 (按需加载)
+│   ├── workflows/              # 工作流程
+│   ├── specs/                  # 规范文档
+│   └── guides/                 # 指南文档
+├── scripts/                     # 辅助脚本
+│   ├── validate-slides.sh      # 验证工具
+│   └── preview.sh              # 预览工具
 └── slidev-docs/                # Slidev 官方文档 (81个)
     ├── guide/                  # 使用指南 (14个)
     ├── builtin/                # 内置功能 (3个)
@@ -28,7 +37,7 @@ slides-generator/
 **场景**: 首次使用，需要快速了解 Slidev
 
 **推荐阅读**:
-1. `SLIDEV_QUICK_REF.md` - 5分钟快速参考
+1. `references/guides/slidev-quickref.md` - 快速参考
 2. `slidev-docs/guide/syntax.md` - 详细语法
 
 ### 2. 功能查找
@@ -36,7 +45,7 @@ slides-generator/
 **场景**: 需要实现特定功能
 
 **查找路径**:
-1. 打开 `SLIDEV_DOCS_INDEX.md`
+1. 打开 `references/guides/slidev-index.md`
 2. 在"按功能类别"部分查找
 3. 找到对应的官方文档路径
 
@@ -50,7 +59,7 @@ slides-generator/
 **场景**: 按使用场景系统学习
 
 **学习路径**:
-1. 打开 `SLIDEV_DOCS_INDEX.md`
+1. 打开 `references/guides/slidev-index.md`
 2. 查看"按使用场景"部分
 3. 按场景分类查找相关文档
 
@@ -65,7 +74,7 @@ slides-generator/
 **场景**: 系统深入学习 Slidev
 
 **学习路径**:
-1. 阅读 `SLIDEV_DOCS_INDEX.md` 的"初学者路径"
+1. 阅读 `references/guides/slidev-index.md` 的"初学者路径"
 2. 按顺序阅读 guide/ 目录文档
 3. 根据需求阅读 features/ 目录文档
 4. 进阶阅读 custom/ 目录文档
@@ -74,7 +83,7 @@ slides-generator/
 
 ## 🎯 文档特点
 
-### SLIDEV_QUICK_REF.md (快速参考)
+### references/guides/slidev-quickref.md (快速参考)
 
 **特点**:
 - ✅ 精简，5-10分钟阅读完
@@ -87,7 +96,7 @@ slides-generator/
 - 需要快速决策
 - 忘记具体语法时
 
-### SLIDEV_DOCS_INDEX.md (完整索引)
+### references/guides/slidev-index.md (完整索引)
 
 **特点**:
 - ✅ 81个官方文档的完整分类
@@ -129,7 +138,7 @@ slides-generator/
 
 ### 快速参考更新
 
-**更新文档**: `SLIDEV_QUICK_REF.md`
+**更新文档**: `references/guides/slidev-quickref.md`
 - 根据官方文档变化更新
 - 保持精简，只更新核心内容
 
@@ -139,7 +148,7 @@ slides-generator/
 
 ### 索引文档更新
 
-**更新文档**: `SLIDEV_DOCS_INDEX.md`
+**更新文档**: `references/guides/slidev-index.md`
 - 官方文档目录结构变化时更新
 - 文档数量变化时更新统计
 
@@ -171,11 +180,11 @@ slides-generator/
 ```
 需要快速查语法
     ↓
-SLIDEV_QUICK_REF.md
+references/guides/slidev-quickref.md
     ↓
 找不到？
     ↓
-SLIDEV_DOCS_INDEX.md (按功能查找)
+references/guides/slidev-index.md (按功能查找)
     ↓
 找到对应的官方文档路径
     ↓
@@ -187,7 +196,7 @@ slidev-docs/xxx.md (详细阅读)
 ```
 第一次使用
     ↓
-SLIDEV_DOCS_INDEX.md (查看学习路径)
+references/guides/slidev-index.md (查看学习路径)
     ↓
 按路径阅读 guide/ 目录
     ↓
@@ -201,7 +210,7 @@ SLIDEV_DOCS_INDEX.md (查看学习路径)
 ```
 需要实现某功能
     ↓
-SLIDEV_DOCS_INDEX.md (按功能查找)
+references/guides/slidev-index.md (按功能查找)
     ↓
 slidev-docs/features/xxx.md (详细了解)
     ↓
@@ -216,14 +225,14 @@ slidev-docs/custom/xxx.md (查看配置)
 
 ### 初学者
 
-1. **第1步**: 阅读 `SLIDEV_QUICK_REF.md`
+1. **第1步**: 阅读 `references/guides/slidev-quickref.md`
 2. **第2步**: 阅读 `slidev-docs/guide/syntax.md`
 3. **第3步**: 阅读 `slidev-docs/builtin/layouts.md`
-4. **第4步**: 实践并查阅 `SLIDEV_DOCS_INDEX.md`
+4. **第4步**: 实践并查阅 `references/guides/slidev-index.md`
 
 ### 进阶用户
 
-1. 熟练使用 `SLIDEV_QUICK_REF.md`
+1. 熟练使用 `references/guides/slidev-quickref.md`
 2. 根据需求查阅 `features/` 目录
 3. 自定义配置查阅 `custom/` 目录
 
@@ -284,10 +293,10 @@ cd slidev-docs
 git diff
 
 # 3. 更新索引（如有目录结构变化）
-# 手动更新 SLIDEV_DOCS_INDEX.md
+# 手动更新 references/guides/slidev-index.md
 
 # 4. 更新快速参考（如有重要功能）
-# 手动更新 SLIDEV_QUICK_REF.md
+# 手动更新 references/guides/slidev-quickref.md
 ```
 
 ---

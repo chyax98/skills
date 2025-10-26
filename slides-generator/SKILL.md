@@ -1,6 +1,6 @@
 ---
 name: slides-generator
-description: 通用幻灯片生成器 - 将任意输入(文件/URL/主题/文本)智能转换为 Slidev 幻灯片。自动识别需求类型,选择最佳处理模式,规范化输出,验证符合性后使用原生 Slidev 渲染。
+description: 通用幻灯片生成器 - 将任意输入智能转换为 Slidev 幻灯片。触发词：生成幻灯片、制作PPT、做个PPT、根据XXX做PPT、把XXX做成幻灯片、XXX的教程、讲解XXX。支持教学、调研、算法、项目解析等场景，自动识别需求类型，生成符合规范的幻灯片并预览。
 license: Apache-2.0
 ---
 
@@ -17,21 +17,6 @@ license: Apache-2.0
 **职责分离**:
 - 生成符合 Slidev 规范的 Markdown
 - 使用原生 Slidev 工具渲染
-
-## 触发条件
-
-### 明确触发
-
-- "生成幻灯片"
-- "制作 PPT"
-- "转换为 slides"
-- "创建演示文稿"
-
-### 隐含触发
-
-- "把 XXX 做成可展示的"
-- "学习 XXX,需要材料"
-- "整理一下这个文档"
 
 ## 工作流程
 
@@ -94,8 +79,6 @@ license: Apache-2.0
 - ⚠️ 警告: 记录改进建议,可选择性修复
 - ✅ 通过: 进入下一步
 
-**检查清单**: @references/specs/validation-checklist.md
-
 ### 步骤 7: 自动打开预览
 
 生成完成后自动使用 Slidev 打开预览。
@@ -123,7 +106,7 @@ license: Apache-2.0
 
 **官方文档**: @slidev-docs/
 
-**文档索引**: @SLIDEV_DOCS_INDEX.md
+**文档索引**: @references/guides/slidev-index.md
 
 **快速查找**:
 - 语法: @slidev-docs/guide/syntax.md
@@ -165,7 +148,7 @@ license: Apache-2.0
 
 - Slidev 语法: @references/guides/slidev-quickref.md
 - 配置参数: @references/guides/slidev-config.md
-- 文档索引: @SLIDEV_DOCS_INDEX.md
+- 文档索引: @references/guides/slidev-index.md
 
 ### 官方文档
 
@@ -174,5 +157,5 @@ license: Apache-2.0
 
 ---
 
-**版本**: 2.1.0 - 按需加载优化
+**版本**: 1.0.0
 **更新**: 2025-10-26

@@ -30,7 +30,6 @@ references/
 |------|------|---------|
 | `slidev-core-rules.md` | Slidev 核心规则 | 生成 Markdown 时 |
 | `validation-checklist.md` | 规范检查清单 | 验证输出时 |
-| `frontend-spec.md` | 前端处理规范 | 了解完整处理流程时 |
 
 ## 指南文档 (guides/)
 
