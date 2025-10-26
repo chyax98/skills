@@ -792,6 +792,5 @@ public Payment pay(Long userId, BigDecimal amount) {
 
 ---
 
-**版本**: 2.0.0
-**更新**: 2025-10-27
-**来源**: 整合 java-git-defect-analyzer 规则
+**版本**: 1.0.0
+**创建**: 2025-10-27

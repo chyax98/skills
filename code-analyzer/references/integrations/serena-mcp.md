@@ -367,11 +367,10 @@ A:
 ## 参考资源
 
 - Serena GitHub: https://github.com/oraios/serena
-- 完整文档: @/Serena_Claude_Code_完整使用指南_2025_10.md
 - LSP 协议: https://microsoft.github.io/language-server-protocol/
 
 ---
 
-**版本**: 2.0.0 (基于 Serena 完整使用指南)
-**更新**: 2025-10-26
+**版本**: 1.0.0
+**创建**: 2025-10-27
 **适用**: code-analyzer 项目

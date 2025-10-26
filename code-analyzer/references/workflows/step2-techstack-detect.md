@@ -9,8 +9,8 @@
 | 技术栈 | 识别特征 | 规则模板 |
 |--------|---------|---------|
 | Java + SpringBoot | pom.xml + @SpringBootApplication | @templates/java-springboot/ |
-| Python + Django | requirements.txt + django | @templates/python-django/ |
-| Node.js + Express | package.json + express | @templates/nodejs-express/ |
+
+> 🚀 **扩展性**: 架构支持多语言扩展,参见主文档 ARCHITECTURE.md "扩展示例"章节
 
 ## 识别流程
 
@@ -21,12 +21,6 @@
 ```bash
 # Java 项目
 ls pom.xml build.gradle
-
-# Python 项目
-ls requirements.txt setup.py pyproject.toml
-
-# Node.js 项目
-ls package.json
 ```
 
 ### 2. Java + SpringBoot 识别
@@ -59,42 +53,6 @@ grep "<spring-boot.version>" pom.xml
 grep "springBootVersion" build.gradle
 ```
 
-### 3. Python + Django 识别
-
-**必要条件**:
-
-- 存在 `requirements.txt` 或 `pyproject.toml`
-- 包含 `Django` 依赖
-- 存在 `manage.py` 文件
-
-**检测命令**:
-
-```bash
-# 检查依赖
-grep -q "Django" requirements.txt && echo "Django"
-
-# 检查项目文件
-ls manage.py settings.py
-```
-
-### 4. Node.js + Express 识别
-
-**必要条件**:
-
-- 存在 `package.json`
-- 包含 `express` 依赖
-
-**检测命令**:
-
-```bash
-# 检查依赖
-grep -q '"express"' package.json && echo "Express"
-
-# 检查代码
-grep -r "require('express')" src/
-grep -r "from 'express'" src/
-```
-
 ## 加载规则模板
 
 根据识别结果,加载对应的规则模板:
@@ -103,27 +61,7 @@ grep -r "from 'express'" src/
 
 ```
 templates/java-springboot/
-├── defect-rules.md         # 8大缺陷检测规则
-├── best-practices.md       # SpringBoot 最佳实践
-└── prompts.md              # 提示词模板
-```
-
-### Python + Django
-
-```
-templates/python-django/
-├── defect-rules.md         # Django 特定缺陷
-├── best-practices.md       # Django 最佳实践
-└── prompts.md              # 提示词模板
-```
-
-### Node.js + Express
-
-```
-templates/nodejs-express/
-├── defect-rules.md         # Express 特定缺陷
-├── best-practices.md       # Express 最佳实践
-└── prompts.md              # 提示词模板
+└── defect-rules.md         # 8大缺陷检测规则
 ```
 
 ## 混合技术栈处理
@@ -176,18 +114,11 @@ src/
 
 **Q: 如果识别失败怎么办?**
 
-A: 要求用户明确指定技术栈:
-
-```
-请明确项目技术栈:
-1. Java + SpringBoot
-2. Python + Django
-3. Node.js + Express
-```
+A: 要求用户明确指定技术栈或提供识别特征。
 
 **Q: 如何支持新的技术栈?**
 
-A: 在 templates/ 目录下新增对应目录和规则文件。
+A: 参见 ARCHITECTURE.md "扩展示例"章节,在 templates/ 目录下新增对应模板。
 
 ## 下一步
 

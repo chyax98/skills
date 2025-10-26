@@ -1,236 +1,100 @@
 # Code Analyzer 架构设计
 
-## 核心设计理念
+## 核心概念
 
-### 1. 主 Skill + 子 Skill 模式
+### 1. 测试左移工具
+
+**定位**: 提测前代码审查工具,面向测试工程师
+
+**核心价值**:
+- 在提测前识别缺陷,而非测试阶段
+- 自动确定回归测试范围
+- 生成结构化测试分析报告
+
+### 2. 两阶段工作流
 
 ```
-code-analyzer (主 Skill)
-├── init-project (子 Skill) - 项目初始化
-└── analyze-commits (执行分析) - 主工作流
+第一次使用 (初始化阶段)
+├─ 扫描项目结构
+├─ 识别技术栈
+├─ 建立 Serena 索引 (2-5分钟)
+├─ 生成项目上下文
+└─ 保存到 .code-analyzer/project-context.json
+
+后续使用 (分析阶段)
+├─ 读取项目上下文
+├─ 增量更新 Serena 索引 (10-30秒)
+├─ 执行 6 步分析工作流
+└─ 生成测试分析报告
 ```
 
-**职责分离**:
+### 3. 项目上下文
 
-- **init-project**: 首次使用,建立项目上下文
-- **analyze-commits**: 分析具体提交,依赖项目上下文
+**概念**: 项目的元信息和配置,避免重复扫描
 
-### 2. 项目上下文 (Project Context)
-
-**概念**: 项目的元信息,分析时的前置知识
-
-**内容**:
+**内容示例**:
 
 ```json
 {
   "project_name": "user-service",
   "techstack": "java-springboot",
-  "version": "3.2.0",
+  "framework_version": "3.2.0",
   "build_tool": "maven",
-  "modules": ["user-service", "order-service"],
-  "key_packages": [
-    "com.example.controller",
-    "com.example.service",
-    "com.example.repository"
-  ],
+  "key_packages": {
+    "controller": "com.example.controller",
+    "service": "com.example.service",
+    "repository": "com.example.repository"
+  },
   "serena_indexed": true,
-  "last_index_time": "2025-10-26 10:30:00",
+  "last_index_time": "2025-10-27T10:30:00",
   "template_path": "templates/java-springboot/"
 }
 ```
 
-**存储位置**: `.code-analyzer/project-context.json`
+**存储位置**: `{被分析项目}/.code-analyzer/project-context.json`
 
-### 3. 两阶段工作流
+---
 
-```
-阶段 1: 初始化 (首次使用)
-├─ init-project skill 触发
-├─ 扫描项目结构
-├─ 识别技术栈
-├─ 建立 Serena 索引
-├─ 生成 project-context.json
-└─ 输出: "项目已初始化,可以开始分析"
+## 核心架构
 
-阶段 2: 分析 (后续使用)
-├─ analyze-commits 触发
-├─ 读取 project-context.json
-├─ 执行 6 步工作流
-├─ 增量更新 Serena 索引
-└─ 输出: 测试分析报告
-```
-
-## 架构优势
-
-### 1. 解耦技术栈
-
-**模板独立性**:
+### 1. 模块化设计
 
 ```
-templates/
-├── java-springboot/
-│   ├── init.md          # 初始化逻辑
-│   ├── defect-rules.md  # 缺陷检测规则
-│   └── prompts.md       # 提示词模板
-├── python-django/
-│   ├── init.md
-│   ├── defect-rules.md
-│   └── prompts.md
-└── nodejs-express/
-    ├── init.md
-    ├── defect-rules.md
-    └── prompts.md
+code-analyzer/
+├── SKILL.md                    # 主入口文档
+├── README.md                   # 快速开始指南
+├── ARCHITECTURE.md             # 本文档
+│
+├── references/
+│   ├── workflows/              # 6步分析工作流
+│   │   ├── step1-code-change.md
+│   │   ├── step2-techstack-detect.md
+│   │   ├── step3-defect-detect.md
+│   │   ├── step4-requirement-verify.md
+│   │   ├── step5-impact-analysis.md
+│   │   └── step6-report-generate.md
+│   │
+│   ├── integrations/           # MCP工具集成
+│   │   ├── serena-mcp.md
+│   │   └── sequential-mcp.md
+│   │
+│   └── specs/
+│       └── report-format.md    # 报告格式规范
+│
+├── templates/                  # 技术栈模板
+│   ├── registry.json           # 模板注册表
+│   └── java-springboot/
+│       └── defect-rules.md     # Java缺陷检测规则
+│
+└── examples/
+    └── project-context.json    # 项目上下文示例
 ```
 
-**新增技术栈**: 只需添加新的 template 目录,无需修改核心工作流。
+### 2. 技术栈扩展机制
 
-### 2. 状态持久化
+#### 模板注册表
 
-**project-context.json**:
-
-- 避免重复扫描
-- 加速后续分析
-- 支持增量索引
-
-### 3. 职责清晰
-
-| 组件 | 职责 | 输入 | 输出 |
-|------|------|------|------|
-| init-project | 项目初始化 | 项目路径 | project-context.json |
-| analyze-commits | 提交分析 | Git 范围 + 需求 | 测试分析报告 |
-| templates/{stack}/ | 技术栈规则 | - | 规则定义 |
-| workflows/ | 通用流程 | - | 流程定义 |
-| integrations/ | MCP 工具 | - | 工具使用指南 |
-
-## 详细设计
-
-### init-project Skill
-
-**触发条件**:
-
-```
-触发词:
-- "初始化项目"
-- "建立代码索引"
-- "首次使用 code-analyzer"
-
-自动触发:
-- 如果 .code-analyzer/project-context.json 不存在
-```
-
-**工作流程**:
-
-```
-Step 1: 扫描项目结构
-├─ 识别项目类型 (Java/Python/Node.js)
-├─ 识别构建工具 (Maven/Gradle/npm)
-└─ 识别项目模块
-
-Step 2: 识别技术栈
-├─ 检查依赖文件 (pom.xml/requirements.txt/package.json)
-├─ 识别框架 (SpringBoot/Django/Express)
-├─ 识别版本
-└─ 加载对应模板
-
-Step 3: 扫描核心包
-├─ 识别 Controller 包
-├─ 识别 Service 包
-├─ 识别 Repository 包
-└─ 识别实体包
-
-Step 4: 建立 Serena 索引
-├─ 检查 Serena 状态
-├─ 创建全量索引 (2-5分钟)
-└─ 记录索引时间
-
-Step 5: 生成项目上下文
-├─ 汇总所有信息
-├─ 保存到 .code-analyzer/project-context.json
-└─ 输出初始化报告
-```
-
-**输出示例**:
-
-```markdown
-# 项目初始化完成
-
-## 项目信息
-
-- **项目名称**: user-service
-- **技术栈**: Java + SpringBoot 3.2.0
-- **构建工具**: Maven
-- **模块数量**: 1 个
-
-## 核心包结构
-
-- Controller: `com.example.controller` (8 个文件)
-- Service: `com.example.service` (12 个文件)
-- Repository: `com.example.repository` (6 个文件)
-- Entity: `com.example.entity` (10 个文件)
-
-## Serena 索引
-
-- **状态**: ✅ 已完成
-- **耗时**: 3分15秒
-- **索引文件**: 36 个
-- **索引行数**: 8,542 行
-
-## 项目上下文
-
-已保存到被分析项目根目录: `{被分析项目}/.code-analyzer/project-context.json`
-
-## 下一步
-
-现在可以使用 `code-analyzer` 分析提交了:
-
-\`\`\`
-分析本分支近3次提交
-
-需求: 用户登录优化
-...
-\`\`\`
-```
-
-### analyze-commits 主工作流
-
-**触发条件**:
-
-```
-触发词:
-- "分析本分支近X次提交"
-- "分析 feature/xxx 分支的提交"
-- "代码审查"
-- "提测检查"
-```
-
-**前置检查**:
-
-```
-检查 1: project-context.json 是否存在
-├─ 存在 → 继续
-└─ 不存在 → 自动调用 init-project
-
-检查 2: Serena 索引是否最新
-├─ 24小时内 → 增量更新 (10-30秒)
-└─ 超过24小时 → 全量索引 (2-5分钟)
-```
-
-**工作流程**:
-
-```
-Step 1: 代码变更提取 (workflows/step1-code-change.md)
-Step 2: 技术栈识别 (读取 project-context.json)
-Step 3: 缺陷检测 (templates/{techstack}/defect-rules.md)
-Step 4: 需求验证 (integrations/sequential-mcp.md)
-Step 5: 影响分析 (integrations/serena-mcp.md)
-Step 6: 报告生成 (specs/report-format.md)
-```
-
-## 模板解耦机制
-
-### 模板注册
-
-**templates/registry.json**:
+**文件**: `templates/registry.json`
 
 ```json
 {
@@ -239,140 +103,252 @@ Step 6: 报告生成 (specs/report-format.md)
       "id": "java-springboot",
       "name": "Java + SpringBoot",
       "detect_files": ["pom.xml", "build.gradle"],
-      "detect_pattern": "spring-boot-starter",
-      "init_workflow": "templates/java-springboot/init.md",
-      "defect_rules": "templates/java-springboot/defect-rules.md",
-      "prompts": "templates/java-springboot/prompts.md"
-    },
-    {
-      "id": "python-django",
-      "name": "Python + Django",
-      "detect_files": ["requirements.txt", "manage.py"],
-      "detect_pattern": "Django",
-      "init_workflow": "templates/python-django/init.md",
-      "defect_rules": "templates/python-django/defect-rules.md",
-      "prompts": "templates/python-django/prompts.md"
+      "detect_dependencies": ["spring-boot-starter"],
+      "detect_annotations": ["@SpringBootApplication"],
+      "paths": {
+        "defect_rules": "templates/java-springboot/defect-rules.md"
+      },
+      "priority": 1
     }
   ]
 }
 ```
 
-### 新增技术栈步骤
+#### 添加新语言
 
-**Step 1**: 创建模板目录
+**步骤**:
+
+1. 创建模板目录: `templates/{language}/`
+2. 编写缺陷检测规则: `defect-rules.md`
+3. 注册到 `registry.json`
+4. 无需修改核心工作流代码
+
+**示例** - 添加 Python/Django:
 
 ```bash
-mkdir -p templates/rust-actix
+mkdir -p templates/python-django
+# 编写 defect-rules.md
+# 在 registry.json 中添加配置
 ```
 
-**Step 2**: 编写规则文件
+### 3. 6步分析工作流
+
+| 步骤 | 职责 | 输入 | 输出 | 工具 |
+|------|------|------|------|------|
+| 1 | 代码变更提取 | Git范围 | 变更文件列表 | git diff |
+| 2 | 技术栈识别 | 项目文件 | 技术栈ID | registry.json |
+| 3 | 缺陷检测 | 变更代码 | 缺陷清单 | Serena MCP |
+| 4 | 需求验证 | 需求文档 | 实现情况 | Sequential MCP |
+| 5 | 影响范围分析 | 变更函数 | 影响模块 | Serena MCP |
+| 6 | 报告生成 | 以上结果 | Markdown报告 | 模板渲染 |
+
+**详细说明**: 参见 `references/workflows/` 目录
+
+---
+
+## MCP工具集成
+
+### 1. Serena MCP (必需)
+
+**用途**:
+- 项目代码索引
+- 符号级代码理解
+- 调用链追踪
+- 依赖关系分析
+
+**核心功能**:
+- `find_symbol`: 查找函数/类定义
+- `find_referencing_symbols`: 查找调用位置
+- `get_symbols_overview`: 文件结构概览
+- `search_for_pattern`: 文本模式搜索
+
+**索引机制**:
+- 首次: 全量索引 (2-5分钟)
+- 后续: 增量更新 (10-30秒)
+
+**详细说明**: @references/integrations/serena-mcp.md
+
+### 2. Sequential MCP (推荐)
+
+**用途**:
+- 需求验证推理
+- 影响范围推导
+- 风险评估决策
+
+**详细说明**: @references/integrations/sequential-mcp.md
+
+---
+
+## 工作流程图
+
+### 完整流程
 
 ```
-templates/rust-actix/
-├── init.md           # 初始化逻辑 (如何识别项目)
-├── defect-rules.md   # 缺陷检测规则
-└── prompts.md        # 提示词模板
+用户触发
+  ↓
+检查 .code-analyzer/project-context.json
+  ↓
+不存在? → 初始化阶段
+  ├─ 扫描项目
+  ├─ 识别技术栈
+  ├─ Serena索引 (2-5分钟)
+  └─ 保存上下文
+存在? → 分析阶段
+  ├─ 读取上下文
+  ├─ 增量索引 (10-30秒)
+  ├─ Step 1: 提取Git变更
+  ├─ Step 2: 加载技术栈规则
+  ├─ Step 3: 缺陷检测
+  ├─ Step 4: 需求验证
+  ├─ Step 5: 影响分析
+  └─ Step 6: 生成报告
+  ↓
+输出: {被分析项目}/analysis-reports/{需求名称}/报告.md
 ```
 
-**Step 3**: 注册到 registry.json
+### 初始化检测逻辑
+
+```python
+if not exists(".code-analyzer/project-context.json"):
+    print("首次使用,正在初始化项目...")
+    # 执行初始化
+    scan_project()
+    detect_techstack()
+    serena_index()
+    save_context()
+    print("✅ 项目初始化完成")
+else:
+    context = load_context()
+    if is_stale(context.last_index_time, hours=24):
+        print("索引过期,执行增量更新...")
+        serena_incremental_update()
+    # 继续分析
+```
+
+---
+
+## 架构优势
+
+### 1. 技术栈解耦
+
+- 新增语言只需添加 template,不修改核心流程
+- 缺陷规则独立维护,易于更新
+- 模板优先级机制支持多语言项目
+
+### 2. 状态持久化
+
+- 项目上下文避免重复扫描
+- Serena 索引支持增量更新
+- 减少90%的准备时间 (首次5分钟 → 后续30秒)
+
+### 3. 职责清晰
+
+- 初始化和分析逻辑分离
+- 每个工作流步骤独立文档
+- MCP工具按职责分类使用
+
+### 4. 自动化友好
+
+- 自动检测是否需要初始化
+- 自动识别技术栈
+- 自动确定回归测试范围
+
+### 5. 可扩展性
+
+- 支持多语言 (当前Java,可扩展Python/Node.js)
+- 支持多框架 (SpringBoot/Django/Express等)
+- 支持自定义缺陷规则
+
+---
+
+## 输出规范
+
+### 报告位置
+
+```
+{被分析项目}/
+└── analysis-reports/
+    ├── 用户登录优化/
+    │   ├── feature-login-20251027-100030.md
+    │   └── feature-login-20251027-153000.md
+    └── 支付流程优化/
+        └── feature-payment-20251027-143000.md
+```
+
+### 报告内容
+
+- 📋 基本信息 (分支、提交数、变更文件)
+- 🔴 缺陷清单 (按严重度分级)
+- 🎯 需求实现情况 (已实现/未实现/多余)
+- 📊 影响范围 (直接影响/间接影响模块)
+- ⚠️ 风险评估 (综合风险等级)
+- 💡 测试重点建议
+
+**详细格式**: @references/specs/report-format.md
+
+---
+
+## 扩展示例
+
+### 示例 1: 添加 Python/Django 支持
+
+**步骤 1**: 创建模板
+
+```bash
+mkdir -p templates/python-django
+```
+
+**步骤 2**: 编写缺陷规则
+
+创建 `templates/python-django/defect-rules.md`,参考 Java 模板结构:
+
+```markdown
+# Python + Django 缺陷检测规则
+
+## 🔴 Blocker
+### 1. SQL 注入
+### 2. 敏感信息泄露
+
+## 🟠 Critical
+### 3. 资源泄漏
+### 4. 异常处理缺失
+...
+```
+
+**步骤 3**: 注册模板
+
+编辑 `templates/registry.json`:
 
 ```json
 {
-  "id": "rust-actix",
-  "name": "Rust + Actix",
-  "detect_files": ["Cargo.toml"],
-  "detect_pattern": "actix-web",
-  "init_workflow": "templates/rust-actix/init.md",
-  "defect_rules": "templates/rust-actix/defect-rules.md",
-  "prompts": "templates/rust-actix/prompts.md"
+  "templates": [
+    {
+      "id": "python-django",
+      "name": "Python + Django",
+      "detect_files": ["requirements.txt", "manage.py"],
+      "detect_dependencies": ["Django"],
+      "detect_code_patterns": ["from django", "import django"],
+      "paths": {
+        "defect_rules": "templates/python-django/defect-rules.md"
+      },
+      "priority": 2
+    },
+    ...
+  ]
 }
 ```
 
-**Step 4**: 测试
+**步骤 4**: 验证
 
-```
-初始化项目 (自动识别 Rust + Actix)
-分析近3次提交 (自动加载 rust-actix 规则)
-```
-
-## 文件组织
-
-```
-code-analyzer/
-├── SKILL.md                    # 主 Skill 入口
-├── ARCHITECTURE.md             # 架构设计 (本文档)
-├── README.md                   # 快速开始
-│
-├── skills/                     # 子 Skills
-│   ├── init-project.md         # 项目初始化 Skill
-│   └── analyze-commits.md      # 分析提交 Skill (可选,复用 SKILL.md)
-│
-├── references/
-│   ├── workflows/              # 6 步通用工作流
-│   ├── integrations/           # MCP 工具集成
-│   └── specs/                  # 规范定义
-│
-├── templates/                  # 技术栈模板 (解耦)
-│   ├── registry.json           # 模板注册表
-│   ├── java-springboot/
-│   ├── python-django/
-│   └── nodejs-express/
-│
-└── examples/                   # 示例
-    ├── project-context.json    # 项目上下文示例
-    └── sample-report.md        # 报告示例
+```bash
+# 在 Django 项目中测试
+cd /path/to/django-project
+# 触发 code-analyzer
 ```
 
-## 用户体验
-
-### 首次使用
-
-```
-用户: "分析本分支近3次提交,需求: 用户登录优化"
-
-code-analyzer:
-  → 检测到未初始化
-  → 自动调用 init-project
-  → "正在初始化项目..."
-  → "识别技术栈: Java + SpringBoot 3.2.0"
-  → "建立 Serena 索引 (预计 3 分钟)..."
-  → "索引完成,已保存项目上下文"
-  → 执行分析工作流
-  → 输出测试分析报告
-```
-
-### 后续使用
-
-```
-用户: "分析本分支近3次提交,需求: 支付流程优化"
-
-code-analyzer:
-  → 读取项目上下文
-  → "检测到技术栈: Java + SpringBoot"
-  → "增量更新 Serena 索引 (15秒)..."
-  → 执行分析工作流
-  → 输出测试分析报告
-```
-
-## 核心优势总结
-
-1. **解耦技术栈**: 新增语言/框架只需添加 template,不改核心流程
-2. **状态持久化**: 项目上下文避免重复扫描,加速后续分析
-3. **职责清晰**: init-project 负责初始化,analyze-commits 负责分析
-4. **自动化友好**: 自动检测未初始化,自动调用 init-project
-5. **增量优化**: Serena 索引支持增量更新,节省时间
-6. **模板驱动**: 所有技术栈特定逻辑在 template 中,易于扩展
-
-## 下一步实施
-
-1. ✅ 创建 skills/init-project.md 子 Skill
-2. ✅ 创建 templates/registry.json 注册表
-3. ✅ 为每个 template 添加 init.md
-4. ✅ 更新 SKILL.md,说明两阶段工作流
-5. ✅ 创建示例 project-context.json
+应自动识别为 Python/Django 并加载对应规则。
 
 ---
 
 **版本**: 1.0.0
-**设计日期**: 2025-10-26
-**设计者**: AI 架构分析
+**创建**: 2025-10-27

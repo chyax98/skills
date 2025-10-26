@@ -82,8 +82,8 @@ Git 提交变更 → 缺陷检测 + 需求验证 + 影响分析 → 测试分析
 | 技术栈 | 识别特征 | 规则模板 |
 |--------|---------|---------|
 | Java + SpringBoot | pom.xml + @SpringBootApplication | @templates/java-springboot/ |
-| Python + Django | requirements.txt + django | @templates/python-django/ |
-| Node.js + Express | package.json + express | @templates/nodejs-express/ |
+
+> 🚀 **扩展性**: 架构支持多语言扩展,详见 @ARCHITECTURE.md "扩展示例"
 
 **详细流程**: @references/workflows/step2-techstack-detect.md
 
@@ -337,6 +337,6 @@ Git 提交变更 → 缺陷检测 + 需求验证 + 影响分析 → 测试分析
 
 ---
 
-**版本**: 3.0.0(模块化架构)
-**更新**: 2025-10-26
+**版本**: 1.0.0
+**创建**: 2025-10-27
 **定位**: 测试左移工具,提测前代码审查
