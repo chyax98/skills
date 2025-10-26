@@ -1,0 +1,3 @@
+[submodule "slides-generator/slidev-docs"]
+	path = slides-generator/slidev-docs
+	url = https://github.com/slidevjs/slidev.git
