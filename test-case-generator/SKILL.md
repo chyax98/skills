@@ -15,6 +15,25 @@ license: Proprietary
 - **重量级用例生成**：并发执行场景分析（正向/边界/异常/性能/安全）和用例生成
 - **单一职责**：专注于用例生成，不处理需求质量问题
 
+## 执行流程（必读）
+
+**重要：必须按以下顺序执行，不可跳过任何步骤**
+
+```
+Step 1: 测试项识别 → 输出 test-items.jsonl（必须先完成）
+    ↓
+Step 2: 并发生成用例 → 读取 test-items.jsonl → 输出 cases/*.jsonl
+    ↓
+Step 3: 质量审查 → 验证格式和内容
+    ↓
+Step 4: 合并与导出 → 输出 cases.jsonl + stats-report.md
+```
+
+**关键原则**：
+- ❌ **禁止直接生成 cases/*.jsonl**（跳过 Step 1）
+- ✅ **必须先生成 test-items.jsonl**（Step 1 完成标志）
+- ✅ Step 2 基于 test-items.jsonl 决定并发策略
+
 ## 适用场景
 
 当用户提供**已规范化的需求文档（prd.md）**并需要：
