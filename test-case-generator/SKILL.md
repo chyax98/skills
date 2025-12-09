@@ -343,65 +343,21 @@ python scripts/stats_report.py cases.jsonl --test-items test-items.jsonl -o stat
 
 ### 环境与依赖
 - Python 3.9+
-- `jsonschema`（严格校验需要，可无网预装）：`pip install jsonschema`
-- `xmind`（生成 XMind，需要有网或预装）：`pip install xmind`
-- 无网或无法安装 `xmind` 时：跳过 Step 5.2，仅输出 JSONL + stats-report。
+- `jsonschema`（Schema 验证）：`pip install jsonschema`
+- `xmind`（生成 XMind）：`pip install xmind`
 
-### validate_jsonl.py
+### 可用脚本
 
-验证 JSONL 文件格式和内容。
+| 脚本 | 功能 | 详细用法 |
+|-----|------|---------|
+| `validate_jsonl.py` | 验证 JSONL 格式、Schema、业务规则 | `--help` |
+| `merge_jsonl.py` | 合并多个 JSONL 文件 | `--help` |
+| `convert_to_xmind.py` | 转换为 XMind 思维导图 | `--help` |
+| `stats_report.py` | 生成统计报告 | `--help` |
 
-```bash
-python scripts/validate_jsonl.py test-items.jsonl
-python scripts/validate_jsonl.py cases.jsonl --strict
-```
+**使用方法**：所有脚本都支持 `--help` 查看详细参数说明。
 
-### merge_jsonl.py
-
-合并多个 JSONL 文件。
-
-```bash
-python scripts/merge_jsonl.py cases/*.jsonl -o cases.jsonl
-```
-
-### convert_to_xmind.py
-
-将 JSONL 转换为 XMind 思维导图。
-
-```bash
-# 基本转换
-python scripts/convert_to_xmind.py cases.jsonl -o cases.xmind
-
-# 指定根节点名称
-python scripts/convert_to_xmind.py cases.jsonl -o cases.xmind --name "用户管理"
-
-# 扁平模式（跳过测试项层级）
-python scripts/convert_to_xmind.py cases.jsonl -o cases.xmind --flat
-```
-
-**依赖**：`pip install xmind`
-
-**思维导图结构**：
-```
-根节点
-├── 模块 (module_name)
-│   └── 测试项 (test_item)
-│       ├── 正向场景
-│       │   └── 用例 [优先级图标]
-│       │       ├── 前置条件
-│       │       ├── 步骤 1 → 预期结果 1
-│       │       └── 备注
-│       ├── 边界场景
-│       └── 异常场景
-```
-
-### stats_report.py
-
-生成统计报告。
-
-```bash
-python scripts/stats_report.py cases.jsonl --test-items test-items.jsonl -o stats-report.md
-```
+**常用命令**：参见 workflow 中各步骤的脚本调用示例。
 
 ## 用例名称规范
 
