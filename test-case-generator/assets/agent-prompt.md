@@ -12,11 +12,13 @@
 
 **工作区路径**：`{workspace}`（需求名称目录，如 "Polaris 差旅报销中台/"）
 
+**Skill 目录路径**：`{skill_dir}`（test-case-generator skill 所在目录）
+
 **关键文件位置**：
 - 测试项文件：`{workspace}/test-items.jsonl`（包含每个模块的 prd 内容）
-- 优先级指南：`test-case-generator/references/priority-guide.md`
-- 测试类型指南：`test-case-generator/references/test-type-guide.md`
-- 测试用例模板参考：`test-case-generator/assets/case-template.jsonl`
+- 优先级指南：`{skill_dir}/references/priority-guide.md`
+- 测试类型指南：`{skill_dir}/references/test-type-guide.md`
+- 测试用例模板参考：`{skill_dir}/assets/case-template.jsonl`
 
 **输出目录**：`{workspace}/cases/`
 
@@ -39,9 +41,9 @@
 
 使用 Read 工具读取以下文件：
 - `{workspace}/test-items.jsonl` - 获取你负责的模块完整信息（包含 prd 内容）
-- `test-case-generator/references/priority-guide.md` - 了解优先级判定规则
-- `test-case-generator/references/test-type-guide.md` - 了解测试类型选择规则
-- `test-case-generator/assets/case-template.jsonl` - 参考用例格式示例
+- `{skill_dir}/references/priority-guide.md` - 了解优先级判定规则
+- `{skill_dir}/references/test-type-guide.md` - 了解测试类型选择规则
+- `{skill_dir}/assets/case-template.jsonl` - 参考用例格式示例
 
 ### 2. 场景分析
 

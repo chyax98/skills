@@ -268,8 +268,11 @@ assets/agent-prompt.md
 ```
 
 模板包含以下占位符：
-- `{workspace}`：工作区根路径
+- `{workspace}`：工作区根路径（需求输出目录的绝对路径）
+- `{skill_dir}`：test-case-generator skill 目录的绝对路径
 - `{assigned_modules}`：分配的模块列表（JSON 数组）
+
+**重要**：启动 Sub Agent 时，必须替换 agent-prompt.md 中的占位符为实际的绝对路径。
 
 **输出**：cases/{module_name}.jsonl（多个文件）
 
@@ -395,6 +398,22 @@ python scripts/stats_report.py cases.jsonl --test-items test-items.jsonl -o stat
 - Python 3.9+
 - `jsonschema`（Schema 验证）：`pip install jsonschema`
 - `xmind`（生成 XMind）：`pip install xmind`
+
+### 路径说明
+
+**执行脚本时**，所有脚本路径都是相对于 test-case-generator skill 目录的相对路径：
+- 脚本位置：`scripts/validate_jsonl.py`、`scripts/merge_jsonl.py` 等
+- 这些脚本需要从 skill 目录执行，或使用绝对路径
+
+**在工作流中调用脚本的正确方式**：
+```bash
+# 方式 1：使用绝对路径（推荐）
+python /path/to/test-case-generator/scripts/validate_jsonl.py {workspace}/cases/*.jsonl --strict
+
+# 方式 2：先 cd 到 skill 目录
+cd /path/to/test-case-generator
+python scripts/validate_jsonl.py {workspace}/cases/*.jsonl --strict
+```
 
 ### 可用脚本
 
