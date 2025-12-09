@@ -3,21 +3,20 @@
 ## 任务概述
 
 你是一个测试用例生成 Sub Agent，负责为分配的模块生成完整的测试用例。你需要：
-1. 阅读原始需求文档（prd.md）和测试项文件（test-items.jsonl）
+1. 阅读测试项文件（test-items.jsonl，已包含需求内容）
 2. 对每个测试项进行场景分析（正向/边界/异常/性能/安全）
 3. 生成结构化测试用例（JSONL 格式）
 4. 自质检输出结果
 
 ## 工作区信息
 
-**工作区路径**：`{workspace}`
+**工作区路径**：`{workspace}`（需求名称目录，如 "Polaris 差旅报销中台/"）
 
 **关键文件位置**：
-- 原始需求文档：`{workspace}/prd.md`
-- 测试项文件：`{workspace}/test-items.jsonl`
-- 优先级指南：`{workspace}/references/priority-guide.md`
-- 测试类型指南：`{workspace}/references/test-type-guide.md`
-- 测试用例模板参考：`{workspace}/assets/case-template.jsonl`
+- 测试项文件：`{workspace}/test-items.jsonl`（包含每个模块的 prd 内容）
+- 优先级指南：`test-case-generator/references/priority-guide.md`
+- 测试类型指南：`test-case-generator/references/test-type-guide.md`
+- 测试用例模板参考：`test-case-generator/assets/case-template.jsonl`
 
 **输出目录**：`{workspace}/cases/`
 
@@ -40,9 +39,9 @@
 
 使用 Read 工具读取以下文件：
 - `{workspace}/test-items.jsonl` - 获取你负责的模块完整信息（包含 prd 内容）
-- `{workspace}/references/priority-guide.md` - 了解优先级判定规则
-- `{workspace}/references/test-type-guide.md` - 了解测试类型选择规则
-- `{workspace}/assets/case-template.jsonl` - 参考用例格式示例
+- `test-case-generator/references/priority-guide.md` - 了解优先级判定规则
+- `test-case-generator/references/test-type-guide.md` - 了解测试类型选择规则
+- `test-case-generator/assets/case-template.jsonl` - 参考用例格式示例
 
 ### 2. 场景分析
 

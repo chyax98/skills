@@ -34,7 +34,8 @@ Step 4: 你自己执行合并与导出 → 输出 cases.jsonl + stats-report.md
 - ❌ **禁止跳过 Step 1 直接生成 cases/*.jsonl**
 
 **你的职责**：
-- ✅ **Step 1**：你必须自己读取 prd.md，自己识别测试项，自己写 test-items.jsonl
+- ✅ **Step 0**：用需求文档名称（去掉 .md）创建输出目录
+- ✅ **Step 1**：你必须自己读取 prd.md，自己识别测试项，自己写 `{需求名称}/test-items.jsonl`
 - ✅ **Step 2**：你读取 test-items.jsonl，计算并发数，启动多个 Task Agent（每个负责 2-3 个模块）
 - ✅ **Step 3**：你自己执行质量审查
 - ✅ **Step 4**：你自己执行合并导出
@@ -64,20 +65,30 @@ Step 4: 你自己执行合并与导出 → 输出 cases.jsonl + stats-report.md
 
 ## 输出结构
 
-所有输出文件放在**需求文档所在目录**下：
+**第一步：用需求名称创建目录**
+
+假设需求文档是 `/path/to/Polaris 差旅报销中台.md`，你必须先创建目录 `/path/to/Polaris 差旅报销中台/`
+
+然后所有产物放在这个目录下：
 
 ```
-需求文档所在目录/
-├── 需求文档.md
-├── test-items.jsonl          # 测试项文件（轻量级）
-├── cases/                    # [中间态] 各模块用例
-│   ├── 用户注册.jsonl
-│   ├── 用户登录.jsonl
-│   └── ...
-├── cases.jsonl               # 合并后的测试用例
-├── cases.xmind               # XMind 思维导图（可选）
-└── stats-report.md           # 统计报告
+/path/to/
+├── Polaris 差旅报销中台.md      # 需求文档（输入）
+└── Polaris 差旅报销中台/         # 创建的输出目录
+    ├── test-items.jsonl          # 测试项文件（轻量级）
+    ├── cases/                    # [中间态] 各模块用例
+    │   ├── 报销单创建.jsonl
+    │   ├── 费用审批.jsonl
+    │   └── ...
+    ├── cases.jsonl               # 合并后的测试用例
+    ├── cases.xmind               # XMind 思维导图（可选）
+    └── stats-report.md           # 统计报告
 ```
+
+**关键**：
+- ✅ 用需求文档名称（去掉 .md）创建目录
+- ✅ 所有产物放在这个目录下
+- ❌ 不要直接在需求文档所在目录生成文件（会混乱）
 
 ## Schema 定义
 
