@@ -17,22 +17,29 @@ license: Proprietary
 
 ## 执行流程（必读）
 
-**重要：必须按以下顺序执行，不可跳过任何步骤**
+**你（主 Agent）必须自己执行以下步骤，不可整体委托给 Task Agent**
 
 ```
-Step 1: 测试项识别 → 输出 test-items.jsonl（必须先完成）
+Step 1: 你自己执行测试项识别 → 输出 test-items.jsonl
     ↓
-Step 2: 并发生成用例 → 读取 test-items.jsonl → 输出 cases/*.jsonl
+Step 2: 你启动多个 Task Agent 并行生成用例 → 输出 cases/*.jsonl
     ↓
-Step 3: 质量审查 → 验证格式和内容
+Step 3: 你自己执行质量审查 → 验证格式和内容
     ↓
-Step 4: 合并与导出 → 输出 cases.jsonl + stats-report.md
+Step 4: 你自己执行合并与导出 → 输出 cases.jsonl + stats-report.md
 ```
 
-**关键原则**：
-- ❌ **禁止直接生成 cases/*.jsonl**（跳过 Step 1）
-- ✅ **必须先生成 test-items.jsonl**（Step 1 完成标志）
-- ✅ Step 2 基于 test-items.jsonl 决定并发策略
+**严格禁止**：
+- ❌ **禁止把整个工作流（Step 1-4）委托给一个 Task Agent**
+- ❌ **禁止跳过 Step 1 直接生成 cases/*.jsonl**
+
+**你的职责**：
+- ✅ **Step 1**：你必须自己读取 prd.md，自己识别测试项，自己写 test-items.jsonl
+- ✅ **Step 2**：你读取 test-items.jsonl，计算并发数，启动多个 Task Agent（每个负责 2-3 个模块）
+- ✅ **Step 3**：你自己执行质量审查
+- ✅ **Step 4**：你自己执行合并导出
+
+**只有 Step 2 才使用 Task Agent**，其他步骤你必须自己完成。
 
 ## 适用场景
 
@@ -57,8 +64,11 @@ Step 4: 合并与导出 → 输出 cases.jsonl + stats-report.md
 
 ## 输出结构
 
+所有输出文件放在**需求文档所在目录**下：
+
 ```
-需求名称/
+需求文档所在目录/
+├── 需求文档.md
 ├── test-items.jsonl          # 测试项文件（轻量级）
 ├── cases/                    # [中间态] 各模块用例
 │   ├── 用户注册.jsonl
