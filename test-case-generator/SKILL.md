@@ -55,32 +55,35 @@ license: Proprietary
 ### 测试项 Schema（轻量级）
 
 ```typescript
-interface TestItem {
-  id: string;                  // 格式："TI-001"
+interface ModuleTestItems {
+  module_id: string;           // 模块ID，格式：M01, M02, M03...（用于用例ID前缀）
   module_name: string;         // 功能模块，≤15字符
-  item: string;                // 测试项名称（功能名称）
-  business_value: "高" | "中" | "低";  // 业务价值
+  test_items: Array<{
+    item: string;              // 测试项名称
+    business_value: "高" | "中" | "低";
+  }>;
+  prd: string;                 // 该模块的需求详情
 }
 ```
 
 **说明**：
-- 测试项只是"需要测试的功能"的清单，不包含场景分析
+- **按模块分组**：test-items.jsonl 每行代表一个模块
+- **module_id**：自动生成（M01-M99），用于用例 ID 前缀（如 M01-001）
+- **test_items**：该模块包含的所有测试项
+- **prd**：该模块的完整需求内容（供 Sub Agent 理解业务）
 - 场景分析（正向/边界/异常/性能/安全）在 Step 2 并发执行
-- 业务价值用于指导用例优先级判断
 
 **示例**：
 ```jsonl
-{"id":"TI-001","module_name":"用户注册","item":"用户注册流程","business_value":"高"}
-{"id":"TI-002","module_name":"用户注册","item":"手机号验证","business_value":"高"}
-{"id":"TI-003","module_name":"用户登录","item":"用户登录流程","business_value":"高"}
-{"id":"TI-004","module_name":"用户登录","item":"密码找回","business_value":"中"}
+{"module_id":"M01","module_name":"用户注册","test_items":[{"item":"用户注册流程","business_value":"高"},{"item":"手机号验证","business_value":"高"}],"prd":"## 用户注册\n用户可以通过手机号或邮箱注册账号..."}
+{"module_id":"M02","module_name":"用户登录","test_items":[{"item":"用户登录流程","business_value":"高"},{"item":"密码找回","business_value":"中"}],"prd":"## 用户登录\n支持用户名、手机号、邮箱三种方式登录..."}
 ```
 
 ### 测试用例 Schema
 
 ```typescript
 interface TestCase {
-  id: string;                  // 格式："TC-001"
+  id: string;                  // 格式："{module_id}-{seq:03d}"，如 M01-001
   name: string;                // 用例名称（主谓宾格式）
   module_name: string;         // 测试项（被测对象），≤15字符
   test_item: string;           // 所属测试项（对应 TestItem.item）
@@ -97,9 +100,14 @@ interface TestCase {
 }
 ```
 
+**ID 编号规则**：
+- 格式：`{module_id}-{seq:03d}`
+- 每个模块独立编号（M01-001, M01-002... M02-001, M02-002...）
+- 天然无冲突，无需预分配 ID 段
+
 **示例**：
 ```jsonl
-{"id":"TC-001","name":"验证用户成功登录系统","module_name":"用户登录","test_item":"用户登录流程","scenario_type":"正向场景","priority":"P1","test_type":"功能测试","is_negative":false,"preconditions":["系统已部署","存在有效账号"],"steps":[{"action":"打开登录页面","expected":"页面正常显示"},{"action":"输入正确的用户名密码","expected":"输入成功"},{"action":"点击登录按钮","expected":"登录成功，跳转主页"}],"notes":"核心功能正向用例"}
+{"id":"M01-001","name":"验证用户成功登录系统","module_name":"用户登录","test_item":"用户登录流程","scenario_type":"正向场景","priority":"P1","test_type":"功能测试","is_negative":false,"preconditions":["系统已部署","存在有效账号"],"steps":[{"action":"打开登录页面","expected":"页面正常显示"},{"action":"输入正确的用户名密码","expected":"输入成功"},{"action":"点击登录按钮","expected":"登录成功，跳转主页"}],"notes":"核心功能正向用例"}
 ```
 
 ## 优先级定义
@@ -162,16 +170,21 @@ interface TestCase {
    - 中：辅助功能（修改信息、查询记录）
    - 低：边缘功能（高级设置、管理员报表）
 
-4. **输出 test-items.jsonl**：
+4. **提取需求内容**：提取该模块的相关 prd 章节内容
+
+5. **分配 module_id**：按顺序递增（M01, M02, M03...）
+
+6. **输出 test-items.jsonl**（按模块分组）：
    ```jsonl
-   {"id":"TI-001","module_name":"用户注册","item":"用户注册流程","business_value":"高"}
-   {"id":"TI-002","module_name":"用户注册","item":"手机号验证","business_value":"高"}
+   {"module_id":"M01","module_name":"用户注册","test_items":[{"item":"用户注册流程","business_value":"高"},{"item":"手机号验证","business_value":"高"}],"prd":"## 用户注册\n..."}
+   {"module_id":"M02","module_name":"用户登录","test_items":[{"item":"用户登录流程","business_value":"高"}],"prd":"## 用户登录\n..."}
    ```
 
 **关键原则**：
 - ⚡ **快速识别**：只列清单，不做场景分析（场景分析在 Step 2）
 - 📋 **粒度适中**：每个测试项预估生成 3-8 条用例
-- 🎯 **面向并发**：测试项是并发分配的最小单元
+- 🎯 **面向并发**：按模块分组，便于并发分配
+- 🔢 **module_id**：自动递增（M01-M99），用于用例 ID 前缀
 
 **输出**：test-items.jsonl
 
@@ -181,85 +194,42 @@ interface TestCase {
 
 **目标**：并发执行场景分析并直接生成测试用例
 
-**并发策略**：
+**并发策略（简化）**：
 
-使用 Task agent 并行生成，按测试项分组分配（最多 10 个 agent）：
+1. **计算 Agent 数量**：
+   ```
+   模块数 = M（来自 test-items.jsonl）
+   Agent 数 = ceil(M / 2.5)  # 每个 agent 负责 2-3 个模块
+
+   示例：
+   - 5 个模块 → 2 个 agent（每个 2-3 个模块）
+   - 10 个模块 → 4 个 agent（每个 2-3 个模块）
+   ```
+
+2. **模块分配**：
+   - 按顺序将模块分配给各 agent（顺序分配，不做负载均衡）
+   - 示例：10 个模块 → Agent1(M01-M03), Agent2(M04-M06), Agent3(M07-M08), Agent4(M09-M10)
+
+3. **并行执行**：
+   - 同时启动 N 个 Task agent
+   - 每个 agent 读取 `assets/agent-prompt.md` 模板作为提示词
+   - 传递给 agent：工作区路径、分配的模块列表（module_id）
+   - Agent 自行读取 prd.md、test-items.jsonl、参考文档
+
+4. **收集结果**：
+   - 各 agent 输出到 `cases/{module_name}.jsonl`
+   - 用例 ID 格式：`{module_id}-{seq:03d}`（如 M01-001, M01-002）
+   - 模块内 ID 独立编号，天然无冲突
+
+**Sub Agent 提示词模板位置**：
 
 ```
-1. 测试项分组
-   ├─ 读取 test-items.jsonl，得到 N 个测试项
-   ├─ 决定并发：
-   │   - 测试项 ≤ 5：单线程生成
-   │   - 测试项 > 5：启用并发（agent 数 = min(N/3, 10)）
-   └─ 分组策略：按模块分组，同模块的测试项分配给同一 agent
-
-2. ID 段分配（动态预估）
-   ├─ 每个测试项预估生成 5 条用例（平均值）
-   ├─ 计算每个 agent 的 ID 段：
-   │   - Agent 1: 负责 TI-001~TI-005（预估 25 条用例）→ TC-001 ~ TC-025
-   │   - Agent 2: 负责 TI-006~TI-010（预估 25 条用例）→ TC-026 ~ TC-050
-   │   - ...
-   └─ 预留 20% 缓冲空间，避免 ID 溢出
-
-3. 并行执行
-   └─ 同时启动 M 个 Task agent，使用下方任务模板
-
-4. 收集结果
-   └─ 各 agent 输出到 cases/{module_name}.jsonl
+assets/agent-prompt.md
 ```
 
-**Task Agent 任务模板**：
-
-```markdown
-## 任务：测试用例生成
-
-### 上下文
-以下是规范化的需求文档（仅包含你负责的模块相关内容）：
-{prd_module_section}
-
-### 输入
-- 负责的测试项：
-{test_items_jsonl}
-- ID 范围：TC-{start} ~ TC-{end}
-
-### 要求
-对每个测试项进行完整的场景分析并生成测试用例：
-
-#### 1. 场景分析维度
-对每个测试项，分析以下场景类型（根据实际情况选择）：
-- **正向场景**：用户正常使用，输入合法数据
-- **边界场景**：输入边界值（最大/最小/空值/长度边界）
-- **异常场景**：错误输入、异常状态、失败处理
-- **性能场景**：并发、大数据量、响应时间（如需求有性能要求）
-- **安全场景**：认证、授权、注入攻击、越权（如涉及敏感操作）
-
-#### 2. 用例生成规则
-- 每个场景生成 1-2 条用例
-- 每个测试项至少生成：1 个正向场景 + 1-2 个异常/边界场景
-- 核心功能（business_value=高）需覆盖更多场景类型
-
-#### 3. 用例格式要求
-- 用例名称：主谓宾格式，以"验证"开头
-- 优先级：根据 business_value 和 scenario_type 判断（参考 priority-guide.md）
-  - 高价值 + 正向 = P1
-  - 高价值 + 异常/边界 = P3
-  - 中价值 + 正向 = P2
-  - 中价值 + 异常/边界 = P4
-  - 低价值 = P5
-- 测试类型：根据场景选择（参考 test-type-guide.md）
-- 反向用例：异常/边界场景标记 is_negative: true
-- 步骤：2-5 个步骤，每步骤有具体的 action 和 expected
-- 步骤描述要具体可执行，避免"正常"、"成功"等模糊描述
-
-### 输出格式
-输出到 `cases/{module_name}.jsonl`，每行一条用例，严格遵循 TestCase Schema：
-{"id":"TC-xxx","name":"...","module_name":"...","test_item":"...","scenario_type":"正向场景","priority":"Px","test_type":"...","is_negative":false,"preconditions":[...],"steps":[{"action":"...","expected":"..."}]}
-
-### 注意
-- ID 必须在分配范围内，顺序递增
-- 每个模块单独一个文件，便于审查和追溯
-- 只输出 JSONL 数据，不要输出解释性文本
-```
+模板包含以下占位符：
+- `{workspace}`：工作区根路径
+- `{assigned_modules}`：分配的模块列表（JSON 数组）
 
 **输出**：cases/{module_name}.jsonl（多个文件）
 
@@ -283,23 +253,18 @@ python scripts/validate_jsonl.py cases/*.jsonl --strict
 ```markdown
 ## 质量检查清单
 
-### 1. ID 重复检查（并发问题）
-□ 检查是否有重复的 TC-xxx ID
-□ 检查 ID 是否在各 agent 分配范围内
-□ 修复方法：重新编号冲突的 ID
-
-### 2. 测试项覆盖检查（遗漏问题）
+### 1. 测试项覆盖检查（遗漏问题）
 □ 列出 test-items.jsonl 中所有测试项
 □ 检查 cases/*.jsonl 中每个测试项是否都有对应用例
 □ 遗漏的测试项需补充用例
 □ 输出：覆盖率 = 已覆盖测试项数 / 总测试项数
 
-### 3. 场景覆盖检查
+### 2. 场景覆盖检查
 □ 每个测试项是否至少有 1 个正向场景
 □ 每个测试项是否至少有 1 个异常/边界场景
 □ 核心功能（business_value=高）是否覆盖更多场景类型
 
-### 4. 格式规范检查
+### 3. 格式规范检查
 □ 用例名称是否以"验证"开头（主谓宾格式）
 □ module_name 是否 ≤15 字符
 □ test_item 是否与 test-items.jsonl 中的 item 匹配
@@ -307,12 +272,12 @@ python scripts/validate_jsonl.py cases/*.jsonl --strict
 □ steps 是否至少有 1 条，每条有 action 和 expected
 □ preconditions 是否为数组格式
 
-### 5. 业务逻辑检查
+### 4. 业务逻辑检查
 □ 优先级是否合理（P1 占比 10-20%）
 □ 反向用例是否标记 is_negative: true
 □ test_type 是否与 scenario_type 匹配（安全场景→安全性测试）
 
-### 6. 内容质量检查
+### 5. 内容质量检查
 □ 步骤描述是否具体可执行（避免"正确操作"等模糊描述）
 □ 预期结果是否可验证（避免"正常"等模糊描述）
 □ 前置条件是否完整
@@ -324,7 +289,6 @@ python scripts/validate_jsonl.py cases/*.jsonl --strict
 ## 质量审查报告
 
 - 总用例数：{N}
-- ID 重复：{N} 处（已修复 / 待修复）
 - 测试项覆盖率：{X}%（{covered}/{total}）
 - 遗漏测试项：{list}
 - 场景覆盖：正向场景 {N} 个，异常场景 {N} 个，边界场景 {N} 个

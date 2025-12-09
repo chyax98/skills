@@ -1,20 +1,7 @@
-{"id":"TI-001","module_name":"用户注册","item":"用户注册流程","business_value":"高"}
-{"id":"TI-002","module_name":"用户注册","item":"手机号验证","business_value":"高"}
-{"id":"TI-003","module_name":"用户注册","item":"邮箱验证","business_value":"高"}
-{"id":"TI-004","module_name":"用户注册","item":"密码强度校验","business_value":"高"}
-{"id":"TI-005","module_name":"用户登录","item":"用户登录流程","business_value":"高"}
-{"id":"TI-006","module_name":"用户登录","item":"登录失败处理","business_value":"高"}
-{"id":"TI-007","module_name":"用户登录","item":"账号锁定机制","business_value":"高"}
-{"id":"TI-008","module_name":"用户登录","item":"会话管理","business_value":"高"}
-{"id":"TI-009","module_name":"个人信息","item":"查看个人信息","business_value":"中"}
-{"id":"TI-010","module_name":"个人信息","item":"修改个人信息","business_value":"中"}
-{"id":"TI-011","module_name":"个人信息","item":"修改密码","business_value":"高"}
-{"id":"TI-012","module_name":"个人信息","item":"上传头像","business_value":"中"}
-{"id":"TI-013","module_name":"权限管理","item":"权限验证","business_value":"高"}
-{"id":"TI-014","module_name":"权限管理","item":"权限分配","business_value":"高"}
-{"id":"TI-015","module_name":"账号安全","item":"双因素认证","business_value":"中"}
-{"id":"TI-016","module_name":"账号安全","item":"登录日志","business_value":"中"}
-{"id":"TI-017","module_name":"性能测试","item":"并发登录","business_value":"中"}
-{"id":"TI-018","module_name":"安全测试","item":"SQL注入防护","business_value":"高"}
-{"id":"TI-019","module_name":"安全测试","item":"XSS防护","business_value":"高"}
-{"id":"TI-020","module_name":"安全测试","item":"CSRF防护","business_value":"高"}
+{"module_id":"M01","module_name":"用户注册","test_items":[{"item":"用户注册流程","business_value":"高"},{"item":"手机号验证","business_value":"高"},{"item":"邮箱验证","business_value":"高"},{"item":"密码强度校验","business_value":"高"}],"prd":"## 用户注册\n\n用户可以通过手机号或邮箱注册账号。注册时需要填写用户名、密码、真实姓名等基本信息。系统应验证手机号和邮箱的唯一性，密码需符合安全策略（至少 8 位，包含大小写字母和数字）。注册成功后发送验证邮件或短信。"}
+{"module_id":"M02","module_name":"用户登录","test_items":[{"item":"用户登录流程","business_value":"高"},{"item":"登录失败处理","business_value":"高"},{"item":"账号锁定机制","business_value":"高"},{"item":"会话管理","business_value":"高"}],"prd":"## 用户登录\n\n支持用户名、手机号、邮箱三种方式登录。登录时验证账号密码，失败次数超过 5 次后锁定账号 30 分钟。登录成功后生成会话令牌（Token），有效期 24 小时。支持记住登录状态功能。"}
+{"module_id":"M03","module_name":"个人信息","test_items":[{"item":"查看个人信息","business_value":"中"},{"item":"修改个人信息","business_value":"中"},{"item":"修改密码","business_value":"高"},{"item":"上传头像","business_value":"中"}],"prd":"## 个人信息管理\n\n用户可以查看和编辑个人信息，包括头像、昵称、真实姓名、联系方式、地址等。修改手机号和邮箱需要验证新旧账号。支持修改密码功能，需验证原密码。"}
+{"module_id":"M04","module_name":"权限管理","test_items":[{"item":"权限验证","business_value":"高"},{"item":"权限分配","business_value":"高"}],"prd":"## 权限管理\n\n系统支持多角色权限控制，包括普通用户、管理员、超级管理员。不同角色拥有不同的功能权限。管理员可以分配和回收用户权限。所有权限变更需要记录操作日志。"}
+{"module_id":"M05","module_name":"账号安全","test_items":[{"item":"双因素认证","business_value":"中"},{"item":"登录日志","business_value":"中"}],"prd":"## 账号安全\n\n支持双因素认证（2FA），可选短信或邮箱验证码。提供登录日志查询功能，记录登录时间、IP 地址、设备信息。支持异地登录提醒。用户可以主动登出，清除会话令牌。"}
+{"module_id":"M06","module_name":"性能测试","test_items":[{"item":"并发登录","business_value":"中"}],"prd":"## 性能要求\n\n系统应支持 1000 并发用户同时在线。登录响应时间不超过 2 秒。用户信息查询响应时间不超过 1 秒。数据库查询需要建立适当索引优化性能。"}
+{"module_id":"M07","module_name":"安全测试","test_items":[{"item":"SQL注入防护","business_value":"高"},{"item":"XSS防护","business_value":"高"},{"item":"CSRF防护","business_value":"高"}],"prd":"## 安全要求\n\n密码使用 bcrypt 加密存储，加密强度不低于 10 轮。会话令牌使用 JWT，包含用户 ID 和过期时间。所有敏感数据传输使用 HTTPS 加密。防止 SQL 注入、XSS 攻击、CSRF 攻击。"}
