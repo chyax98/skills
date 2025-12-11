@@ -36,10 +36,14 @@
   // === 图标字段 ===
   "mark": "flag",             // 标记图标（语义化名称）
   "expression": "happy",      // 表情图标（语义化名称）
+  "flag": "flag-red",         // 彩色旗帜图标
+  "star_icon": "star-blue",   // 彩色星星图标
+  "avatar": "avatar-green",   // 彩色头像图标
+  "month": "jan",             // 月份图标
+  "week": "mon",              // 星期图标
 
-  // === 代码块 ===
-  "code": "print('hello')",   // 代码内容
-  "lang": "python"            // 语言（默认 python）
+  // === 公式 ===
+  "formula": "E=mc^2"         // LaTeX 公式
 }
 ```
 
@@ -79,19 +83,24 @@
 | `note` | string | - | 备注内容 |
 | `link` | string | - | 超链接 URL |
 
-### 代码块字段
+### 公式字段
 
-| 字段 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `code` | string | - | 代码内容（存在此字段时节点显示代码块） |
-| `lang` | string | `"python"` | 编程语言 |
-
-支持的语言：`python`, `javascript`, `typescript`, `java`, `c`, `cpp`, `go`, `rust`, `sql`, `bash`, `json`, `yaml`, `markdown`, `html`, `css` 等
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `formula` | string | LaTeX 公式（存在此字段时节点显示公式） |
 
 **示例**：
 ```jsonl
-{"id":5,"pid":1,"text":"快速排序","code":"def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[0]\n    return quicksort([x for x in arr[1:] if x < pivot]) + [pivot] + quicksort([x for x in arr[1:] if x >= pivot])","lang":"python"}
+{"id":2,"pid":1,"text":"质能方程","formula":"E=mc^2"}
+{"id":3,"pid":1,"text":"求和公式","formula":"\\sum_{i=1}^{n}i=\\frac{n(n+1)}{2}"}
+{"id":4,"pid":1,"text":"方程组","formula":"\\begin{cases}x+y=10\\\\x-y=2\\end{cases}"}
+{"id":5,"pid":1,"text":"积分","formula":"\\int_{0}^{\\infty}e^{-x^2}dx=\\frac{\\sqrt{\\pi}}{2}"}
 ```
+
+**注意**：
+- 使用标准 LaTeX 语法
+- JSON 中反斜杠需要转义（`\\` 表示 `\`）
+- `text` 字段用于搜索和备用显示
 
 ### 标记图标 (mark)
 
@@ -130,6 +139,7 @@
 **其他**：
 - `trophy` 🏆 | `diamond` 💎 | `money` 💰
 - `woman` 👩 | `man` 👨 | `music` 🎵 | `mic` 🎤 | `headset` 🎧
+- `lightbulb` 💡 | `pencil` ✏️ | `gift` 🎁 | `alert` ⚠️ | `fire` 🔥
 
 ### 表情图标 (expression)
 
@@ -139,6 +149,40 @@
 - `sad` 😢 伤心
 - `tongue` 😛 吐舌头
 - `cry` 😭 大哭
+- `awkward` 😬 尴尬/紧张
+
+### 旗帜图标 (flag)
+
+彩色旗帜，用于分类标记：
+- `flag-red` 🚩 红色 | `flag-orange` 橙色 | `flag-blue` 蓝色
+- `flag-green` 绿色 | `flag-purple` 紫色 | `flag-cyan` 青色
+- `flag-peach` 桃红 | `flag-lime` 黄绿 | `flag-teal` 蓝绿 | `flag-light-blue` 浅蓝
+
+### 彩色星星图标 (star_icon)
+
+彩色五角星，用于重要性标记：
+- `star-coral` 珊瑚红 | `star-orange` 橙色 | `star-blue` 蓝色
+- `star-green` 绿色 | `star-purple` 紫色 | `star-cyan` 青色
+- `star-peach` 桃色 | `star-lime` 黄绿 | `star-turquoise` 青绿 | `star-light-blue` 浅蓝
+
+### 头像图标 (avatar)
+
+彩色人物头像，用于人员标记：
+- `avatar-coral` 珊瑚红 | `avatar-orange` 橙色 | `avatar-blue` 蓝色
+- `avatar-green` 绿色 | `avatar-purple` 紫色 | `avatar-cyan` 青色
+- `avatar-peach` 桃色 | `avatar-lime` 黄绿 | `avatar-teal` 蓝绿 | `avatar-slate-blue` 石蓝
+
+### 月份图标 (month)
+
+**中文（默认）**：`jan`, `feb`, `mar`, `apr`, `may`, `jun`, `jul`, `aug`, `sep`, `oct`, `nov`, `dec`
+
+**英文**：`jan-en`, `feb-en`, `mar-en`, `apr-en`, `may-en`, `jun-en`, `jul-en`, `aug-en`, `sep-en`, `oct-en`, `nov-en`, `dec-en`
+
+### 星期图标 (week)
+
+**中文（默认）**：`mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`
+
+**英文**：`mon-en`, `tue-en`, `wed-en`, `thu-en`, `fri-en`, `sat-en`, `sun-en`
 
 ## 全局配置
 
@@ -163,15 +207,13 @@
 {"id":2,"pid":1,"text":"变量与数据类型","star":5,"progress":9,"expression":"happy"}
 {"id":3,"pid":1,"text":"控制流程","star":4,"progress":7,"mark":"check"}
 {"id":4,"pid":1,"text":"函数","star":5,"progress":5,"note":"重点掌握闭包和装饰器","mark":"star"}
-{"id":5,"pid":1,"text":"装饰器示例","code":"def timer(func):\n    def wrapper(*args):\n        import time\n        start = time.time()\n        result = func(*args)\n        print(f'{func.__name__} took {time.time()-start:.2f}s')\n        return result\n    return wrapper","lang":"python"}
-{"id":6,"pid":0,"text":"面向对象","priority":2,"mark":"target"}
-{"id":7,"pid":6,"text":"类与对象","todo":"done","mark":"check-circle"}
-{"id":8,"pid":6,"text":"继承与多态","todo":"undone","mark":"clock"}
-{"id":9,"pid":6,"text":"魔术方法","todo":"undone","note":"__init__, __str__, __repr__等","mark":"warning"}
-{"id":10,"pid":0,"text":"进阶主题","priority":3,"mark":"trophy"}
-{"id":11,"pid":10,"text":"异步编程","link":"https://docs.python.org/3/library/asyncio.html","mark":"chart"}
-{"id":12,"pid":10,"text":"async 示例","code":"import asyncio\n\nasync def fetch_data():\n    await asyncio.sleep(1)\n    return 'data'\n\nasyncio.run(fetch_data())","lang":"python"}
-{"id":13,"pid":10,"text":"元编程","star":3,"expression":"cool"}
+{"id":5,"pid":0,"text":"面向对象","priority":2,"mark":"target"}
+{"id":6,"pid":5,"text":"类与对象","todo":"done","mark":"check-circle"}
+{"id":7,"pid":5,"text":"继承与多态","todo":"undone","mark":"clock"}
+{"id":8,"pid":5,"text":"魔术方法","todo":"undone","note":"__init__, __str__, __repr__等","mark":"warning"}
+{"id":9,"pid":0,"text":"进阶主题","priority":3,"mark":"trophy"}
+{"id":10,"pid":9,"text":"异步编程","link":"https://docs.python.org/3/library/asyncio.html","mark":"chart"}
+{"id":11,"pid":9,"text":"元编程","star":3,"expression":"cool"}
 ```
 
 ## 字段值映射（内部）
@@ -180,8 +222,14 @@
 
 | DSL 字段 | DSL 值 | 知犀内部值 |
 |---------|--------|-----------|
-| `priority` | 1-10 | 11-20 (+10) |
+| `priority` | 1-20 | 11-30 (+10) |
 | `star` | 1-10 | 1-10 (不变) |
 | `progress` | 1-9 | 1-9 (不变) |
-| `mark` | 语义化名称 | 25-64 (映射表) |
-| `expression` | 语义化名称 | 1-7 (映射表) |
+| `mark` | 语义化名称 | 25-69 (映射表) |
+| `expression` | 语义化名称 | 1-8 (映射表) |
+| `flag` | 语义化名称 | 1-10 (映射表) |
+| `star_icon` | 语义化名称 | 1-10 (映射表) |
+| `avatar` | 语义化名称 | 1-10 (映射表) |
+| `month` | 语义化名称 | 1-24 (映射表) |
+| `week` | 语义化名称 | 1-14 (映射表) |
+| `formula` | LaTeX 字符串 | Quill Delta 格式 |

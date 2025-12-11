@@ -19,7 +19,7 @@ def gen_id() -> str:
 
 # ============ 图标映射表 ============
 
-# mark 图标：DSL 使用语义化名称，映射到知犀的 25-64 数值
+# mark 图标：DSL 使用语义化名称，映射到知犀的 25-69 数值
 MARK_MAP = {
     # 收藏/评价类
     "star": 25,           # ⭐ 黄色星星
@@ -72,9 +72,16 @@ MARK_MAP = {
     "music": 62,          # 🎵 音乐
     "mic": 63,            # 🎤 麦克风
     "headset": 64,        # 🎧 耳机
+
+    # 新增 (65-69)
+    "lightbulb": 65,      # 💡 灯泡/想法
+    "pencil": 66,         # ✏️ 铅笔/编辑
+    "gift": 67,           # 🎁 礼物
+    "alert": 68,          # ⚠️ 警告三角
+    "fire": 69,           # 🔥 火焰/热门
 }
 
-# expression 表情图标：DSL 使用语义化名称
+# expression 表情图标：DSL 使用语义化名称 (1-8, 6 不存在)
 EXPRESSION_MAP = {
     "cool": 1,      # 😎 墨镜酷
     "smile": 2,     # 🙂 微笑
@@ -82,6 +89,71 @@ EXPRESSION_MAP = {
     "sad": 4,       # 😢 伤心
     "tongue": 5,    # 😛 吐舌头
     "cry": 7,       # 😭 大哭
+    "awkward": 8,   # 😬 尴尬/紧张
+}
+
+# flag 旗帜图标：彩色旗帜 (1-10)
+FLAG_MAP = {
+    "flag-red": 1,        # 🚩 红色旗帜
+    "flag-orange": 2,     # 🟠 橙色旗帜
+    "flag-blue": 3,       # 🔵 蓝色旗帜
+    "flag-green": 4,      # 🟢 绿色旗帜
+    "flag-purple": 5,     # 🟣 紫色旗帜
+    "flag-cyan": 6,       # 青色旗帜
+    "flag-peach": 7,      # 桃红旗帜
+    "flag-lime": 8,       # 黄绿旗帜
+    "flag-teal": 9,       # 蓝绿旗帜
+    "flag-light-blue": 10,  # 浅蓝旗帜
+}
+
+# star 五角星图标：彩色星星 (1-10)
+STAR_ICON_MAP = {
+    "star-coral": 1,      # 珊瑚红星星
+    "star-orange": 2,     # 橙色星星
+    "star-blue": 3,       # 蓝色星星
+    "star-green": 4,      # 绿色星星
+    "star-purple": 5,     # 紫色星星
+    "star-cyan": 6,       # 青色星星
+    "star-peach": 7,      # 桃色星星
+    "star-lime": 8,       # 黄绿星星
+    "star-turquoise": 9,  # 青绿星星
+    "star-light-blue": 10,  # 浅蓝星星
+}
+
+# avatar 头像图标：彩色头像 (1-10)
+AVATAR_MAP = {
+    "avatar-coral": 1,       # 珊瑚红头像
+    "avatar-orange": 2,      # 橙色头像
+    "avatar-blue": 3,        # 蓝色头像
+    "avatar-green": 4,       # 绿色头像
+    "avatar-purple": 5,      # 紫色头像
+    "avatar-cyan": 6,        # 青色头像
+    "avatar-peach": 7,       # 桃色头像
+    "avatar-lime": 8,        # 黄绿头像
+    "avatar-teal": 9,        # 蓝绿头像
+    "avatar-slate-blue": 10,  # 石蓝头像
+}
+
+# month 月份图标 (1-24)
+MONTH_MAP = {
+    # 中文月份（默认）→ 知犀 13-24
+    "jan": 13, "feb": 14, "mar": 15, "apr": 16,
+    "may": 17, "jun": 18, "jul": 19, "aug": 20,
+    "sep": 21, "oct": 22, "nov": 23, "dec": 24,
+    # 英文月份 → 知犀 1-12
+    "jan-en": 1, "feb-en": 2, "mar-en": 3, "apr-en": 4,
+    "may-en": 5, "jun-en": 6, "jul-en": 7, "aug-en": 8,
+    "sep-en": 9, "oct-en": 10, "nov-en": 11, "dec-en": 12,
+}
+
+# week 星期图标 (1-14)
+WEEK_MAP = {
+    # 中文星期（默认）→ 知犀 8-14
+    "mon": 8, "tue": 9, "wed": 10, "thu": 11,
+    "fri": 12, "sat": 13, "sun": 14,
+    # 英文星期 → 知犀 1-7
+    "mon-en": 1, "tue-en": 2, "wed-en": 3, "thu-en": 4,
+    "fri-en": 5, "sat-en": 6, "sun-en": 7,
 }
 
 
@@ -97,27 +169,24 @@ class NodeStyle:
 
 
 @dataclass
-class CodeBlock:
-    """代码块"""
-    code: str                            # 代码内容
-    lang: str = "python"                 # 语言
-    theme: str = "light-plus"            # 主题: light-plus, dark-plus
-    show_line_number: bool = True        # 显示行号
-    auto_wrap: bool = True               # 自动换行
-
-
-@dataclass
 class NodeContent:
     text: str
     note: Optional[str] = None           # 备注
     link: Optional[str] = None           # 超链接
-    priority: Optional[int] = None       # 优先级图标 (1-10)
+    priority: Optional[int] = None       # 优先级图标 (1-20)
     star: Optional[int] = None           # 星级评分 (1-10)
     progress: Optional[int] = None       # 进度条 (1-9)
     todo: Optional[str] = None           # 待办状态 ("done" / "undone")
     mark: Optional[str] = None           # 标记图标 (语义化名称，见 MARK_MAP)
     expression: Optional[str] = None     # 表情图标 (语义化名称，见 EXPRESSION_MAP)
-    code_block: Optional[CodeBlock] = None  # 代码块
+    # 图标类型
+    flag: Optional[str] = None           # 旗帜图标 (语义化名称，见 FLAG_MAP)
+    star_icon: Optional[str] = None      # 彩色星星图标 (语义化名称，见 STAR_ICON_MAP)
+    avatar: Optional[str] = None         # 头像图标 (语义化名称，见 AVATAR_MAP)
+    month: Optional[str] = None          # 月份图标 (语义化名称，见 MONTH_MAP)
+    week: Optional[str] = None           # 星期图标 (语义化名称，见 WEEK_MAP)
+    # 公式
+    formula: Optional[str] = None        # LaTeX 公式
 
 
 @dataclass
@@ -196,21 +265,45 @@ class MindNode:
             if expr_value:
                 data["expression"] = expr_value
 
-        # 代码块
-        if self.content.code_block is not None:
-            cb = self.content.code_block
-            data["code"] = {
-                "resourceId": gen_id(),  # 知犀需要一个 resourceId，但没有预览图时可以随机生成
-                "content": {
-                    "code": cb.code,
-                    "theme": cb.theme,
-                    "lang": cb.lang,
-                    "options": {
-                        "autoWrap": cb.auto_wrap,
-                        "showLineNumber": cb.show_line_number
-                    }
-                },
-                "name": ""
+        # 旗帜图标 (DSL 语义化名称 → 知犀数值)
+        if self.content.flag is not None:
+            flag_value = FLAG_MAP.get(self.content.flag)
+            if flag_value:
+                data["flag"] = flag_value
+
+        # 彩色星星图标 (DSL 语义化名称 → 知犀数值)
+        if self.content.star_icon is not None:
+            star_icon_value = STAR_ICON_MAP.get(self.content.star_icon)
+            if star_icon_value:
+                data["starIcon"] = star_icon_value
+
+        # 头像图标 (DSL 语义化名称 → 知犀数值)
+        if self.content.avatar is not None:
+            avatar_value = AVATAR_MAP.get(self.content.avatar)
+            if avatar_value:
+                data["avatar"] = avatar_value
+
+        # 月份图标 (DSL 语义化名称 → 知犀数值)
+        if self.content.month is not None:
+            month_value = MONTH_MAP.get(self.content.month)
+            if month_value:
+                data["month"] = month_value
+
+        # 星期图标 (DSL 语义化名称 → 知犀数值)
+        if self.content.week is not None:
+            week_value = WEEK_MAP.get(self.content.week)
+            if week_value:
+                data["week"] = week_value
+
+        # 公式 (LaTeX)：修改 richText 以嵌入公式
+        if self.content.formula is not None:
+            # 知犀公式节点的 text 必须是 "\n"
+            data["text"] = "\n"
+            data["richText"] = {
+                "ops": [
+                    {"insert": {"formula": self.content.formula}},
+                    {"insert": "\n"}
+                ]
             }
 
         # 构建节点
@@ -248,6 +341,36 @@ class MindMapConfig:
         return result
 
 
+# ============ 文本校验 ============
+
+def validate_text(text: str, field_name: str = "text") -> str:
+    """校验文本，检测并清理乱码字符"""
+    if not text:
+        return text
+
+    # 检测常见乱码模式（Unicode 替换字符）
+    if '\ufffd' in text:
+        print(f"⚠️ 警告: {field_name} 字段包含乱码字符 (U+FFFD)，已清理")
+        text = text.replace('\ufffd', '')
+
+    # 检测其他可能的乱码模式
+    # 连续的高位 Unicode 私用区字符可能是乱码
+    cleaned = []
+    prev_was_invalid = False
+    for char in text:
+        code = ord(char)
+        # 跳过私用区字符 (U+E000-U+F8FF) 和无效字符
+        if 0xE000 <= code <= 0xF8FF:
+            if not prev_was_invalid:
+                print(f"⚠️ 警告: {field_name} 字段包含私用区字符，已清理")
+            prev_was_invalid = True
+            continue
+        prev_was_invalid = False
+        cleaned.append(char)
+
+    return ''.join(cleaned)
+
+
 # ============ JSONL 解析器 ============
 
 def parse_jsonl(jsonl_content: str) -> tuple[MindMapConfig, MindNode]:
@@ -280,21 +403,13 @@ def parse_jsonl(jsonl_content: str) -> tuple[MindMapConfig, MindNode]:
     for data in nodes_data:
         node_id = data['id']
 
-        # 解析代码块
-        code_block = None
-        if 'code' in data:
-            code_block = CodeBlock(
-                code=data['code'],
-                lang=data.get('lang', 'python'),
-                theme=data.get('code_theme', 'light-plus'),
-                show_line_number=data.get('show_line_number', True),
-                auto_wrap=data.get('auto_wrap', True),
-            )
+        # 解析内容（校验文本字段）
+        raw_text = data.get('text', '')
+        raw_note = data.get('note')
 
-        # 解析内容
         content = NodeContent(
-            text=data.get('text', ''),
-            note=data.get('note'),
+            text=validate_text(raw_text, f"节点{node_id}.text"),
+            note=validate_text(raw_note, f"节点{node_id}.note") if raw_note else None,
             link=data.get('link'),
             priority=data.get('priority'),
             star=data.get('star'),
@@ -302,7 +417,14 @@ def parse_jsonl(jsonl_content: str) -> tuple[MindMapConfig, MindNode]:
             todo=data.get('todo'),
             mark=data.get('mark'),
             expression=data.get('expression'),
-            code_block=code_block,
+            # 图标类型
+            flag=data.get('flag'),
+            star_icon=data.get('star_icon'),
+            avatar=data.get('avatar'),
+            month=data.get('month'),
+            week=data.get('week'),
+            # 公式
+            formula=data.get('formula'),
         )
 
         # 解析样式
@@ -387,7 +509,7 @@ class ZXMGenerator:
             metadata = json.dumps(self._generate_metadata_json(), ensure_ascii=False)
             zf.writestr('metadata.json', metadata)
 
-            manifest = json.dumps(self._generate_manifest_json())
+            manifest = json.dumps(self._generate_manifest_json(), ensure_ascii=False)
             zf.writestr('manifest.json', manifest)
 
             zf.writestr('resources/.keep', '')
@@ -423,40 +545,23 @@ def generate_zxm_from_file(jsonl_file: str, output_path: str) -> str:
 # ============ 测试 ============
 
 if __name__ == "__main__":
-    # 测试 JSONL 解析和生成（含代码块）
-    # DSL 使用直觉友好的值：
-    # - priority: 1-10 → 知犀 11-20
-    # - mark: 语义化名称 → 知犀 25-64
-    # - expression: 语义化名称 → 知犀 1-7
-    # - code: 代码内容，lang: 语言
+    # 测试 JSONL 解析和生成
     test_jsonl = '''
 {"id":"_config","theme":"ai-classical1","template":"right"}
 {"id":0,"text":"Python 学习路线","bg":"#4A90D9","fc":"#FFFFFF","fs":18,"bold":true}
 {"id":1,"pid":0,"text":"基础语法","priority":1,"mark":"flag"}
-{"id":2,"pid":1,"text":"Hello World","code":"print(\\"Hello, World!\\")","lang":"python"}
-{"id":3,"pid":1,"text":"变量定义","code":"name = \\"Python\\"\\nversion = 3.12\\nprint(f\\"{name} {version}\\")","lang":"python"}
-{"id":4,"pid":0,"text":"函数","priority":2,"mark":"target"}
-{"id":5,"pid":4,"text":"装饰器示例","code":"def timer(func):\\n    def wrapper(*args):\\n        import time\\n        start = time.time()\\n        result = func(*args)\\n        print(f\\"耗时: {time.time()-start:.2f}s\\")\\n        return result\\n    return wrapper","lang":"python"}
-{"id":6,"pid":0,"text":"异步编程","priority":3,"mark":"trophy"}
-{"id":7,"pid":6,"text":"async/await","code":"import asyncio\\n\\nasync def main():\\n    await asyncio.sleep(1)\\n    print(\\"Done!\\")\\n\\nasyncio.run(main())","lang":"python"}
+{"id":2,"pid":1,"text":"变量与数据类型","star":5,"progress":9}
+{"id":3,"pid":1,"text":"函数","note":"重点：闭包、装饰器","mark":"star"}
+{"id":4,"pid":0,"text":"面向对象","priority":2,"mark":"target"}
+{"id":5,"pid":4,"text":"类与对象","todo":"done","mark":"check-circle"}
+{"id":6,"pid":4,"text":"继承多态","todo":"undone","mark":"clock"}
+{"id":7,"pid":0,"text":"数学基础","priority":3,"mark":"lightbulb"}
+{"id":8,"pid":7,"text":"时间复杂度","formula":"O(n\\\\log n)"}
+{"id":9,"pid":7,"text":"求和公式","formula":"\\\\sum_{i=1}^{n}i=\\\\frac{n(n+1)}{2}"}
 '''
 
     output = generate_zxm_from_jsonl(
         test_jsonl,
-        "/tmp/test_code_block.zxm"
+        "/tmp/test_zxm.zxm"
     )
-
-    # 验证生成的内容
-    print("\n=== 验证生成内容 ===")
-    with zipfile.ZipFile(output, 'r') as zf:
-        content = json.loads(zf.read('content.json'))
-        # 检查是否有 code 字段
-        def find_code(node):
-            data = node.get('data', {})
-            if 'code' in data:
-                print(f"✅ 找到代码块: {data.get('text', '')[:20]}")
-                print(f"   语言: {data['code']['content']['lang']}")
-                print(f"   代码: {data['code']['content']['code'][:50]}...")
-            for child in node.get('children', {}).get('normal', []):
-                find_code(child)
-        find_code(content['contents'][0]['root'])
+    print(f"\n测试文件已生成: {output}")
