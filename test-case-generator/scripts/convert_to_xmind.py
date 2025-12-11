@@ -95,9 +95,8 @@ def build_case_node(parent_topic, case: Dict):
     └── 备注
     """
     # 用例节点
-    case_id = case.get('id', '')
     name = case.get('name', '')
-    title = f"{case_id} {name}".strip()
+    title = name
 
     case_topic = parent_topic.addSubTopic()
     case_topic.setTitle(title)
@@ -107,9 +106,6 @@ def build_case_node(parent_topic, case: Dict):
     if priority in PRIORITY_MAP:
         case_topic.addMarker(PRIORITY_MAP[priority])
 
-    # 反向用例标记
-    if case.get('is_negative'):
-        case_topic.addMarker('symbol-wrong')
 
     # 测试项
     test_type = case.get('test_type')

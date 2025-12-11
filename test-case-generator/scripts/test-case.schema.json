@@ -8,7 +8,8 @@
     "id",
     "name",
     "module_name",
-    "test_point_name",
+    "test_item",
+    "scenario_type",
     "priority",
     "test_type",
     "is_negative",
@@ -18,26 +19,31 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^TC-[0-9]{3,4}$",
-      "description": "用例 ID，格式：TC-序号，例如：TC-001、TC-0012"
+      "pattern": "^M[0-9]{2}-[0-9]{3}$",
+      "description": "用例 ID，格式：{module_id}-{seq:03d}，例如：M01-001"
     },
     "name": {
       "type": "string",
       "minLength": 1,
       "maxLength": 100,
-      "description": "用例名称，按主谓宾格式表达，例如：验证用户成功登录系统"
+      "description": "用例名称，主谓宾格式，以"验证"开头，例如：验证用户成功登录系统"
     },
     "module_name": {
       "type": "string",
       "minLength": 1,
       "maxLength": 15,
-      "description": "测试项（被测对象/模块），简洁表达，例如：用户登录、订单管理"
+      "description": "功能模块，≤15 字符，例如：用户登录、订单管理"
     },
-    "test_point_name": {
+    "test_item": {
       "type": "string",
       "minLength": 1,
       "maxLength": 50,
-      "description": "测试场景，例如：正常登录流程、密码错误处理"
+      "description": "所属测试项，对应 TestItem.item"
+    },
+    "scenario_type": {
+      "type": "string",
+      "enum": ["正向场景", "边界场景", "异常场景", "性能场景", "安全场景"],
+      "description": "场景类型"
     },
     "priority": {
       "type": "string",

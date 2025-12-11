@@ -5,12 +5,13 @@ JSONL 格式验证工具
 功能：
 1. 验证 JSONL 文件的 JSON 语法
 2. 验证是否符合 JSON Schema
-3. 验证业务规则（ID 唯一性、关联完整性）
+3. 验证业务规则（ID 唯一性、格式规范、内容质量）
 
 用法：
-    python validate_jsonl.py test-points.jsonl
+    python validate_jsonl.py test-items.jsonl
     python validate_jsonl.py cases.jsonl
     python validate_jsonl.py cases.jsonl --strict
+    python validate_jsonl.py cases/*.jsonl --strict
     python validate_jsonl.py cases.jsonl --schema test-case.schema.json
 """
 
@@ -115,18 +116,18 @@ def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_pat
 
         # 检查文件名判断类型
         file_name = file_path.name.lower()
-        if 'test-point' in file_name or 'testpoint' in file_name:
-            schema_path = script_dir / 'test-point.schema.json'
+        if 'test-item' in file_name or 'testitem' in file_name:
+            schema_path = script_dir / 'test-item.schema.json'
         elif 'case' in file_name:
             schema_path = script_dir / 'test-case.schema.json'
         else:
             # 尝试从第一个对象推断
             if objects:
                 _, first_obj = objects[0]
-                if 'test_point_name' in first_obj and 'steps' in first_obj:
+                if 'module_id' in first_obj and 'test_items' in first_obj:
+                    schema_path = script_dir / 'test-item.schema.json'
+                elif 'test_item' in first_obj and 'scenario_type' in first_obj:
                     schema_path = script_dir / 'test-case.schema.json'
-                elif 'scene' in first_obj and 'check' in first_obj:
-                    schema_path = script_dir / 'test-point.schema.json'
 
     if schema_path is None or not schema_path.exists():
         errors.append(ValidationError(
@@ -266,6 +267,46 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
                     f"用例名称 '{name}' 建议以'验证'开头（主谓宾格式）"
                 ))
 
+    # 规则 6：ID 格式检查（新格式 M01-001）
+    import re
+    module_id_pattern = re.compile(r'^M[0-9]{2}-[0-9]{3}$')
+    for line_num, obj in objects:
+        if 'id' in obj and 'scenario_type' in obj:  # 测试用例
+            case_id = obj['id']
+            if not module_id_pattern.match(case_id):
+                errors.append(ValidationError(
+                    str(file_path),
+                    line_num,
+                    "ID 格式错误",
+                    f"用例 ID '{case_id}' 格式错误，应为 {{module_id}}-{{seq:03d}}（如 M01-001）"
+                ))
+
+    # 规则 7：scenario_type 有效值检查
+    valid_scenarios = ['正向场景', '边界场景', '异常场景', '性能场景', '安全场景']
+    for line_num, obj in objects:
+        if 'scenario_type' in obj:
+            scenario = obj['scenario_type']
+            if scenario not in valid_scenarios:
+                errors.append(ValidationError(
+                    str(file_path),
+                    line_num,
+                    "场景类型错误",
+                    f"scenario_type '{scenario}' 无效，应为：{', '.join(valid_scenarios)}"
+                ))
+
+    # 规则 8：module_id 格式检查（测试项文件）
+    module_id_pattern_item = re.compile(r'^M[0-9]{2}$')
+    for line_num, obj in objects:
+        if 'module_id' in obj and 'test_items' in obj:  # 测试项
+            module_id = obj['module_id']
+            if not module_id_pattern_item.match(module_id):
+                errors.append(ValidationError(
+                    str(file_path),
+                    line_num,
+                    "module_id 格式错误",
+                    f"module_id '{module_id}' 格式错误，应为 M01-M99"
+                ))
+
     return errors, warnings
 
 
@@ -311,9 +352,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例：
-  python validate_jsonl.py test-points.jsonl
+  python validate_jsonl.py test-items.jsonl
   python validate_jsonl.py cases.jsonl
   python validate_jsonl.py cases.jsonl --strict
+  python validate_jsonl.py cases/*.jsonl --strict
   python validate_jsonl.py cases.jsonl --schema test-case.schema.json
         """
     )
