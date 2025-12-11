@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """
-DrawIO XML 结构验证脚本
+DrawIO XML 验证脚本
 用法: python validate_drawio.py <file.drawio>
+
+验证内容:
+1. XML 语法正确性
+2. 基础结构完整性 (mxfile/diagram/mxGraphModel/root)
+3. 必要属性检查 (vertex/edge, as="geometry", relative)
+4. ID 唯一性和引用完整性
+5. 样式格式规范
+6. 节点重叠检测
 """
 
 import xml.etree.ElementTree as ET
 import sys
 import re
-from pathlib import Path
+from typing import Dict, List, Set, Optional, Tuple
 
 
 class DrawIOValidator:
@@ -15,238 +23,215 @@ class DrawIOValidator:
 
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.errors = []      # 严重错误，必须修复
-        self.warnings = []    # 警告，建议修复
-        self.tree = None
-        self.root = None
-        self.nodes = {}       # id -> node info
-        self.edges = []       # edge list
+        self.errors: List[Tuple[str, str, Optional[str]]] = []   # (message, fix_hint, element_id)
+        self.warnings: List[Tuple[str, str, Optional[str]]] = []
+        self.tree: Optional[ET.ElementTree] = None
+        self.root: Optional[ET.Element] = None
+        self.all_ids: Set[str] = set()
+        self.nodes: Dict[str, dict] = {}
+        self.edges: List[dict] = []
+        self.page_count: int = 0
+
+    def _error(self, msg: str, fix: str, elem_id: str = None):
+        self.errors.append((msg, fix, elem_id))
+
+    def _warn(self, msg: str, fix: str, elem_id: str = None):
+        self.warnings.append((msg, fix, elem_id))
 
     def validate(self) -> bool:
-        """执行全部验证，返回是否通过"""
-        print(f"🔍 验证文件: {self.filepath}\n")
+        """执行验证，返回是否通过"""
+        print(f"🔍 验证: {self.filepath}\n")
 
-        # 1. 解析 XML
         if not self._parse_xml():
+            self._print_results()
             return False
 
-        # 2. 结构验证
         self._validate_structure()
-
-        # 3. 节点验证
+        self._collect_elements()
         self._validate_nodes()
-
-        # 4. 连线验证
         self._validate_edges()
-
-        # 5. 样式验证
         self._validate_styles()
-
-        # 输出结果
+        self._check_overlapping()
         self._print_results()
 
         return len(self.errors) == 0
 
     def _parse_xml(self) -> bool:
-        """解析 XML 文件"""
         try:
             self.tree = ET.parse(self.filepath)
             self.root = self.tree.getroot()
-            print("✅ XML 语法正确")
             return True
         except ET.ParseError as e:
-            self.errors.append(f"XML 解析失败: {e}")
+            self._error(f"XML 解析失败: {e}", "检查标签闭合和特殊字符转义")
             return False
         except FileNotFoundError:
-            self.errors.append(f"文件不存在: {self.filepath}")
+            self._error(f"文件不存在", "检查文件路径")
             return False
 
     def _validate_structure(self):
-        """验证基础结构"""
-        # 检查根元素
         if self.root.tag != 'mxfile':
-            self.errors.append("根元素必须是 <mxfile>")
+            self._error("根元素必须是 <mxfile>", "修改根元素标签")
             return
 
-        # 检查 diagram
-        diagram = self.root.find('diagram')
-        if diagram is None:
-            self.errors.append("缺少 <diagram> 元素")
+        diagrams = self.root.findall('diagram')
+        if not diagrams:
+            self._error("缺少 <diagram>", "添加 <diagram name='...' id='...'>")
             return
 
-        # 检查 mxGraphModel
-        model = diagram.find('mxGraphModel')
-        if model is None:
-            self.errors.append("缺少 <mxGraphModel> 元素")
-            return
+        self.page_count = len(diagrams)
 
-        # 检查 root
-        root_elem = model.find('root')
-        if root_elem is None:
-            self.errors.append("缺少 <root> 元素")
-            return
+        for i, diagram in enumerate(diagrams):
+            diagram_id = diagram.get('id', f'diagram_{i}')
 
-        # 检查必须的 id="0" 和 id="1"
-        cells = root_elem.findall('mxCell')
-        ids = [cell.get('id') for cell in cells]
+            if not diagram.get('name'):
+                self._warn("<diagram> 缺少 name", "添加 name='页面名称'", diagram_id)
+            if not diagram.get('id'):
+                self._warn("<diagram> 缺少 id", "添加 id='唯一标识'")
 
-        if '0' not in ids:
-            self.errors.append("缺少 id='0' 的根节点")
-        if '1' not in ids:
-            self.errors.append("缺少 id='1' 的默认图层")
+            model = diagram.find('mxGraphModel')
+            if model is None:
+                self._error("缺少 <mxGraphModel>", "在 <diagram> 内添加 <mxGraphModel>", diagram_id)
+                continue
 
-        print("✅ 基础结构完整")
+            root_elem = model.find('root')
+            if root_elem is None:
+                self._error("缺少 <root>", "在 <mxGraphModel> 内添加 <root>", diagram_id)
+                continue
+
+            ids = [c.get('id') for c in root_elem.findall('mxCell')]
+            if '0' not in ids:
+                self._error("缺少 id='0' 根节点", "添加 <mxCell id='0'/>")
+            if '1' not in ids:
+                self._error("缺少 id='1' 默认图层", "添加 <mxCell id='1' parent='0'/>")
+
+    def _collect_elements(self):
+        for cell in self.root.findall('.//mxCell'):
+            cell_id = cell.get('id')
+            if cell_id:
+                self.all_ids.add(cell_id)
 
     def _validate_nodes(self):
-        """验证所有节点"""
-        root_elem = self.root.find('.//root')
-        if root_elem is None:
-            return
-
-        all_ids = set()
-        canvas_width = int(self.root.find('.//mxGraphModel').get('dx', 800))
-        canvas_height = int(self.root.find('.//mxGraphModel').get('dy', 600))
-
-        for cell in root_elem.findall('mxCell'):
+        for cell in self.root.findall('.//mxCell'):
             cell_id = cell.get('id')
-
-            # ID 唯一性检查
-            if cell_id in all_ids:
-                self.errors.append(f"重复的 ID: {cell_id}")
-            all_ids.add(cell_id)
-
-            # 跳过根节点
-            if cell_id in ['0', '1']:
+            if cell_id in ['0', '1'] or cell.get('parent') == '0':
                 continue
 
-            # 节点 (vertex)
-            if cell.get('vertex') == '1':
-                geom = cell.find('mxGeometry')
-                if geom is None:
-                    self.errors.append(f"节点 {cell_id} 缺少 <mxGeometry>")
-                    continue
+            is_vertex = cell.get('vertex') == '1'
+            is_edge = cell.get('edge') == '1'
+            has_style = cell.get('style') is not None
 
-                # 检查 as="geometry"
-                if geom.get('as') != 'geometry':
-                    self.errors.append(f"节点 {cell_id} 的 mxGeometry 缺少 as='geometry'")
+            if has_style and not is_vertex and not is_edge:
+                if cell.get('parent') != '0':
+                    self._warn("有 style 但缺少 vertex/edge 属性", "添加 vertex='1' 或 edge='1'", cell_id)
 
-                # 坐标检查
-                x = float(geom.get('x', 0))
-                y = float(geom.get('y', 0))
-                w = float(geom.get('width', 0))
-                h = float(geom.get('height', 0))
+            if is_vertex:
+                self._validate_vertex(cell, cell_id)
+            elif is_edge:
+                self._validate_edge_cell(cell, cell_id)
 
-                # 存储节点信息
-                self.nodes[cell_id] = {'x': x, 'y': y, 'width': w, 'height': h}
+    def _validate_vertex(self, cell: ET.Element, cell_id: str):
+        geom = cell.find('mxGeometry')
+        if geom is None:
+            self._error("节点缺少 <mxGeometry>", "添加 <mxGeometry x='' y='' width='' height='' as='geometry'/>", cell_id)
+            return
 
-                # 边界检查（相对坐标的子节点跳过）
-                parent = cell.get('parent')
-                if parent == '1':  # 只检查顶层节点
-                    if x < 0 or y < 0:
-                        self.warnings.append(f"节点 {cell_id} 坐标为负: ({x}, {y})")
-                    if x + w > canvas_width + 100:  # 允许一定误差
-                        self.warnings.append(f"节点 {cell_id} 超出画布右边界: x={x+w}")
-                    if y + h > canvas_height + 100:
-                        self.warnings.append(f"节点 {cell_id} 超出画布下边界: y={y+h}")
+        if geom.get('as') != 'geometry':
+            self._error("mxGeometry 缺少 as='geometry'", "添加 as='geometry'", cell_id)
 
-            # 连线 (edge)
-            elif cell.get('edge') == '1':
-                source = cell.get('source')
-                target = cell.get('target')
-                self.edges.append({
-                    'id': cell_id,
-                    'source': source,
-                    'target': target,
-                    'style': cell.get('style', '')
-                })
+        parent = cell.get('parent')
+        if parent and parent not in self.all_ids:
+            self._error(f"parent='{parent}' 不存在", f"改为 '1' 或创建 id='{parent}'", cell_id)
 
-                # 检查 geometry
-                geom = cell.find('mxGeometry')
-                if geom is not None and geom.get('as') != 'geometry':
-                    self.errors.append(f"连线 {cell_id} 的 mxGeometry 缺少 as='geometry'")
+        x, y = float(geom.get('x', 0)), float(geom.get('y', 0))
+        w, h = float(geom.get('width', 0)), float(geom.get('height', 0))
+        self.nodes[cell_id] = {'x': x, 'y': y, 'width': w, 'height': h, 'parent': parent}
 
-        print(f"✅ 发现 {len(self.nodes)} 个节点, {len(self.edges)} 条连线")
+        if w <= 0 or h <= 0:
+            self._warn(f"尺寸无效: {w}x{h}", "设置正数 width/height", cell_id)
+
+    def _validate_edge_cell(self, cell: ET.Element, cell_id: str):
+        self.edges.append({
+            'id': cell_id,
+            'source': cell.get('source'),
+            'target': cell.get('target')
+        })
+
+        geom = cell.find('mxGeometry')
+        if geom is not None:
+            if geom.get('as') != 'geometry':
+                self._error("连线 mxGeometry 缺少 as='geometry'", "添加 as='geometry'", cell_id)
+            if geom.get('relative') != '1':
+                self._error("连线 mxGeometry 缺少 relative='1'", "添加 relative='1'", cell_id)
+
+        parent = cell.get('parent')
+        if parent and parent not in self.all_ids:
+            self._error(f"parent='{parent}' 不存在", "改为 '1'", cell_id)
 
     def _validate_edges(self):
-        """验证连线"""
         for edge in self.edges:
-            source = edge['source']
-            target = edge['target']
-
-            # 检查 source/target 是否存在
-            if source and source not in self.nodes and source not in ['0', '1']:
-                self.errors.append(f"连线 {edge['id']} 的 source='{source}' 不存在")
-            if target and target not in self.nodes and target not in ['0', '1']:
-                self.errors.append(f"连线 {edge['id']} 的 target='{target}' 不存在")
+            eid, src, tgt = edge['id'], edge['source'], edge['target']
+            if src and src not in self.all_ids:
+                self._error(f"source='{src}' 不存在", f"修改 source 或创建 id='{src}'", eid)
+            if tgt and tgt not in self.all_ids:
+                self._error(f"target='{tgt}' 不存在", f"修改 target 或创建 id='{tgt}'", eid)
 
     def _validate_styles(self):
-        """验证样式格式"""
-        root_elem = self.root.find('.//root')
-        if root_elem is None:
-            return
-
-        color_pattern = re.compile(r'#[0-9a-fA-F]{6}')
-
-        for cell in root_elem.findall('mxCell'):
+        for cell in self.root.findall('.//mxCell'):
             cell_id = cell.get('id')
             style = cell.get('style', '')
-
-            if not style:
+            if not style or cell_id in ['0', '1']:
                 continue
-
-            # 检查样式末尾分号
-            if style and not style.endswith(';'):
-                self.warnings.append(f"元素 {cell_id} 的 style 末尾缺少分号")
-
-            # 检查颜色格式（建议小写）
-            colors = color_pattern.findall(style)
-            for color in colors:
-                if color != color.lower():
-                    self.warnings.append(f"元素 {cell_id} 的颜色建议使用小写: {color}")
+            if not style.endswith(';'):
+                self._warn("style 末尾缺少分号", "添加 ';'", cell_id)
 
     def _check_overlapping(self):
-        """检查节点重叠（简化版）"""
-        node_list = list(self.nodes.items())
-        for i, (id1, n1) in enumerate(node_list):
-            for id2, n2 in node_list[i+1:]:
-                # 简单矩形重叠检测
-                if (n1['x'] < n2['x'] + n2['width'] and
-                    n1['x'] + n1['width'] > n2['x'] and
-                    n1['y'] < n2['y'] + n2['height'] and
-                    n1['y'] + n1['height'] > n2['y']):
-                    self.warnings.append(f"节点 {id1} 和 {id2} 可能重叠")
+        by_parent: Dict[str, List[Tuple[str, dict]]] = {}
+        for nid, info in self.nodes.items():
+            p = info.get('parent', '1')
+            by_parent.setdefault(p, []).append((nid, info))
+
+        for nodes in by_parent.values():
+            for i, (id1, n1) in enumerate(nodes):
+                for id2, n2 in nodes[i+1:]:
+                    if (n1['x'] < n2['x'] + n2['width'] and
+                        n1['x'] + n1['width'] > n2['x'] and
+                        n1['y'] < n2['y'] + n2['height'] and
+                        n1['y'] + n1['height'] > n2['y']):
+                        self._warn(f"与 {id2} 重叠", f"调整 {id1} 或 {id2} 位置", id1)
 
     def _print_results(self):
-        """输出验证结果"""
+        if self.nodes or self.edges:
+            print(f"✅ {len(self.nodes)} 节点, {len(self.edges)} 连线, {self.page_count} 页面")
+
         print("\n" + "="*50)
 
         if self.errors:
-            print(f"\n❌ 错误 ({len(self.errors)} 个) - 必须修复:")
-            for i, err in enumerate(self.errors, 1):
-                print(f"   {i}. {err}")
+            print(f"\n❌ 错误 ({len(self.errors)}):")
+            for msg, fix, eid in self.errors:
+                e = f" [{eid}]" if eid else ""
+                print(f"  • {msg}{e}")
+                print(f"    → {fix}")
 
         if self.warnings:
-            print(f"\n⚠️  警告 ({len(self.warnings)} 个) - 建议修复:")
-            for i, warn in enumerate(self.warnings, 1):
-                print(f"   {i}. {warn}")
+            print(f"\n⚠️  警告 ({len(self.warnings)}):")
+            for msg, fix, eid in self.warnings[:10]:
+                e = f" [{eid}]" if eid else ""
+                print(f"  • {msg}{e}")
+                print(f"    → {fix}")
+            if len(self.warnings) > 10:
+                print(f"  ... 还有 {len(self.warnings) - 10} 个")
 
         print("\n" + "="*50)
-        if not self.errors:
-            print("✅ 验证通过！文件可以正常导入 DrawIO")
-        else:
-            print("❌ 验证失败，请修复以上错误")
+        print("✅ 通过" if not self.errors else "❌ 失败，请修复错误后重新验证")
 
 
 def main():
     if len(sys.argv) < 2:
-        print("用法: python validate_drawio.py <file.drawio>")
-        print("示例: python validate_drawio.py my_diagram.drawio")
+        print(__doc__)
         sys.exit(1)
 
-    filepath = sys.argv[1]
-    validator = DrawIOValidator(filepath)
-    success = validator.validate()
-    sys.exit(0 if success else 1)
+    validator = DrawIOValidator(sys.argv[1])
+    sys.exit(0 if validator.validate() else 1)
 
 
 if __name__ == '__main__':
