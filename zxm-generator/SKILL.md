@@ -97,7 +97,7 @@ license: MIT
 ### Step 3: 生成 ZXM 文件
 
 ```bash
-uv run /path/to/zxm-generator/scripts/zxm_generator.py 主题.md -o 主题.zxm
+uv run zxm_generator.py 主题.md -o 主题.zxm
 ```
 
 ### Step 4: 打开文件
