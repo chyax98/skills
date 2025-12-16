@@ -1,28 +1,64 @@
 ---
 name: zxm-generator
-description: This skill should be used when generating ZhiXi mindmap files (.zxm format). It converts AI-friendly JSONL DSL into native ZhiXi files with support for priority, star ratings, progress bars, todos, notes, hyperlinks, marks, and expressions. Trigger phrases include "生成 zxm", "知犀格式", "导出思维导图".
+description: This skill generates ZhiXi mindmap files (.zxm) from Markdown with inline decorations. Use `<<{JSON}>>` at line end for styling (colors, icons, progress, etc.). Supports learning notes, knowledge systems, project planning, concept analysis, tech architecture, and troubleshooting scenarios. Trigger phrases include "生成 zxm", "知犀导图", "思维导图文件".
 license: MIT
 ---
 
 # ZXM 思维导图生成器
 
-将 JSONL DSL 转换为知犀思维导图原生文件（.zxm）。
+将 Markdown 转换为知犀思维导图原生文件（.zxm）。
+
+**核心特性**：单文件内联装饰
+- Markdown 定义结构
+- `<<{JSON}>>` 添加装饰（可选）
+- 一个文件搞定一切
 
 ---
 
-## 环境要求
+## 通用设计原则
 
-| 依赖 | 要求 | 说明 |
-|------|------|------|
-| Python | ≥ 3.9 | 使用了类型注解语法 `dict[str, Any]` |
-| 知犀应用 | 已安装 | 用于打开 `.zxm` 文件 |
-| 外部依赖 | 无 | 仅使用标准库 |
+### Tony Buzan 法则
 
-**常见问题**：
-- **TypeError: 'type' object is not subscriptable** → Python 版本低于 3.9，请升级
-- **文件打开失败** → 确认已安装知犀思维导图应用
-- **编码错误** → 确保 JSONL 文件为 UTF-8 编码
-- **文本乱码** → 脚本会自动检测并清理乱码字符（U+FFFD），控制台会输出警告
+- 从中心向外发散，模拟放射性思维
+- 节点使用关键词/短语，避免长段落
+- 使用颜色和图标增强记忆
+- 分支层级递进，从粗到细
+
+### Miller's Law（7±2）
+
+- 工作记忆容量 5-9 个项目
+- 主分支控制在 **3-7 个**
+- 超过 7 个会增加认知负荷
+
+### 层级原则
+
+- **横向**：同级节点平行、互斥
+- **纵向**：父子节点递进、深入
+- **深度**：建议 2-5 层，避免过深
+
+---
+
+## 场景路由
+
+### Step 0: 判断场景并加载指南
+
+根据用户需求判断场景类型，**读取对应的场景指南**：
+
+| 场景 | 特征 | 加载文件 |
+|------|------|----------|
+| **学习笔记** | 学习技术、整理课程、复习备考 | `references/scenarios/learning-notes.md` |
+| **知识体系** | 领域图谱、系统梳理、知识框架 | `references/scenarios/knowledge-system.md` |
+| **项目规划** | 任务拆解、方案设计、需求分析 | `references/scenarios/project-planning.md` |
+| **概念分析** | 深度理解、技术对比、问题分析 | `references/scenarios/concept-analysis.md` |
+| **技术方案** | 架构设计、模块设计、技术选型 | `references/scenarios/tech-architecture.md` |
+| **故障排查** | 问题诊断、根因分析、排查流程 | `references/scenarios/troubleshooting.md` |
+
+**执行步骤**：
+1. 分析用户需求，判断最匹配的场景
+2. 使用 Read 工具加载对应场景文件
+3. 按场景指南中的规范生成思维导图
+
+**默认场景**：学习笔记（如无法明确判断）
 
 ---
 
@@ -30,159 +66,111 @@ license: MIT
 
 ### Step 1: 创建输出目录
 
-在**当前工作区**根据需求名称创建文件夹：
+在**当前工作目录**创建文件夹：
 
 ```
-./{需求名称}/
-├── {需求名称}.jsonl    # DSL 源文件
-└── {需求名称}.zxm      # 思维导图文件
+./{主题名称}/
+├── {主题名称}.md       # Markdown 源文件
+└── {主题名称}.zxm      # 生成的思维导图
 ```
 
-示例：用户请求 "Python学习路线" → 创建 `./Python学习路线/` 目录
+### Step 2: 编写 Markdown
 
-### Step 2: 生成 JSONL 文件
+使用标题层级（`#`）+ 内联装饰（`<<{...}>>`）：
 
-在目录中创建 `.jsonl` 文件，每行一个 JSON 对象：
-
-```jsonl
-{"id":"_config","theme":"ai-classical1","template":"right"}
-{"id":0,"text":"Python学习路线","bg":"#4A90D9","fc":"#FFFFFF","bold":true}
-{"id":1,"pid":0,"text":"分支一","priority":1,"mark":"flag"}
-{"id":2,"pid":1,"text":"子节点","star":5}
+```markdown
+# 主题名称 <<{"theme":"ai-classical1","bg":"#4A90D9","fc":"#FFF","bold":true}>>
+## 一级分支 <<{"priority":1,"mark":"flag"}>>
+### 二级节点
+### 重点节点 <<{"star":5}>>
+## 一级分支 <<{"priority":2}>>
+### 二级节点
 ```
 
-### Step 3: 调用生成器
+**规则**：
+- `#` 数量 = 层级深度
+- 每行一个节点
+- 行末 `<<{JSON}>>` 添加装饰（可选）
+- 无装饰的节点保持纯净
+- 按场景指南中的维度组织内容
 
-```python
-import sys
-sys.path.insert(0, '/path/to/zxm-generator')
-from scripts.zxm_generator import generate_zxm_from_file
+### Step 3: 生成 ZXM 文件
 
-# 从 jsonl 文件生成 zxm（同目录下）
-generate_zxm_from_file("./Python学习路线/Python学习路线.jsonl", "./Python学习路线/Python学习路线.zxm")
+```bash
+uv run /path/to/zxm-generator/scripts/zxm_generator.py 主题.md -o 主题.zxm
 ```
 
 ### Step 4: 打开文件
 
 ```bash
-open "./Python学习路线/Python学习路线.zxm"
+open "./{主题名称}/{主题名称}.zxm"
 ```
-
-**重要**：
-- **禁止修改** `scripts/zxm_generator.py`
-- **只使用下方列出的有效图标值**，无效值会导致文件无法打开
-
-**最佳实践**：
-- **标签适度**：每个节点建议 1-2 个标签，最多不超过 3 个，过多会显得杂乱
-- **按需使用**：根据场景选择合适的标签类型，不必每个节点都加标签
-- **层级区分**：一级分支可加 priority，重点节点加 mark/star，普通节点保持简洁
 
 ---
 
-## JSONL DSL 快速参考
+## 内联装饰语法
 
-每行一个 JSON 对象。详细规范见 `references/schema.md`。
+### 全局配置（在根节点设置）
 
-### 核心字段
+```markdown
+# 主题 <<{"theme":"ai-classical1","template":"right","bg":"#4A90D9"}>>
+```
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | int | 节点 ID（0 起始） |
-| `pid` | int | 父节点 ID（根节点省略） |
-| `text` | string | 节点文本 |
+| 字段 | 说明 | 可选值 |
+|------|------|--------|
+| `theme` | 主题风格 | `ai-classical1`(推荐), `classical2`, `dark` |
+| `template` | 布局方向 | `right`, `left`, `both`, `tree`, `org` |
 
 ### 样式字段
 
-| 字段 | 说明 | 示例 |
+| 字段 | 作用 | 示例 |
 |------|------|------|
 | `bg` | 背景色 | `"#4A90D9"` |
-| `fc` | 字体颜色 | `"#FFFFFF"` |
-| `fs` | 字体大小 | `18` |
+| `fc` | 字体色 | `"#FFFFFF"` |
 | `bold` | 加粗 | `true` |
 
 ### 功能字段
 
-| 字段 | 范围/类型 | 说明 |
-|------|-----------|------|
-| `priority` | 1-20 | 优先级 ①②③... |
-| `star` | 1-10 | 星级评分 |
-| `progress` | 1-9 | 进度条 |
-| `todo` | `"done"` / `"undone"` | 待办 |
-| `note` | string | 备注 |
-| `link` | URL | 超链接 |
-| `formula` | LaTeX | 数学公式 |
+| 字段 | 作用 | 范围/格式 |
+|------|------|-----------|
+| `priority` | 优先级 ①②③ | 1-20 |
+| `star` | 星级 ★★★ | 1-10 |
+| `progress` | 进度条 | 1-9 |
+| `todo` | 待办 | `"done"`/`"undone"` |
+| `note` | 备注（支持 `\n` 换行） | 文本 |
+| `link` | 链接 | URL |
 
-### 图标字段（只能使用以下有效值）
+### 图标字段
 
-**mark** - 标记图标：
-`star`, `medal`, `heart`, `heart-broken`, `flag`, `star-orange`, `arrow-up`, `arrow-down`, `arrow-left`, `arrow-right`, `arrow-up-left`, `arrow-up-right`, `arrow-down-left`, `arrow-down-right`, `circle`, `check-circle`, `ban`, `check`, `cross`, `warning`, `question`, `calendar`, `clock`, `bell`, `location`, `mail`, `phone`, `chat`, `clipboard`, `chart`, `target`, `thumbs-up`, `trophy`, `diamond`, `money`, `woman`, `man`, `music`, `mic`, `headset`, `lightbulb`, `pencil`, `gift`, `alert`, `fire`
+| 字段 | 常用值 |
+|------|--------|
+| `mark` | `flag`, `star`, `check`, `warning`, `target`, `trophy`, `lightbulb`, `fire` |
+| `expression` | `cool`, `happy`, `sad` |
+| `avatar` | `avatar-blue`, `avatar-green`, `avatar-orange` |
 
-**expression** - 表情：
-`cool`, `smile`, `happy`, `sad`, `tongue`, `cry`, `awkward`
+完整列表见 `references/schema.md`。
 
-**flag** - 彩色旗帜：
-`flag-red`, `flag-orange`, `flag-blue`, `flag-green`, `flag-purple`, `flag-cyan`, `flag-peach`, `flag-lime`, `flag-teal`, `flag-light-blue`
+---
 
-**star_icon** - 彩色星星：
-`star-coral`, `star-orange`, `star-blue`, `star-green`, `star-purple`, `star-cyan`, `star-peach`, `star-lime`, `star-turquoise`, `star-light-blue`
+## 自检清单
 
-**avatar** - 彩色头像：
-`avatar-coral`, `avatar-orange`, `avatar-blue`, `avatar-green`, `avatar-purple`, `avatar-cyan`, `avatar-peach`, `avatar-lime`, `avatar-teal`, `avatar-slate-blue`
+**通用检查**：
+- [ ] 主分支 3-7 个？
+- [ ] 层级深度 2-5 层？
+- [ ] 同级节点互斥、平行？
+- [ ] 内联装饰 JSON 格式正确？
 
-**month** - 月份（默认中文，加 `-en` 后缀为英文）：
-`jan`, `feb`, `mar`, `apr`, `may`, `jun`, `jul`, `aug`, `sep`, `oct`, `nov`, `dec`
+**场景检查**：参照所加载的场景指南
 
-**week** - 星期（默认中文，加 `-en` 后缀为英文）：
-`mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`
-
-### 全局配置（可选首行）
-
-```jsonl
-{"id":"_config","theme":"ai-classical1","template":"right"}
+**验证命令**：
+```bash
+uv run zxm_generator.py 主题.md --validate
 ```
 
 ---
 
-## 完整示例
+## 参考资源
 
-```python
-import sys
-sys.path.insert(0, '/path/to/zxm-generator')
-from scripts.zxm_generator import generate_zxm_from_jsonl
-
-jsonl = r'''
-{"id":"_config","theme":"ai-classical1","template":"right"}
-{"id":0,"text":"Python 学习路线","bg":"#4A90D9","fc":"#FFFFFF","fs":18,"bold":true}
-{"id":1,"pid":0,"text":"基础语法","priority":1,"mark":"flag"}
-{"id":2,"pid":1,"text":"变量与数据类型","star":5,"progress":9}
-{"id":3,"pid":1,"text":"函数","note":"重点：闭包、装饰器","mark":"star"}
-{"id":4,"pid":0,"text":"面向对象","priority":2,"mark":"target"}
-{"id":5,"pid":4,"text":"类与对象","todo":"done","mark":"check-circle"}
-{"id":6,"pid":4,"text":"继承多态","todo":"undone","mark":"clock"}
-{"id":7,"pid":0,"text":"进阶主题","priority":3,"mark":"trophy"}
-{"id":8,"pid":7,"text":"异步编程","link":"https://docs.python.org/3/library/asyncio.html"}
-{"id":9,"pid":7,"text":"元编程","expression":"cool"}
-{"id":10,"pid":0,"text":"数学基础","priority":4,"mark":"lightbulb"}
-{"id":11,"pid":10,"text":"时间复杂度","formula":"O(n\\log n)"}
-{"id":12,"pid":10,"text":"求和公式","formula":"\\sum_{i=1}^{n}i=\\frac{n(n+1)}{2}"}
-'''
-
-generate_zxm_from_jsonl(jsonl, "./python-learning.zxm")
-```
-
----
-
-## 常见错误
-
-| 错误 | 原因 | 解决 |
-|------|------|------|
-| 图标不显示 | 使用了无效的 mark 值 | 只使用上方列出的有效值 |
-| 文件打不开 | JSON 格式错误 | 检查引号、逗号、转义 |
-| 公式不显示 | `\` 未正确转义 | 使用 `r'''...'''` 或 `\\` |
-
----
-
-## 参考
-
-- 完整 DSL 规范：`references/schema.md`
+- DSL 规范：`references/schema.md`
+- 场景指南：`references/scenarios/*.md`
 - 生成器脚本：`scripts/zxm_generator.py`
