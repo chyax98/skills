@@ -1,12 +1,12 @@
 
 """
-测试用例 Markdown 转 XMind 工具
+测试用例 Markdown 转 Excel 工具
 
-将 Markdown 格式的测试用例转换为 XMind 思维导图。
+将 Markdown 格式的测试用例转换为 Excel 格式。
 
 使用方法：
-    uv run convert_to_xmind.py test-cases.md -o test-cases.xmind
-    uv run convert_to_xmind.py test-cases.md  # 默认输出同名 xmind 文件
+    uv run convert_to_excel.py test-cases.md -o test-cases.xlsx
+    uv run convert_to_excel.py test-cases.md  # 默认输出同名 xlsx 文件
 """
 
 import re
@@ -19,15 +19,15 @@ from typing import Optional
 @dataclass
 class TestCase:
     """测试用例数据结构"""
-    module: str = ""
-    scenario: str = ""
-    name: str = ""
-    priority: str = ""
-    test_type: str = ""
-    is_negative: bool = False
-    preconditions: str = ""
-    steps: list = field(default_factory=list)
-    notes: str = ""
+    module: str = ""              # 一级分组
+    scenario: str = ""            # 二级分组
+    name: str = ""                # 用例名称
+    priority: str = ""            # 优先级
+    test_type: str = ""           # 测试类型
+    is_negative: bool = False     # 是否反向
+    preconditions: str = ""       # 前置条件
+    steps: list = field(default_factory=list)  # [(action, expected), ...]
+    notes: str = ""               # 备注
 
 
 def parse_metadata(line: str) -> tuple[str, str, bool]:
@@ -43,16 +43,22 @@ def parse_metadata(line: str) -> tuple[str, str, bool]:
 
 
 def parse_steps(lines: list[str]) -> list[tuple[str, str]]:
-    """解析步骤行"""
+    """
+    解析步骤行
+    格式：1. 操作 ➡️ 预期结果  或  1. 操作
+    返回：[(action, expected), ...]
+    """
     steps = []
     for line in lines:
         line = line.strip()
         if not line:
             continue
 
+        # 移除编号前缀
         match = re.match(r'^\d+\.\s*(.+)$', line)
         if match:
             content = match.group(1)
+
             # 使用 ➡️ 作为分隔符
             if '➡️' in content:
                 parts = content.split('➡️', 1)
@@ -61,26 +67,29 @@ def parse_steps(lines: list[str]) -> list[tuple[str, str]]:
             else:
                 action = content.strip()
                 expected = ""
+
             steps.append((action, expected))
 
     return steps
 
 
 def parse_markdown(content: str) -> list[TestCase]:
-    """解析 Markdown 内容"""
+    """解析 Markdown 内容，返回测试用例列表"""
     cases = []
     lines = content.split('\n')
 
     current_module = ""
     current_scenario = ""
     current_case: Optional[TestCase] = None
-    current_section = None
+    current_section = None  # 当前解析的部分：preconditions, steps, notes
     section_lines = []
 
     def save_section():
+        """保存当前部分到用例"""
         nonlocal current_case, current_section, section_lines
         if current_case and current_section and section_lines:
             if current_section == 'preconditions':
+                # 前置条件：合并为单行，用分号分隔
                 precond_list = []
                 for line in section_lines:
                     line = line.strip()
@@ -97,6 +106,7 @@ def parse_markdown(content: str) -> list[TestCase]:
         current_section = None
 
     def save_case():
+        """保存当前用例"""
         nonlocal current_case
         save_section()
         if current_case and current_case.name:
@@ -106,20 +116,24 @@ def parse_markdown(content: str) -> list[TestCase]:
     for line in lines:
         stripped = line.strip()
 
+        # 跳过分隔线
         if stripped == '---':
             continue
 
+        # 一级标题：模块
         if line.startswith('# ') and not line.startswith('## '):
             save_case()
             current_module = line[2:].strip()
             current_scenario = ""
             continue
 
+        # 二级标题：场景
         if line.startswith('## '):
             save_case()
             current_scenario = line[3:].strip()
             continue
 
+        # 三级标题：用例名称
         if line.startswith('### '):
             save_case()
             current_case = TestCase(
@@ -129,6 +143,7 @@ def parse_markdown(content: str) -> list[TestCase]:
             )
             continue
 
+        # 元数据：P1|功能|反向
         if current_case and re.match(r'^P[1-5]\|', stripped):
             save_section()
             priority, test_type, is_negative = parse_metadata(stripped)
@@ -137,21 +152,25 @@ def parse_markdown(content: str) -> list[TestCase]:
             current_case.is_negative = is_negative
             continue
 
+        # 前置条件
         if stripped.startswith('[前置]'):
             if current_case:
                 save_section()
                 current_section = 'preconditions'
+                # 如果同一行有内容
                 rest = stripped[4:].strip()
                 if rest:
                     section_lines.append(rest)
             continue
 
+        # 步骤
         if stripped.startswith('[步骤]'):
             if current_case:
                 save_section()
                 current_section = 'steps'
             continue
 
+        # 备注
         if stripped.startswith('[备注]'):
             if current_case:
                 save_section()
@@ -161,127 +180,104 @@ def parse_markdown(content: str) -> list[TestCase]:
                     section_lines.append(rest)
             continue
 
+        # 收集当前部分的内容
         if current_section and stripped:
             section_lines.append(stripped)
 
+    # 保存最后一个用例
     save_case()
+
     return cases
 
 
-def create_xmind(cases: list[TestCase], output_path: Path, title: str = "测试用例"):
-    """创建 XMind 文件"""
+def create_excel(cases: list[TestCase], output_path: Path):
+    """创建 Excel 文件"""
     try:
-        import xmind
-        from xmind.core.markerref import MarkerId
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
     except ImportError:
-        print("错误：需要安装 xmind")
-        print("请执行：pip install xmind")
+        print("错误：需要安装 openpyxl")
+        print("请执行：pip install openpyxl")
         return False
 
-    # 创建工作簿
-    workbook = xmind.Workbook()
-    sheet = workbook.getPrimarySheet()
-    sheet.setTitle(title)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "测试用例"
 
-    # 根节点
-    root = sheet.getRootTopic()
-    root.setTitle(title)
+    # 定义样式
+    header_font = Font(bold=True, size=11)
+    header_fill = PatternFill(start_color="CCE5FF", end_color="CCE5FF", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    cell_alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
 
-    # 优先级标记映射
-    priority_markers = {
-        'P1': MarkerId.starRed,
-        'P2': MarkerId.starOrange,
-        'P3': MarkerId.starYellow,
-        'P4': MarkerId.starBlue,
-        'P5': MarkerId.starGreen,
-    }
+    # 表头
+    headers = [
+        "一级分组", "二级分组", "用例名称", "优先级", "测试类型",
+        "是否反向", "前置条件", "操作步骤", "预期结果", "备注"
+    ]
 
-    # 按模块分组
-    modules = {}
-    for case in cases:
-        module_name = case.module or "(未分组)"
-        if module_name not in modules:
-            modules[module_name] = {}
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
 
-        scenario_name = case.scenario or "(默认场景)"
-        if scenario_name not in modules[module_name]:
-            modules[module_name][scenario_name] = []
+    # 数据行
+    for row_idx, case in enumerate(cases, 2):
+        # 步骤和预期结果格式化
+        steps_text = '\n'.join(f"{i+1}. {step[0]}" for i, step in enumerate(case.steps))
+        expected_text = '\n'.join(f"{i+1}. {step[1]}" for i, step in enumerate(case.steps) if step[1])
 
-        modules[module_name][scenario_name].append(case)
+        row_data = [
+            case.module,
+            case.scenario,
+            case.name,
+            case.priority,
+            case.test_type,
+            "是" if case.is_negative else "否",
+            case.preconditions,
+            steps_text,
+            expected_text,
+            case.notes
+        ]
 
-    # 构建思维导图结构
-    for module_name, scenarios in modules.items():
-        # 模块节点
-        module_topic = root.addSubTopic()
-        module_topic.setTitle(module_name)
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col, value=value)
+            cell.alignment = cell_alignment
+            cell.border = thin_border
 
-        for scenario_name, case_list in scenarios.items():
-            # 场景节点
-            scenario_topic = module_topic.addSubTopic()
-            scenario_topic.setTitle(scenario_name)
+    # 设置列宽
+    column_widths = [15, 15, 30, 8, 12, 10, 25, 35, 35, 20]
+    for col, width in enumerate(column_widths, 1):
+        ws.column_dimensions[chr(64 + col)].width = width
 
-            for case in case_list:
-                # 用例节点
-                case_topic = scenario_topic.addSubTopic()
-
-                # 标题：用例名称 + 元数据
-                meta_parts = []
-                if case.priority:
-                    meta_parts.append(case.priority)
-                if case.test_type:
-                    meta_parts.append(case.test_type)
-                if case.is_negative:
-                    meta_parts.append("反向")
-
-                title_text = case.name
-                if meta_parts:
-                    title_text += f" [{'/'.join(meta_parts)}]"
-
-                case_topic.setTitle(title_text)
-
-                # 添加优先级标记
-                if case.priority in priority_markers:
-                    case_topic.addMarker(priority_markers[case.priority])
-
-                # 前置条件
-                if case.preconditions:
-                    precond_topic = case_topic.addSubTopic()
-                    precond_topic.setTitle(f"前置：{case.preconditions}")
-
-                # 步骤
-                if case.steps:
-                    steps_topic = case_topic.addSubTopic()
-                    steps_topic.setTitle("步骤")
-
-                    for i, (action, expected) in enumerate(case.steps, 1):
-                        step_topic = steps_topic.addSubTopic()
-                        step_text = f"{i}. {action}"
-                        if expected:
-                            step_text += f" → {expected}"
-                        step_topic.setTitle(step_text)
-
-                # 备注
-                if case.notes:
-                    case_topic.setPlainNotes(case.notes)
+    # 冻结首行
+    ws.freeze_panes = 'A2'
 
     # 保存
-    xmind.save(workbook, str(output_path))
+    wb.save(output_path)
     return True
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='将 Markdown 格式的测试用例转换为 XMind 思维导图',
+        description='将 Markdown 格式的测试用例转换为 Excel',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 示例：
-    uv run convert_to_xmind.py test-cases.md -o test-cases.xmind
-    uv run convert_to_xmind.py test-cases.md --name "项目测试用例"
+    python convert_to_excel.py test-cases.md -o test-cases.xlsx
+    python convert_to_excel.py test-cases.md  # 输出 test-cases.xlsx
         '''
     )
     parser.add_argument('input', help='输入的 Markdown 文件路径')
-    parser.add_argument('-o', '--output', help='输出的 XMind 文件路径（默认同名 .xmind）')
-    parser.add_argument('--name', default='测试用例', help='思维导图根节点名称')
+    parser.add_argument('-o', '--output', help='输出的 Excel 文件路径（默认同名 .xlsx）')
 
     args = parser.parse_args()
 
@@ -290,7 +286,7 @@ def main():
         print(f"错误：文件不存在 {input_path}")
         return 1
 
-    output_path = Path(args.output) if args.output else input_path.with_suffix('.xmind')
+    output_path = Path(args.output) if args.output else input_path.with_suffix('.xlsx')
 
     # 读取并解析
     content = input_path.read_text(encoding='utf-8')
@@ -300,8 +296,8 @@ def main():
         print("警告：未解析到任何测试用例")
         return 1
 
-    # 创建 XMind
-    if create_xmind(cases, output_path, title=args.name):
+    # 创建 Excel
+    if create_excel(cases, output_path):
         print(f"转换完成：{output_path}")
         print(f"共 {len(cases)} 条用例")
         return 0

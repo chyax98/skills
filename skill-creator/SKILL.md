@@ -518,3 +518,29 @@ Reference these skills as complete DEPTH framework implementations:
   - Example of structured thinking tool with DEPTH
 
 These examples demonstrate how DEPTH components integrate seamlessly into different types of skills while maintaining the core framework principles.
+
+---
+
+## 常见问题（基于官方规范）
+
+**Q: 何时使用 DEPTH 框架？**
+
+A: DEPTH 是**设计指南**，用于创建 skill 时的思考框架。但在最终的 SKILL.md 中：
+- ❌ 不要显式标注 `(DEPTH: X)`
+- ✅ 理解其思想并隐式应用
+- 官方 skills 不使用 DEPTH 标记
+
+**Q: 检查清单应该多详细？**
+
+A: **必须详细完备**。流程型 skill 的检查清单通常有 20-40 项，每个检查项必须明确，包含修正动作。
+
+**Q: 如何平衡简洁和完备？**
+
+A:
+- 流程步骤：简洁（每阶段 3-5 点）
+- 检查清单：完备（详细列出）
+- 示例：适度（每功能 1-2 个）
+
+**Q: 官方推荐的流程型结构？**
+
+A: Phase/Stage 阶段化 + Checklist + CRITICAL 标记 + 保持 <500 行
