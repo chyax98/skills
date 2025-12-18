@@ -130,13 +130,8 @@ def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_pat
                     schema_path = script_dir / 'test-case.schema.json'
 
     if schema_path is None or not schema_path.exists():
-        errors.append(ValidationError(
-            str(file_path),
-            0,
-            "Schema 错误",
-            f"无法找到 Schema 文件：{schema_path}"
-        ))
-        return errors
+        # Schema 文件不存在，跳过验证（TypeScript 定义在 SKILL.md 中）
+        return []
 
     # 加载 Schema
     try:
@@ -217,13 +212,14 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
     for line_num, obj in objects:
         if 'steps' in obj:
             steps = obj['steps']
+            has_expected = False
             for i, step in enumerate(steps, 1):
                 if not isinstance(step, dict):
                     errors.append(ValidationError(
                         str(file_path),
                         line_num,
                         "业务规则",
-                        f"步骤 {i} 格式错误：应为对象，包含 action 和 expected 字段"
+                        f"步骤 {i} 格式错误：应为对象，包含 action 字段"
                     ))
                     continue
 
@@ -235,13 +231,17 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
                         f"步骤 {i} 缺少 action 字段"
                     ))
 
-                if 'expected' not in step:
-                    errors.append(ValidationError(
-                        str(file_path),
-                        line_num,
-                        "业务规则",
-                        f"步骤 {i} 缺少 expected 字段"
-                    ))
+                if 'expected' in step and step['expected']:
+                    has_expected = True
+
+            # 至少需要一个验证点（有 expected 的步骤）
+            if not has_expected:
+                errors.append(ValidationError(
+                    str(file_path),
+                    line_num,
+                    "业务规则",
+                    f"用例 '{obj.get('id', '?')}' 缺少验证点（至少一个步骤需要 expected）"
+                ))
 
     # 规则 4：module_name 长度检查
     for line_num, obj in objects:

@@ -13,7 +13,7 @@
 |------|------|
 | `{workspace}/modules.jsonl` | 模块规划和测试项 |
 | `{workspace}/cases/*.jsonl` | 已生成的用例 |
-| `{skill_dir}/references/priority-guide.md` | 优先级判定指南（按需读取） |
+| `{skill_dir}/assets/priority-guide.md` | 优先级判定指南（按需读取） |
 
 ## 审查流程
 
@@ -45,7 +45,7 @@
 
 ```bash
 grep -n '�' {workspace}/cases/*.jsonl  # 乱码检查
-python {skill_dir}/scripts/validate_jsonl.py {workspace}/cases/*.jsonl --strict
+python {skill_dir}/scripts/validate.py {workspace}/cases/*.jsonl --strict
 ```
 
 ## 输出
