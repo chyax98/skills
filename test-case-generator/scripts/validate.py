@@ -116,8 +116,8 @@ def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_pat
 
         # 检查文件名判断类型
         file_name = file_path.name.lower()
-        if 'test-item' in file_name or 'testitem' in file_name:
-            schema_path = script_dir / 'test-item.schema.json'
+        if 'module' in file_name:
+            schema_path = script_dir / 'module.schema.json'
         elif 'case' in file_name:
             schema_path = script_dir / 'test-case.schema.json'
         else:
@@ -125,7 +125,7 @@ def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_pat
             if objects:
                 _, first_obj = objects[0]
                 if 'module_id' in first_obj and 'test_items' in first_obj:
-                    schema_path = script_dir / 'test-item.schema.json'
+                    schema_path = script_dir / 'module.schema.json'
                 elif 'test_item' in first_obj and 'scenario_type' in first_obj:
                     schema_path = script_dir / 'test-case.schema.json'
 

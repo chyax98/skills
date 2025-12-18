@@ -1,462 +1,561 @@
 ---
 name: test-case-generator
-description: 基于规范化需求文档（prd.md）生成完整测试用例体系。采用轻量级测试项识别 + 重量级并发用例生成的策略，支持场景分析、模块组织、质量审查和多格式导出。适用于已规范化的需求文档（建议先使用 requirement-tester 预处理）。
-license: Proprietary
+description: 从需求文档生成结构化测试用例。按模块逐个生成并即时校验，独立审查查漏补缺，输出 JSONL/Excel/XMind 格式。触发词：生成测试用例、需求转用例、测试用例生成。
 ---
 
 # 测试用例生成器
 
-## 概述
-
-根据规范化的需求文档（prd.md）自动生成结构化的测试用例体系（JSONL 格式），包含测试项识别、场景分析、用例生成、质量审查和多格式导出。
-
-**核心设计**：
-- **轻量级测试项识别**：快速提取需要测试的功能项，作为并发分配基准
-- **重量级用例生成**：并发执行场景分析（正向/边界/异常/性能/安全）和用例生成
-- **单一职责**：专注于用例生成，不处理需求质量问题
-
-## 执行流程（必读）
-
-**你（主 Agent）必须自己执行以下步骤，不可整体委托给 Task Agent**
+## 核心设计
 
 ```
-Step 1: 你自己执行测试项识别 → 输出 test-items.jsonl
-    ↓
-Step 2: 你启动多个 Task Agent 并行生成用例 → 输出 cases/*.jsonl
-    ↓
-Step 3: 你自己执行质量审查 → 验证格式和内容
-    ↓
-Step 4: 你自己执行合并与导出 → 输出 cases.jsonl + stats-report.md
+单 Agent 全流程 → 保持完整上下文，正确处理模块边界
+逐模块串行生成 → 每个模块即时检验，问题当场修复
+JSONL 追加写入 → 容错好，中断可恢复
+Task Agent 审查 → 独立视角查漏补缺
 ```
 
 **严格禁止**：
-- ❌ **禁止把整个工作流（Step 1-4）委托给一个 Task Agent**
-- ❌ **禁止跳过 Step 1 直接生成 cases/*.jsonl**
+- ❌ 将整个工作流委托给 Task Agent
+- ❌ 跳过 Step 1 直接生成用例
+- ❌ Step 2 使用并发生成
 
-**你的职责**：
-- ✅ **Step 0**：用需求文档名称（去掉 .md）创建输出目录
-- ✅ **Step 1**：你必须自己读取 prd.md，自己识别测试项，自己写 `{需求名称}/test-items.jsonl`
-- ✅ **Step 2**：你读取 test-items.jsonl，计算并发数，启动多个 Task Agent（每个负责 2-3 个模块）
-- ✅ **Step 3**：你自己执行质量审查
-- ✅ **Step 4**：你自己执行合并导出
+## 角色分工
 
-**只有 Step 2 才使用 Task Agent**，其他步骤你必须自己完成。
-
-## 适用场景
-
-当用户提供**已规范化的需求文档（prd.md）**并需要：
-- 生成系统化的测试用例
-- 按模块组织测试用例
-- 导出为 JSONL/XMind 格式
-- 进行测试覆盖度分析
-
-### 前置条件
-- **必需输入**：prd.md（已规范化，推荐使用 requirement-tester 预处理）
-- **输入质量要求**：
-  - 功能模块清晰可识别
-  - 业务规则描述完整
-  - 异常处理有说明（如已通过 requirement-tester 处理）
-
-### 配置选项
-- 范围与规模：预估测试项和用例数量
-- 质量目标：优先级分布（P1 10–20%、反向≥15%）
-- 导出需求：是否生成 XMind/统计报告
-- 并发策略：是否启用并行（测试项 > 5 时建议启用）
+| 角色 | 职责 | 执行阶段 |
+|-----|------|---------|
+| 测试项识别者 | 从 prd.md 提取功能清单，评估业务价值，规划生成顺序 | Step 1 |
+| 用例设计者 | 场景分析（正向/边界/异常/性能/安全），生成用例 | Step 2 |
+| QA 复核者 | 检查覆盖完整性、跨模块一致性、内容质量 | Step 3 |
 
 ## 输出结构
 
-**第一步：用需求名称创建目录**
-
-假设需求文档是 `/path/to/Polaris 差旅报销中台.md`，你必须先创建目录 `/path/to/Polaris 差旅报销中台/`
-
-然后所有产物放在这个目录下：
-
 ```
-/path/to/
-├── Polaris 差旅报销中台.md      # 需求文档（输入）
-└── Polaris 差旅报销中台/         # 创建的输出目录
-    ├── test-items.jsonl          # 测试项文件（轻量级）
-    ├── cases/                    # [中间态] 各模块用例
-    │   ├── 报销单创建.jsonl
-    │   ├── 费用审批.jsonl
+./                                # 当前工作目录
+└── {需求名称}/                    # 工作区（自动创建）
+    ├── modules.jsonl             # Step 1: 模块规划
+    ├── cases/                    # Step 2: 各模块用例
+    │   ├── M01-用户登录.jsonl
     │   └── ...
-    ├── cases.jsonl               # 合并后的测试用例
-    ├── cases.xmind               # XMind 思维导图（可选）
-    └── stats-report.md           # 统计报告
+    ├── cases.jsonl               # Step 4: 合并后用例
+    ├── cases.xlsx                # Step 4: Excel 格式
+    ├── cases.xmind               # Step 4: XMind 格式
+    ├── review-report.md          # Step 3: 审查报告
+    └── stats-report.md           # Step 4: 统计报告
 ```
 
-**关键**：
-- ✅ 用需求文档名称（去掉 .md）创建目录
-- ✅ 所有产物放在这个目录下
-- ❌ 不要直接在需求文档所在目录生成文件（会混乱）
+**输入**：prd.md（位置任意，用户提供路径）
 
-## Schema 定义
+**工作区命名**：从 prd.md 标题提取，如 `# 用户管理系统需求` → 工作区为 `./用户管理系统需求/`
 
-### 测试项 Schema（轻量级）
+---
 
+## Step 1: 需求理解与规划
+
+**执行者**：主 Agent（不可委托）
+
+**输入**：prd.md（规范化需求文档）
+
+**处理流程**：
+
+1. **读取 prd.md**，理解完整业务
+2. **划分功能模块**（≤8 个），按功能内聚、边界清晰原则
+3. **识别测试项**：
+   - 每个用户可执行的操作 = 1 个测试项
+   - 每个系统自动行为 = 1 个测试项
+   - 每个 CRUD 操作 = 各 1 个测试项
+   - 每个关键业务规则 = 1 个测试项
+4. **评估业务价值**：高（核心流程）/ 中（辅助功能）/ 低（边缘功能）
+5. **规划生成顺序**：基础模块优先，被依赖方先生成
+6. **分配 module_id**：M01, M02, M03...
+7. **提取模块 prd**：该模块的需求原文
+8. **输出 modules.jsonl**
+
+**Module Schema**：
 ```typescript
-interface ModuleTestItems {
-  module_id: string;           // 模块ID，格式：M01, M02, M03...（用于用例ID前缀）
-  module_name: string;         // 功能模块，≤15字符
+interface Module {
+  module_id: string;           // M01, M02, ...
+  module_name: string;         // ≤15 字符
+  order: number;               // 生成顺序
   test_items: Array<{
     item: string;              // 测试项名称
     business_value: "高" | "中" | "低";
   }>;
-  prd: string;                 // 该模块的需求详情
+  prd: string;                 // 该模块需求原文
 }
 ```
 
-**说明**：
-- **按模块分组**：test-items.jsonl 每行代表一个模块
-- **module_id**：自动生成（M01-M99），用于用例 ID 前缀（如 M01-001）
-- **test_items**：该模块包含的所有测试项
-- **prd**：该模块的完整需求内容（供 Sub Agent 理解业务）
-- 场景分析（正向/边界/异常/性能/安全）在 Step 2 并发执行
-
-**示例**：
+**输出示例**：
 ```jsonl
-{"module_id":"M01","module_name":"用户注册","test_items":[{"item":"用户注册流程","business_value":"高"},{"item":"手机号验证","business_value":"高"}],"prd":"## 用户注册\n用户可以通过手机号或邮箱注册账号..."}
-{"module_id":"M02","module_name":"用户登录","test_items":[{"item":"用户登录流程","business_value":"高"},{"item":"密码找回","business_value":"中"}],"prd":"## 用户登录\n支持用户名、手机号、邮箱三种方式登录..."}
+{"module_id":"M01","module_name":"用户登录","order":1,"test_items":[{"item":"账号密码登录","business_value":"高"},{"item":"手机验证码登录","business_value":"高"}],"prd":"## 用户登录\n支持账号密码和手机验证码两种登录方式..."}
 ```
 
-### 测试用例 Schema
+**Step 1 完成后**：使用 TodoWrite 创建各模块的生成任务
+
+---
+
+## Step 2: 逐模块生成用例
+
+**执行者**：主 Agent（不可委托，保持全局上下文）
+
+**前置准备**：
+- 首次生成前，读取 `{skill_dir}/assets/cases.jsonl` 了解用例格式示例
+
+**核心循环**：
+
+```python
+for module in sorted(modules, key=lambda m: m.order):
+    # 1. 更新 TodoWrite：标记当前模块 in_progress
+
+    # 2. 场景分析
+    scenarios = analyze_scenarios(module)
+
+    # 3. 生成用例
+    cases = generate_cases(module, scenarios)
+
+    # 4. 写入 cases/{module_id}-{module_name}.jsonl
+
+    # 5. 即时检验（编码+格式+覆盖）
+    issues = validate_module()
+
+    # 6. 有问题则修复，循环直到通过
+    while issues:
+        fix_issues(issues)
+        issues = validate_module()
+
+    # 7. 更新 TodoWrite：标记当前模块 completed
+```
+
+### 场景分析维度
+
+| 场景类型 | 分析内容 | 覆盖要求 |
+|---------|---------|---------|
+| 正向场景 | 正常流程，合法输入 | **所有测试项必须** |
+| 边界场景 | 最大/最小/空值/长度边界 | **所有测试项必须** |
+| 异常场景 | 错误输入、失败处理 | **所有测试项必须** |
+| 性能场景 | 并发、大数据量 | 需求有要求时 |
+| 安全场景 | 认证、授权、注入防护 | 涉及敏感操作时 |
+
+**场景覆盖策略**：
+- 核心功能（business_value=高）：正向 + 边界 + 异常 + 性能/安全（如适用）
+- 辅助功能（business_value=中）：正向 + 边界 + 异常
+- 边缘功能（business_value=低）：正向 + 主要异常
+
+---
+
+### 优先级判定规则
+
+| 业务价值 | 场景类型 | 优先级 | 说明 |
+|---------|---------|-------|------|
+| 高 | 正向场景 | **P1** | 核心功能冒烟测试，每次构建必测 |
+| 高 | 异常/边界 | **P3** | 核心功能健壮性，版本回归必测 |
+| 中 | 正向场景 | **P2** | 基本功能验证，每日回归 |
+| 中 | 异常/边界 | **P4** | 基本功能健壮性，完整回归 |
+| 低 | 任意场景 | **P5** | 不常用功能，发布前测试 |
+
+**优先级分布目标**：P1(10-20%) P2(25-35%) P3(20-30%) P4(15-25%) P5(5-10%)
+
+> 如需了解更多优先级判定示例和特殊场景处理，读取 `{skill_dir}/assets/priority-guide.md`
+
+---
+
+### 测试类型
+
+根据场景特点选择最匹配的测试类型：
+
+| 测试类型 | 适用场景 | 示例 |
+|---------|---------|------|
+| **功能测试** | 业务逻辑验证（默认类型） | 登录、下单、支付流程 |
+| **易用性测试** | 用户体验、界面交互 | 表单布局、操作流程便捷性 |
+| **兼容性测试** | 跨环境运行 | 多浏览器、多设备适配 |
+| **性能测试** | 响应时间、并发能力 | 页面加载、接口响应、并发登录 |
+| **安全性测试** | 认证授权、攻击防护 | SQL注入、XSS、越权访问 |
+| **稳定性测试** | 长期运行稳定性 | 7x24运行、内存泄漏检测 |
+| **集成测试** | 模块间协作 | 订单与支付集成、消息推送 |
+| **可靠性测试** | 故障恢复、容错 | 断网恢复、服务降级 |
+| **可维护性测试** | 运维能力 | 日志完整性、监控覆盖 |
+| **可移植性测试** | 跨平台迁移 | 从Windows迁移到Linux |
+| **埋点测试** | 数据上报 | 行为追踪、事件上报准确性 |
+| **AI效果测试** | AI模型输出 | 识别准确率、生成质量 |
+| **硬件效果测试** | 硬件交互 | 传感器数据、外设控制 |
+
+**选择原则**：
+- 安全场景 → 安全性测试
+- 性能场景 → 性能测试
+- 一般功能场景 → 功能测试（最常用）
+
+> 如需了解各测试类型的详细说明和更多示例，读取 `{skill_dir}/assets/test-type-guide.md`
+
+---
+
+### TestCase Schema
 
 ```typescript
 interface TestCase {
-  id: string;                  // 格式："{module_id}-{seq:03d}"，如 M01-001
-  name: string;                // 用例名称（主谓宾格式）
-  module_name: string;         // 测试项（被测对象），≤15字符
-  test_item: string;           // 所属测试项（对应 TestItem.item）
-  scenario_type: string;       // 场景类型（正向/边界/异常/性能/安全）
+  id: string;                  // M01-001 格式
+  name: string;                // 以"验证"开头，主谓宾格式
+  module_name: string;         // ≤15 字符
+  test_item: string;           // 所属测试项（与 modules.jsonl 中 item 匹配）
+  scenario_type: "正向场景" | "边界场景" | "异常场景" | "性能场景" | "安全场景";
   priority: "P1" | "P2" | "P3" | "P4" | "P5";
-  test_type: string;           // 测试类型（13种）
-  is_negative: boolean;        // 是否反向用例
-  preconditions: string[];     // 前置条件
+  test_type: string;           // 上述 13 种之一
+  is_negative: boolean;        // 异常/边界场景 = true，正向场景 = false
+  preconditions: string[];     // 前置条件（具体明确）
   steps: Array<{
-    action: string;            // 操作步骤
-    expected: string;          // 预期结果
+    action: string;            // 操作步骤（具体可执行）
+    expected: string;          // 预期结果（可验证）
   }>;
   notes?: string;              // 备注（可选）
 }
 ```
 
-**ID 编号规则**：
-- 格式：`{module_id}-{seq:03d}`
-- 每个模块独立编号（M01-001, M01-002... M02-001, M02-002...）
-- 天然无冲突，无需预分配 ID 段
+---
 
-**示例**：
-```jsonl
-{"id":"M01-001","name":"验证用户成功登录系统","module_name":"用户登录","test_item":"用户登录流程","scenario_type":"正向场景","priority":"P1","test_type":"功能测试","is_negative":false,"preconditions":["系统已部署","存在有效账号"],"steps":[{"action":"打开登录页面","expected":"页面正常显示"},{"action":"输入正确的用户名密码","expected":"输入成功"},{"action":"点击登录按钮","expected":"登录成功，跳转主页"}],"notes":"核心功能正向用例"}
+### 用例生成规范
+
+**ID 格式**：`{module_id}-{seq:03d}`（如 M01-001, M01-002）
+
+**用例名称**：主谓宾格式，以"验证"开头
+```
+✅ 验证用户使用正确密码成功登录系统
+✅ 验证用户输入错误密码时登录失败并提示错误信息
+✅ 验证系统拒绝超过20字符的用户名
+❌ 登录测试
+❌ 密码错误
 ```
 
-## 优先级定义
+**步骤描述**：具体可执行，避免模糊
+```
+✅ action: "在用户名输入框输入 testuser"
+   expected: "用户名输入框显示 testuser"
 
-| 优先级 | 定义 | 示例 |
-|-------|-----|-----|
-| P1 | 核心功能正向测试（冒烟） | 用户登录成功 |
-| P2 | 基本功能正向测试 | 修改个人信息 |
-| P3 | 核心功能反向测试（错误/边界） | 密码错误登录失败 |
-| P4 | 基本功能反向测试（异常/边界） | 头像格式错误 |
-| P5 | 不常用功能正反向测试 | 管理员导出报表 |
+✅ action: "输入21个字符的用户名 abcdefghijklmnopqrstu"
+   expected: "提示\"用户名长度不能超过20字符\""
 
-详细说明参见 `references/priority-guide.md`
+❌ action: "输入正确的用户名"
+   expected: "正常显示"
+```
 
-## 测试类型
-
-| 类别 | 测试类型 | 说明 |
-|-----|---------|-----|
-| 基础 | 功能测试 | 验证功能正确性 |
-| 基础 | 易用性测试 | 验证用户体验 |
-| 基础 | 兼容性测试 | 验证跨环境运行 |
-| 基础 | 性能测试 | 验证性能指标 |
-| 基础 | 安全性测试 | 验证安全防护 |
-| 基础 | 稳定性测试 | 验证长期运行 |
-| 基础 | 集成测试 | 验证模块协作 |
-| 扩展 | 可靠性测试 | 验证故障恢复 |
-| 扩展 | 可维护性测试 | 验证运维能力 |
-| 扩展 | 可移植性测试 | 验证迁移能力 |
-| 扩展 | 埋点测试 | 验证数据上报 |
-| 扩展 | AI效果测试 | 验证 AI 输出 |
-| 扩展 | 硬件效果测试 | 验证硬件交互 |
-
-详细说明参见 `references/test-type-guide.md`
-
-## 工作流程
-
-### 角色分工
-- **测试项识别者**：从 prd.md 提取功能清单，评估业务价值
-- **用例设计者**：场景分析、用例生成（含并发协调）
-- **QA 复核者**：运行校验脚本、执行质量清单、触发修正动作
-
-### Step 1: 测试项识别（轻量级，单线程）
-
-**目标**：快速提取"需要测试的功能清单"，作为并发分配基准
-
-**执行流程**：
-
-1. **读取 prd.md**，提取功能模块和业务规则
-2. **识别测试项**（每个独立的功能点/业务规则）：
-   ```
-   识别规则：
-   - 每个用户可执行的操作 = 1 个测试项
-   - 每个系统自动触发的行为 = 1 个测试项
-   - 每个数据实体的 CRUD 操作 = 各 1 个测试项
-   - 每个关键业务规则 = 1 个测试项
-   ```
-
-3. **评估业务价值**：
-   - 高：核心业务流程（登录、支付、下单）
-   - 中：辅助功能（修改信息、查询记录）
-   - 低：边缘功能（高级设置、管理员报表）
-
-4. **提取需求内容**：提取该模块的相关 prd 章节内容
-
-5. **分配 module_id**：按顺序递增（M01, M02, M03...）
-
-6. **输出 test-items.jsonl**（按模块分组）：
-   ```jsonl
-   {"module_id":"M01","module_name":"用户注册","test_items":[{"item":"用户注册流程","business_value":"高"},{"item":"手机号验证","business_value":"高"}],"prd":"## 用户注册\n..."}
-   {"module_id":"M02","module_name":"用户登录","test_items":[{"item":"用户登录流程","business_value":"高"}],"prd":"## 用户登录\n..."}
-   ```
-
-**关键原则**：
-- ⚡ **快速识别**：只列清单，不做场景分析（场景分析在 Step 2）
-- 📋 **粒度适中**：每个测试项预估生成 3-8 条用例
-- 🎯 **面向并发**：按模块分组，便于并发分配
-- 🔢 **module_id**：自动递增（M01-M99），用于用例 ID 前缀
-
-**输出**：test-items.jsonl
+**前置条件**：具体明确
+```
+✅ "系统已部署并可正常访问"
+✅ "存在测试账号 testuser/Test@123456"
+✅ "用户已登录系统"
+✅ "购物车中有商品"
+❌ "系统正常"
+❌ "用户已登录"（缺少具体账号信息）
+```
 
 ---
 
-### Step 2: 场景分析 + 用例生成（重量级，并发）
+### 用例示例
 
-**目标**：并发执行场景分析并直接生成测试用例
-
-**并发策略（简化）**：
-
-1. **计算 Agent 数量**：
-   ```
-   模块数 = M（来自 test-items.jsonl）
-   Agent 数 = ceil(M / 2.5)  # 每个 agent 负责 2-3 个模块
-
-   示例：
-   - 5 个模块 → 2 个 agent（每个 2-3 个模块）
-   - 10 个模块 → 4 个 agent（每个 2-3 个模块）
-   ```
-
-2. **模块分配**：
-   - 按顺序将模块分配给各 agent（顺序分配，不做负载均衡）
-   - 示例：10 个模块 → Agent1(M01-M03), Agent2(M04-M06), Agent3(M07-M08), Agent4(M09-M10)
-
-3. **并行执行**：
-   - 同时启动 N 个 Task agent
-   - 每个 agent 读取 `assets/agent-prompt.md` 模板作为提示词
-   - 传递给 agent：工作区路径、分配的模块列表（module_id）
-   - Agent 自行读取 prd.md、test-items.jsonl、参考文档
-
-4. **收集结果**：
-   - 各 agent 输出到 `cases/{module_name}.jsonl`
-   - 用例 ID 格式：`{module_id}-{seq:03d}`（如 M01-001, M01-002）
-   - 模块内 ID 独立编号，天然无冲突
-
-**Sub Agent 提示词模板位置**：
-
-```
-assets/agent-prompt.md
+**正向场景示例**：
+```json
+{
+  "id": "M01-001",
+  "name": "验证用户使用正确密码成功登录系统",
+  "module_name": "用户登录",
+  "test_item": "账号密码登录",
+  "scenario_type": "正向场景",
+  "priority": "P1",
+  "test_type": "功能测试",
+  "is_negative": false,
+  "preconditions": [
+    "系统已部署并可正常访问",
+    "存在测试账号 testuser/Test@123456"
+  ],
+  "steps": [
+    {"action": "打开系统登录页面", "expected": "页面显示登录表单，包含用户名、密码输入框和登录按钮"},
+    {"action": "在用户名输入框输入 testuser", "expected": "输入框显示 testuser"},
+    {"action": "在密码输入框输入 Test@123456", "expected": "密码显示为密文（圆点或星号）"},
+    {"action": "点击登录按钮", "expected": "登录成功，跳转到系统首页，页面显示用户昵称"}
+  ],
+  "notes": "核心功能正向用例"
+}
 ```
 
-模板包含以下占位符：
-- `{workspace}`：工作区根路径（需求输出目录的绝对路径）
-- `{skill_dir}`：test-case-generator skill 目录的绝对路径
-- `{assigned_modules}`：分配的模块列表（JSON 数组）
+**异常场景示例**：
+```json
+{
+  "id": "M01-002",
+  "name": "验证用户输入错误密码时登录失败",
+  "module_name": "用户登录",
+  "test_item": "账号密码登录",
+  "scenario_type": "异常场景",
+  "priority": "P3",
+  "test_type": "功能测试",
+  "is_negative": true,
+  "preconditions": [
+    "系统已部署并可正常访问",
+    "存在测试账号 testuser/Test@123456"
+  ],
+  "steps": [
+    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
+    {"action": "在用户名输入框输入 testuser", "expected": "输入框显示 testuser"},
+    {"action": "在密码输入框输入错误密码 wrongpassword", "expected": "密码显示为密文"},
+    {"action": "点击登录按钮", "expected": "登录失败，页面提示\"用户名或密码错误\"，停留在登录页面"}
+  ],
+  "notes": "核心功能反向用例"
+}
+```
 
-**重要**：启动 Sub Agent 时，必须替换 agent-prompt.md 中的占位符为实际的绝对路径。
+**边界场景示例**：
+```json
+{
+  "id": "M01-003",
+  "name": "验证系统拒绝超过20字符的用户名",
+  "module_name": "用户登录",
+  "test_item": "账号密码登录",
+  "scenario_type": "边界场景",
+  "priority": "P3",
+  "test_type": "功能测试",
+  "is_negative": true,
+  "preconditions": ["系统已部署并可正常访问"],
+  "steps": [
+    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
+    {"action": "在用户名输入框输入21个字符 abcdefghijklmnopqrstu", "expected": "输入框显示输入内容"},
+    {"action": "点击登录按钮", "expected": "提示\"用户名长度不能超过20字符\""}
+  ],
+  "notes": "边界值测试"
+}
+```
 
-**输出**：cases/{module_name}.jsonl（多个文件）
+**安全场景示例**：
+```json
+{
+  "id": "M01-010",
+  "name": "验证系统防止SQL注入攻击",
+  "module_name": "用户登录",
+  "test_item": "账号密码登录",
+  "scenario_type": "安全场景",
+  "priority": "P1",
+  "test_type": "安全性测试",
+  "is_negative": true,
+  "preconditions": ["系统已部署并可正常访问"],
+  "steps": [
+    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
+    {"action": "在用户名输入框输入 ' OR '1'='1", "expected": "输入被接受"},
+    {"action": "在密码输入框输入任意内容", "expected": "输入被接受"},
+    {"action": "点击登录按钮", "expected": "登录失败，返回正常错误提示，不会绕过认证"}
+  ],
+  "notes": "安全测试-SQL注入防护"
+}
+```
 
 ---
 
-### Step 3: 质量审查
-
-对各 agent 输出的模块文件进行审查（合并前）：
-
-**3.1 编码检查**（优先执行）
+### 即时检验（每个模块必做）
 
 ```bash
-# 检查所有模块文件是否有乱码字符
-grep -n '�' cases/*.jsonl
+# 1. 编码检查（必须无乱码）
+grep -n '�' cases/{module}.jsonl
+# 无输出 = 通过；有输出 = 显示行号，必须修复
+
+# 2. 格式校验
+python {skill_dir}/scripts/validate.py cases/{module}.jsonl --strict
+
+# 3. 覆盖检查（人工确认）
+# - 该模块每个 test_item 是否都有用例？
+# - 是否至少有 1 个正向 + 1 个异常/边界？
 ```
 
-- **无输出** = 无乱码，继续下一步
-- **有输出** = 显示 `文件名:行号:内容`，必须先修复再继续
+### 上下文管理（关键优势）
 
-**3.2 格式验证**（使用脚本）
+```
+为什么单 Agent 串行能保证质量：
+
+1. Agent 始终持有完整 prd.md
+2. 生成下一个模块时，能参考前面模块的风格和覆盖情况
+3. 模块间有交叉时，能正确判断归属
+4. 不会重复，不会遗漏
+```
+
+### 断点恢复
+
+```
+如果中途中断：
+1. 检查 cases/ 目录，确认已完成的模块
+2. 检查 TodoWrite 状态
+3. 从下一个未完成的模块继续
+已生成的 .jsonl 文件不会丢失
+```
+
+---
+
+## Step 3: 全量审查
+
+**执行者**：Task Agent（主 Agent 启动）
+
+**目的**：跳出生成视角，以独立审查者身份检查全量用例
+
+**前置准备**：读取 `{skill_dir}/assets/review-prompt.md` 获取审查 Agent 的完整提示词
+
+**启动方式**：
+
+```python
+Task(
+    subagent_type="general-purpose",
+    prompt=read_file("{skill_dir}/assets/review-prompt.md")
+           .replace("{workspace}", workspace_path)
+           .replace("{skill_dir}", skill_dir_path)
+)
+```
+
+**审查维度**：
+1. **覆盖完整性**：每个测试项是否都有用例？场景是否覆盖？
+2. **跨模块一致性**：命名风格、优先级分布、模块边界
+3. **内容质量**：步骤描述具体、预期结果可验证、前置条件完整
+
+**输出**：
+- `{workspace}/review-report.md`：审查报告
+- 发现问题直接修复（追加或编辑 cases/*.jsonl）
+
+---
+
+## Step 4: 合并与导出
+
+**执行者**：主 Agent + 脚本
 
 ```bash
-# 验证所有模块文件的格式和业务规则
-python scripts/validate_jsonl.py cases/*.jsonl --strict
+# 1. 最终格式检验
+python {skill_dir}/scripts/validate.py {workspace}/cases/*.jsonl --strict
+
+# 2. 合并所有模块
+python {skill_dir}/scripts/merge.py {workspace}/cases/*.jsonl \
+    -o {workspace}/cases.jsonl --sort-by module
+
+# 3. 导出 Excel
+python {skill_dir}/scripts/to_excel.py {workspace}/cases.jsonl \
+    -o {workspace}/cases.xlsx
+
+# 4. 导出 XMind（可选）
+python {skill_dir}/scripts/to_xmind.py {workspace}/cases.jsonl \
+    -o {workspace}/cases.xmind --name "{需求名称}"
+
+# 5. 生成统计报告
+python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
+    --modules {workspace}/modules.jsonl -o {workspace}/stats-report.md
 ```
 
-**3.2 AI 手动检查清单**
-
-逐项检查并修复问题：
+**输出确认**：
 
 ```markdown
+## 生成完成
+
+| 文件 | 说明 |
+|------|------|
+| modules.jsonl | 模块规划（N 个模块） |
+| cases/*.jsonl | 各模块用例（中间产物） |
+| cases.jsonl | 合并用例（N 条） |
+| cases.xlsx | Excel 格式 |
+| cases.xmind | XMind 思维导图 |
+| review-report.md | 审查报告 |
+| stats-report.md | 统计报告 |
+```
+
+---
+
 ## 质量检查清单
 
-### 1. 测试项覆盖检查（遗漏问题）
-□ 列出 test-items.jsonl 中所有测试项
-□ 检查 cases/*.jsonl 中每个测试项是否都有对应用例
-□ 遗漏的测试项需补充用例
-□ 输出：覆盖率 = 已覆盖测试项数 / 总测试项数
+### 完整性检查
+- [ ] 每个模块都已生成用例文件
+- [ ] 每个 test_item 都有对应用例
+- [ ] 每个 test_item 至少 1 个正向场景
+- [ ] 每个 test_item 至少 1 个异常/边界场景
+- [ ] 核心功能（business_value=高）覆盖更多场景类型
 
-### 2. 场景覆盖检查
-□ 每个测试项是否至少有 1 个正向场景
-□ 每个测试项是否至少有 1 个异常/边界场景
-□ 核心功能（business_value=高）是否覆盖更多场景类型
+### 格式规范检查
+- [ ] ID 格式正确：`{module_id}-{seq:03d}`
+- [ ] ID 连续递增，无跳号
+- [ ] 用例名称以"验证"开头，主谓宾格式
+- [ ] module_name ≤15 字符
+- [ ] test_item 与 modules.jsonl 中的 item 匹配
+- [ ] scenario_type 为 5 种有效值之一
+- [ ] priority 为 P1-P5
+- [ ] test_type 为 13 种有效值之一
+- [ ] steps 至少 1 条，每条有 action 和 expected
+- [ ] preconditions 为数组格式
+- [ ] JSONL 格式正确（每行一个 JSON）
 
-### 3. 格式规范检查
-□ 用例名称是否以"验证"开头（主谓宾格式）
-□ module_name 是否 ≤15 字符
-□ test_item 是否与 test-items.jsonl 中的 item 匹配
-□ scenario_type 是否为有效值（正向/边界/异常/性能/安全）
-□ steps 是否至少有 1 条，每条有 action 和 expected
-□ preconditions 是否为数组格式
+### 编码检查
+- [ ] `grep -n '�' cases/*.jsonl` 无输出
 
-### 4. 业务逻辑检查
-□ 优先级是否合理（P1 占比 10-20%）
-□ 反向用例是否标记 is_negative: true
-□ test_type 是否与 scenario_type 匹配（安全场景→安全性测试）
+### 内容质量检查
+- [ ] 步骤描述具体可执行（无模糊词）
+- [ ] 预期结果可验证（无模糊词）
+- [ ] 前置条件完整明确
+- [ ] 反向用例正确标记 is_negative: true
+- [ ] test_type 与 scenario_type 匹配
 
-### 5. 内容质量检查
-□ 步骤描述是否具体可执行（避免"正确操作"等模糊描述）
-□ 预期结果是否可验证（避免"正常"等模糊描述）
-□ 前置条件是否完整
-```
+### 业务逻辑检查
+- [ ] 优先级分布合理
+- [ ] 反向用例占比 ≥15%
+- [ ] 覆盖需求中的关键业务规则
+- [ ] 边界场景覆盖各类边界值
+- [ ] 安全场景覆盖敏感操作的防护
 
-**检查结果报告**：
+### 禁用的模糊描述
 
-```markdown
-## 质量审查报告
+**操作步骤禁用词**：正确操作、正确输入、按要求操作、合理操作、正常操作
 
-- 总用例数：{N}
-- 测试项覆盖率：{X}%（{covered}/{total}）
-- 遗漏测试项：{list}
-- 场景覆盖：正向场景 {N} 个，异常场景 {N} 个，边界场景 {N} 个
-- 格式问题：{N} 处
-- 优先级分布：P1({x}%) P2({x}%) P3({x}%) P4({x}%) P5({x}%)
-
-### 待修复问题
-1. ...
-2. ...
-```
+**预期结果禁用词**：正确、正常、合适、成功、失败、完成、应该、可能、合理
 
 ---
 
-### Step 4: 合并与导出
+## 成功标准
 
-**4.1 合并测试用例**
+| 指标 | 目标值 |
+|------|-------|
+| 测试项覆盖率 | 100% |
+| 场景覆盖 | 每个测试项至少 1 正向 + 1 异常/边界 |
+| 格式校验 | 0 错误 |
+| 编码检查 | 0 乱码 |
+| P1 占比 | 10-20% |
+| P2 占比 | 25-35% |
+| P3 占比 | 20-30% |
+| P4 占比 | 15-25% |
+| P5 占比 | 5-10% |
+| 反向用例占比 | ≥15% |
 
-```bash
-python scripts/merge_jsonl.py cases/*.jsonl -o cases.jsonl --sort-by module
-```
-
-> 若发现 ID 溢出/冲突：按模块排序后整体重排 ID（TC-001 起），或调整分段后重新生成并合并。
-
-**4.2 导出 XMind 思维导图**（可选）
-
-```bash
-python scripts/convert_to_xmind.py cases.jsonl -o cases.xmind --name "{需求名称}"
-```
-
-**4.3 生成统计报告**
-
-```bash
-python scripts/stats_report.py cases.jsonl --test-items test-items.jsonl -o stats-report.md
-```
-
-**4.4 输出确认**
-
-```markdown
-## 导出完成
-
-已生成以下文件：
-- test-items.jsonl（{N} 个测试项）
-- cases/（{M} 个模块文件，中间态）
-- cases.jsonl（{N} 条用例，合并后）
-- cases.xmind（思维导图，可选）
-- stats-report.md（统计报告）
-
-请查收。
-```
+---
 
 ## 工具脚本
 
-### 环境与依赖
-- Python 3.9+
-- `jsonschema`（Schema 验证）：`pip install jsonschema`
-- `xmind`（生成 XMind）：`pip install xmind`
+**环境**：Python 3.9+，依赖 `jsonschema`、`xmind`、`openpyxl`
 
-### 路径说明
+**路径**：脚本在 `{skill_dir}/scripts/`，使用绝对路径调用
 
-**执行脚本时**，所有脚本路径都是相对于 test-case-generator skill 目录的相对路径：
-- 脚本位置：`scripts/validate_jsonl.py`、`scripts/merge_jsonl.py` 等
-- 这些脚本需要从 skill 目录执行，或使用绝对路径
+| 脚本 | 功能 |
+|-----|------|
+| validate_jsonl.py | 验证 JSONL 格式、Schema、业务规则 |
+| merge_jsonl.py | 合并多个 JSONL 文件 |
+| convert_to_excel.py | 转换为 Excel |
+| convert_to_xmind.py | 转换为 XMind 思维导图 |
+| stats_report.py | 生成统计报告 |
 
-**在工作流中调用脚本的正确方式**：
-```bash
-# 方式 1：使用绝对路径（推荐）
-python /path/to/test-case-generator/scripts/validate_jsonl.py {workspace}/cases/*.jsonl --strict
+---
 
-# 方式 2：先 cd 到 skill 目录
-cd /path/to/test-case-generator
-python scripts/validate_jsonl.py {workspace}/cases/*.jsonl --strict
-```
+## 按需读取的参考文档
 
-### 可用脚本
+以下文档在特定场景下读取，不要一开始就全部加载：
 
-| 脚本 | 功能 | 详细用法 |
-|-----|------|---------|
-| `validate_jsonl.py` | 验证 JSONL 格式、Schema、业务规则 | `--help` |
-| `merge_jsonl.py` | 合并多个 JSONL 文件 | `--help` |
-| `convert_to_xmind.py` | 转换为 XMind 思维导图 | `--help` |
-| `stats_report.py` | 生成统计报告 | `--help` |
+| 文档 | 读取时机 | 内容 |
+|------|---------|------|
+| `references/priority-guide.md` | 判定优先级时遇到特殊场景 | 优先级判定决策树、特殊场景处理、常见错误 |
+| `references/test-type-guide.md` | 选择测试类型时需要更多指导 | 各测试类型详细说明和更多示例 |
+| `assets/case-template.jsonl` | Step 2 首次生成前 | 完整的用例格式示例（10条） |
+| `assets/modules-template.jsonl` | Step 1 需要模块规划示例时 | 模块规划格式示例 |
+| `assets/review-prompt.md` | Step 3 启动审查 Agent 时 | 审查 Agent 的完整提示词 |
+| `scripts/module.schema.json` | 需要精确了解模块字段约束时 | 模块规划 JSON Schema |
+| `scripts/test-case.schema.json` | 需要精确了解用例字段约束时 | 测试用例 JSON Schema |
 
-**使用方法**：所有脚本都支持 `--help` 查看详细参数说明。
-
-**常用命令**：参见 workflow 中各步骤的脚本调用示例。
-
-## 用例名称规范
-
-用例名称应按**主谓宾格式**表达：
-
-| 正确示例 | 错误示例 |
-|---------|---------|
-| 验证用户成功登录系统 | 登录测试 |
-| 验证密码错误时登录失败 | 密码错误 |
-| 验证系统防止SQL注入 | SQL注入测试 |
-
-## 成功标准
-1. **文档完整性**：test-items.jsonl / cases/ / cases.jsonl / stats-report.md；有网且依赖满足时附 cases.xmind。
-2. **覆盖率**：测试项覆盖 100%，缺失=0。
-3. **场景覆盖**：每个测试项至少有 1 个正向场景 + 1 个异常/边界场景；核心功能（business_value=高）覆盖更多场景类型。
-4. **质量阈值**：模糊描述=0；每步含 expected；module_name ≤15；用例名以"验证"开头；scenario_type 为有效值。
-5. **优先级分布**：P1 10–20%，P2 25–35%，P3 20–30%，P4 15–25%，P5 5–10%；反向用例占比 ≥15%。
-6. **格式校验**：`validate_jsonl.py --strict` 0 错误；ID 冲突=0；Schema 校验通过。
-7. **并发安全**：无 ID 溢出/越界；如调整分段需在合并后重排 ID。
+---
 
 ## 注意事项
 
-1. **本 skill 专注于用例生成**，不处理需求质量问题（如需求模糊、缺失信息等，请先使用 requirement-tester）
-2. 用例 ID 必须全局唯一
-3. 用例名称按主谓宾格式，不含 ID
-4. 优先级按 business_value 和 scenario_type 综合判断
-5. 测试类型从 13 种中选择最匹配的一种
-6. scenario_type 必须为：正向场景、边界场景、异常场景、性能场景、安全场景 之一
-
-## 按需加载提示
-- references（priority/test-type guide）仅在判定优先级/类型时读取，避免整篇加载。
-- assets 模板用于快速起稿，完成后可删除未用文件。
-- scripts 执行输出即可，不把脚本内容拉入上下文。
+1. **主 Agent 执行 Step 1、2、4**，只有 Step 3 使用 Task Agent
+2. **用例 ID 全局唯一**，模块前缀保证天然无冲突
+3. **每个模块生成后立即检验**，不要等到最后
+4. **保持全局上下文**，生成时参考前面模块的风格
+5. **断点可恢复**，已生成的文件不会丢失
+6. **按需读取参考文档**，不要一开始就加载所有 references

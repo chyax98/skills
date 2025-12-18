@@ -4,7 +4,7 @@ JSONL 转 XMind 思维导图工具
 
 功能：
 1. 将 JSONL 格式的测试用例转换为 XMind 思维导图
-2. 支持按模块和测试点分层展示
+2. 支持按模块和测试项分层展示
 3. 支持优先级图标标记
 4. 步骤与预期结果形成父子结构
 
@@ -68,15 +68,15 @@ def load_jsonl(file_path: Path) -> List[Dict]:
 
 def group_by_module(test_cases: List[Dict]) -> Dict[str, Dict[str, List[Dict]]]:
     """
-    按模块和测试点分组
+    按模块和测试项分组
 
-    返回结构：{module_name: {test_point_name: [cases]}}
+    返回结构：{module_name: {test_item: [cases]}}
     """
     structure = defaultdict(lambda: defaultdict(list))
     for case in test_cases:
         module = case.get('module_name', '未命名模块')
-        point = case.get('test_point_name', '默认测试点')
-        structure[module][point].append(case)
+        item = case.get('test_item', '默认测试项')
+        structure[module][item].append(case)
     return structure
 
 
@@ -170,29 +170,29 @@ def convert_to_xmind(
     grouped = group_by_module(test_cases)
 
     for module_name in sorted(grouped.keys()):
-        points = grouped[module_name]
+        items = grouped[module_name]
 
         # 模块节点
         mod_topic = root.addSubTopic()
         mod_topic.setTitle(module_name)
 
-        for point_name in sorted(points.keys()):
-            cases = points[point_name]
+        for item_name in sorted(items.keys()):
+            cases = items[item_name]
 
-            # 判断是否需要测试点层级
-            # 条件：flat 模式、测试点名与模块名相同、或为默认测试点
-            skip_point_level = (
+            # 判断是否需要测试项层级
+            # 条件：flat 模式、测试项名与模块名相同、或为默认测试项
+            skip_item_level = (
                 flat_mode or
-                point_name == module_name or
-                point_name == "默认测试点"
+                item_name == module_name or
+                item_name == "默认测试项"
             )
 
-            if skip_point_level:
+            if skip_item_level:
                 parent_for_case = mod_topic
             else:
-                point_topic = mod_topic.addSubTopic()
-                point_topic.setTitle(point_name)
-                parent_for_case = point_topic
+                item_topic = mod_topic.addSubTopic()
+                item_topic.setTitle(item_name)
+                parent_for_case = item_topic
 
             # 用例节点
             for case in cases:
@@ -244,7 +244,7 @@ def main():
     parser.add_argument('input', type=Path, help='输入 JSONL 文件')
     parser.add_argument('-o', '--output', type=Path, required=True, help='输出 XMind 文件路径')
     parser.add_argument('--name', default='测试用例', help='根节点名称（默认：测试用例）')
-    parser.add_argument('--flat', action='store_true', help='扁平模式：跳过测试点层级，用例直接挂在模块下')
+    parser.add_argument('--flat', action='store_true', help='扁平模式：跳过测试项层级，用例直接挂在模块下')
 
     args = parser.parse_args()
 

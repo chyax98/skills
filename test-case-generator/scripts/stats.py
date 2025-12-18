@@ -9,7 +9,7 @@
 
 用法：
     python stats_report.py cases.jsonl -o stats-report.md
-    python stats_report.py cases.jsonl --test-points test-points.jsonl -o stats-report.md
+    python stats_report.py cases.jsonl --modules modules.jsonl -o stats-report.md
 """
 
 import json
@@ -43,13 +43,13 @@ def load_jsonl(file_path: Path) -> List[Dict]:
     return objects
 
 
-def generate_stats_report(test_cases: List[Dict], test_points: List[Dict] = None) -> str:
+def generate_stats_report(test_cases: List[Dict], modules: List[Dict] = None) -> str:
     """
     生成统计报告
 
     Args:
         test_cases: 测试用例列表
-        test_points: 测试点列表（可选）
+        modules: 模块规划列表（可选）
 
     Returns:
         Markdown 格式的统计报告
@@ -67,10 +67,12 @@ def generate_stats_report(test_cases: List[Dict], test_points: List[Dict] = None
     total_cases = len(test_cases)
     lines.append(f"- 测试用例总数：{total_cases}")
 
-    if test_points:
-        total_points = len(test_points)
-        lines.append(f"- 测试点总数：{total_points}")
-        lines.append(f"- 平均每测试点用例数：{total_cases / total_points:.2f}")
+    if modules:
+        total_modules = len(modules)
+        total_items = sum(len(m.get('test_items', [])) for m in modules)
+        lines.append(f"- 模块总数：{total_modules}")
+        lines.append(f"- 测试项总数：{total_items}")
+        lines.append(f"- 平均每测试项用例数：{total_cases / total_items:.2f}" if total_items > 0 else "")
 
     lines.append("")
 
@@ -101,7 +103,7 @@ def generate_stats_report(test_cases: List[Dict], test_points: List[Dict] = None
     lines.append("| 优先级 | 数量 | 占比 |")
     lines.append("|--------|------|------|")
 
-    for priority in ['P1', 'P2', 'P3', 'P4']:
+    for priority in ['P1', 'P2', 'P3', 'P4', 'P5']:
         count = priorities.get(priority, 0)
         percentage = (count / total_cases) * 100 if total_cases > 0 else 0
         lines.append(f"| {priority} | {count} | {percentage:.1f}% |")
@@ -175,12 +177,12 @@ def main():
         epilog="""
 示例：
   python stats_report.py cases.jsonl -o stats-report.md
-  python stats_report.py cases.jsonl --test-points test-points.jsonl -o stats-report.md
+  python stats_report.py cases.jsonl --modules modules.jsonl -o stats-report.md
         """
     )
     parser.add_argument('cases', type=Path, help='测试用例 JSONL 文件')
     parser.add_argument('-o', '--output', type=Path, required=True, help='输出报告文件路径')
-    parser.add_argument('--test-points', type=Path, help='测试点 JSONL 文件（可选）')
+    parser.add_argument('--modules', type=Path, help='模块规划 JSONL 文件（可选）')
 
     args = parser.parse_args()
 
@@ -191,13 +193,13 @@ def main():
         print("错误：测试用例文件为空")
         sys.exit(1)
 
-    # 加载测试点（可选）
-    test_points = None
-    if args.test_points and args.test_points.exists():
-        test_points = load_jsonl(args.test_points)
+    # 加载模块规划（可选）
+    modules = None
+    if args.modules and args.modules.exists():
+        modules = load_jsonl(args.modules)
 
     # 生成报告
-    report = generate_stats_report(test_cases, test_points)
+    report = generate_stats_report(test_cases, modules)
 
     # 写入文件
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -210,8 +212,8 @@ def main():
     print("统计摘要：")
     print("="*60)
     print(f"测试用例总数：{len(test_cases)}")
-    if test_points:
-        print(f"测试点总数：{len(test_points)}")
+    if modules:
+        print(f"模块总数：{len(modules)}")
 
 
 if __name__ == '__main__':
