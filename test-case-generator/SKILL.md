@@ -197,6 +197,22 @@ interface TestCase {
 ❌ 密码错误
 ```
 
+### 可执行性原则
+
+生成**黑盒测试用例**，确保测试人员可执行：
+
+| 要素 | 要求 | 正确 | 错误 |
+|-----|------|------|------|
+| 步骤 | 基于界面/系统入口操作 | "点击提交按钮" | "调用 API 接口" |
+| 预期 | 通过界面可验证的结果 | "提示'保存成功'" | "数据库插入记录" |
+| 验证 | 不依赖查代码/日志/数据库 | "列表显示新数据" | "检查后台日志" |
+
+**禁止生成**：
+- 步骤涉及：调用接口、执行 SQL、查看代码、修改配置文件
+- 预期涉及：数据库字段值、日志内容、缓存状态、接口响应码
+
+---
+
 **步骤描述**：具体可执行，避免模糊
 
 **预期结果原则**：只在验证点写预期，过渡步骤省略
@@ -241,89 +257,18 @@ interface TestCase {
 
 ### 用例示例
 
-**正向用例**：
-```json
-{
-  "id": "M01-001",
-  "name": "验证用户使用正确密码成功登录系统",
-  "module_name": "用户登录",
-  "test_item": "账号密码登录",
-  "priority": "P1",
-  "test_type": "功能测试",
-  "is_negative": false,
-  "preconditions": [
-    "系统已部署并可正常访问",
-    "存在测试账号 testuser/Test@123456"
-  ],
-  "steps": [
-    {"action": "打开系统登录页面"},
-    {"action": "输入用户名 testuser"},
-    {"action": "输入密码 Test@123456"},
-    {"action": "点击登录按钮", "expected": "登录成功，跳转到系统首页，显示用户昵称"}
-  ]
-}
-```
+```jsonl
+# 正向用例
+{"id":"M01-001","name":"验证用户使用正确密码成功登录系统","module_name":"用户登录","test_item":"账号密码登录","priority":"P1","test_type":"功能测试","is_negative":false,"preconditions":["系统已部署并可正常访问","存在测试账号 testuser/Test@123456"],"steps":[{"action":"打开系统登录页面"},{"action":"输入用户名 testuser"},{"action":"输入密码 Test@123456"},{"action":"点击登录按钮","expected":"登录成功，跳转到系统首页，显示用户昵称"}]}
 
-**反向用例（异常）**：
-```json
-{
-  "id": "M01-002",
-  "name": "验证用户输入错误密码时登录失败",
-  "module_name": "用户登录",
-  "test_item": "账号密码登录",
-  "priority": "P3",
-  "test_type": "功能测试",
-  "is_negative": true,
-  "preconditions": [
-    "系统已部署并可正常访问",
-    "存在测试账号 testuser/Test@123456"
-  ],
-  "steps": [
-    {"action": "打开系统登录页面"},
-    {"action": "输入用户名 testuser"},
-    {"action": "输入错误密码 wrongpassword"},
-    {"action": "点击登录按钮", "expected": "登录失败，提示\"用户名或密码错误\""}
-  ]
-}
-```
+# 反向用例（异常）
+{"id":"M01-002","name":"验证用户输入错误密码时登录失败","module_name":"用户登录","test_item":"账号密码登录","priority":"P3","test_type":"功能测试","is_negative":true,"preconditions":["系统已部署并可正常访问","存在测试账号 testuser/Test@123456"],"steps":[{"action":"打开系统登录页面"},{"action":"输入用户名 testuser"},{"action":"输入错误密码 wrongpassword"},{"action":"点击登录按钮","expected":"登录失败，提示\"用户名或密码错误\""}]}
 
-**反向用例（边界）**：
-```json
-{
-  "id": "M01-003",
-  "name": "验证系统拒绝超过20字符的用户名",
-  "module_name": "用户登录",
-  "test_item": "账号密码登录",
-  "priority": "P3",
-  "test_type": "功能测试",
-  "is_negative": true,
-  "preconditions": ["系统已部署并可正常访问"],
-  "steps": [
-    {"action": "打开系统登录页面"},
-    {"action": "输入21个字符的用户名 abcdefghijklmnopqrstu"},
-    {"action": "点击登录按钮", "expected": "提示\"用户名长度不能超过20字符\""}
-  ]
-}
-```
+# 反向用例（边界）
+{"id":"M01-003","name":"验证系统拒绝超过20字符的用户名","module_name":"用户登录","test_item":"账号密码登录","priority":"P3","test_type":"功能测试","is_negative":true,"preconditions":["系统已部署并可正常访问"],"steps":[{"action":"打开系统登录页面"},{"action":"输入21个字符的用户名 abcdefghijklmnopqrstu"},{"action":"点击登录按钮","expected":"提示\"用户名长度不能超过20字符\""}]}
 
-**安全测试用例**：
-```json
-{
-  "id": "M01-010",
-  "name": "验证系统防止SQL注入攻击",
-  "module_name": "用户登录",
-  "test_item": "账号密码登录",
-  "priority": "P1",
-  "test_type": "安全性测试",
-  "is_negative": true,
-  "preconditions": ["系统已部署并可正常访问"],
-  "steps": [
-    {"action": "打开系统登录页面"},
-    {"action": "在用户名输入框输入 ' OR '1'='1"},
-    {"action": "输入任意密码"},
-    {"action": "点击登录按钮", "expected": "登录失败，返回正常错误提示，不会绕过认证"}
-  ]
-}
+# 安全测试用例
+{"id":"M01-010","name":"验证系统防止SQL注入攻击","module_name":"用户登录","test_item":"账号密码登录","priority":"P1","test_type":"安全性测试","is_negative":true,"preconditions":["系统已部署并可正常访问"],"steps":[{"action":"打开系统登录页面"},{"action":"在用户名输入框输入 ' OR '1'='1"},{"action":"输入任意密码"},{"action":"点击登录按钮","expected":"登录失败，返回正常错误提示，不会绕过认证"}]}
 ```
 
 ---
@@ -359,9 +304,7 @@ python {skill_dir}/scripts/validate.py cases/{module}.jsonl --strict
 
 **执行者**：Task Agent（主 Agent 启动）
 
-**目的**：跳出生成视角，以独立审查者身份检查全量用例
-
-**前置准备**：读取 `{skill_dir}/assets/review-prompt.md` 获取审查 Agent 的完整提示词
+**目的**：脚本扫描发现可疑点，Agent 裁决是否需要修复
 
 **启动方式**：
 
@@ -374,14 +317,10 @@ Task(
 )
 ```
 
-**审查维度**：
-1. **覆盖完整性**：每个测试项是否都有用例？场景是否覆盖？
-2. **跨模块一致性**：命名风格、优先级分布、模块边界
-3. **内容质量**：步骤描述具体、预期结果可验证、前置条件完整
-
-**输出**：
-- `{workspace}/review-report.md`：审查报告
-- 发现问题直接修复（追加或编辑 cases/*.jsonl）
+**审查流程**：
+1. **脚本扫描**：`validate.py --strict --audit --modules` 输出待审查项
+2. **Agent 裁决**：逐项判断是否需要修复
+3. **输出报告**：`{workspace}/review-report.md`
 
 ---
 
@@ -445,6 +384,7 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 
 ### 内容质量
 - [ ] 步骤具体可执行，预期可验证
+- [ ] 黑盒可执行：步骤基于界面，预期通过界面可验证，无需查库/看日志
 - [ ] 禁用词：正确、正常、合适、成功、失败、应该
 - [ ] 反向用例标记 is_negative: true
 
@@ -459,7 +399,6 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 | 格式校验 | 0 错误 |
 | 编码检查 | 0 乱码 |
 | 优先级分布 | 合理即可 |
-| 反向用例占比 | ≥15% |
 
 ---
 
@@ -471,7 +410,7 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 
 | 脚本 | 功能 |
 |-----|------|
-| validate.py | 验证 JSONL 格式、Schema、业务规则 |
+| validate.py | 验证格式 + 审查模式（`--audit` 输出待审查项） |
 | merge.py | 合并多个 JSONL 文件 |
 | to_excel.py | 转换为 Excel |
 | to_xmind.py | 转换为 XMind 思维导图 |

@@ -1,67 +1,69 @@
 #!/usr/bin/env python3
 """
-JSONL 格式验证工具
+JSONL 格式验证与审查工具
 
 功能：
 1. 验证 JSONL 文件的 JSON 语法
-2. 验证是否符合 JSON Schema
-3. 验证业务规则（ID 唯一性、格式规范、内容质量）
+2. 验证业务规则（ID 唯一性、格式规范）
+3. 审查模式：发现待审查项（禁用词、可执行性、覆盖完整性）
 
 用法：
-    python validate_jsonl.py test-items.jsonl
-    python validate_jsonl.py cases.jsonl
-    python validate_jsonl.py cases.jsonl --strict
-    python validate_jsonl.py cases/*.jsonl --strict
-    python validate_jsonl.py cases.jsonl --schema test-case.schema.json
+    python validate.py cases.jsonl
+    python validate.py cases.jsonl --strict
+    python validate.py cases/*.jsonl --strict
+    python validate.py cases/*.jsonl --audit --modules modules.jsonl
 """
 
 import json
 import sys
+import re
 import argparse
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
-from collections import Counter
+from typing import List, Dict, Tuple
+from collections import Counter, defaultdict
 
-try:
-    import jsonschema
-    JSONSCHEMA_AVAILABLE = True
-except ImportError:
-    JSONSCHEMA_AVAILABLE = False
-    print("警告：jsonschema 未安装，将跳过 Schema 验证")
-    print("安装方法：pip install jsonschema")
+
+# 禁用词配置
+FORBIDDEN_WORDS_STEP = ['正确操作', '正确输入', '按要求操作', '按要求输入']
+FORBIDDEN_WORDS_EXPECTED = ['正确', '正常', '合适', '应该']
+
+# 非黑盒关键词（可执行性检测）
+NON_BLACKBOX_WORDS = [
+    '数据库', 'SQL', 'API', '接口', '日志', 'log', '缓存', 'cache',
+    '后台', '服务端', '响应码', '状态码', '返回值', '配置文件'
+]
 
 
 class ValidationError:
-    """验证错误"""
-    def __init__(self, file_path: str, line_num: int, error_type: str, message: str):
+    """验证错误（必须修复）"""
+    def __init__(self, file_path: str, line_num: int, error_type: str, message: str, case_id: str = None):
         self.file_path = file_path
         self.line_num = line_num
         self.error_type = error_type
         self.message = message
+        self.case_id = case_id
 
     def __str__(self):
-        return f"{self.file_path}:{self.line_num} [{self.error_type}] {self.message}"
+        id_str = f" {self.case_id}" if self.case_id else ""
+        return f"{self.file_path}:{self.line_num}{id_str} [{self.error_type}] {self.message}"
 
 
-class ValidationWarning:
-    """验证警告"""
-    def __init__(self, file_path: str, line_num: int, warning_type: str, message: str):
-        self.file_path = file_path
-        self.line_num = line_num
-        self.warning_type = warning_type
+class AuditItem:
+    """待审查项（需要 Agent 判断）"""
+    def __init__(self, category: str, case_id: str, location: str, message: str, context: str = None):
+        self.category = category  # 覆盖/禁用词/可执行
+        self.case_id = case_id
+        self.location = location  # 步骤/预期/名称
         self.message = message
+        self.context = context  # 原文
 
     def __str__(self):
-        return f"{self.file_path}:{self.line_num} [{self.warning_type}] {self.message}"
+        ctx = f' "{self.context}"' if self.context else ""
+        return f"[{self.category}] {self.case_id}:{self.location} - {self.message}{ctx}"
 
 
-def validate_json_syntax(file_path: Path) -> Tuple[List[Dict], List[ValidationError]]:
-    """
-    第 1 层：JSON 语法验证
-
-    Returns:
-        (objects, errors)
-    """
+def load_jsonl(file_path: Path) -> Tuple[List[Tuple[int, Dict]], List[ValidationError]]:
+    """加载 JSONL 文件"""
     objects = []
     errors = []
 
@@ -69,7 +71,7 @@ def validate_json_syntax(file_path: Path) -> Tuple[List[Dict], List[ValidationEr
         with open(file_path, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
-                if not line:
+                if not line or line.startswith('#'):
                     continue
 
                 try:
@@ -77,350 +79,340 @@ def validate_json_syntax(file_path: Path) -> Tuple[List[Dict], List[ValidationEr
                     objects.append((line_num, obj))
                 except json.JSONDecodeError as e:
                     errors.append(ValidationError(
-                        str(file_path),
-                        line_num,
-                        "语法错误",
+                        str(file_path), line_num, "语法错误",
                         f"JSON 解析失败：{e}"
                     ))
     except Exception as e:
         errors.append(ValidationError(
-            str(file_path),
-            0,
-            "文件错误",
+            str(file_path), 0, "文件错误",
             f"无法读取文件：{e}"
         ))
 
     return objects, errors
 
 
-def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_path: Path = None) -> List[ValidationError]:
-    """
-    第 2 层：Schema 验证
-
-    Args:
-        objects: [(line_num, obj), ...]
-        file_path: JSONL 文件路径
-        schema_path: JSON Schema 文件路径
-
-    Returns:
-        errors
-    """
-    if not JSONSCHEMA_AVAILABLE:
-        return []
-
-    errors = []
-
-    # 自动推断 Schema 文件
-    if schema_path is None:
-        script_dir = Path(__file__).parent
-
-        # 检查文件名判断类型
-        file_name = file_path.name.lower()
-        if 'module' in file_name:
-            schema_path = script_dir / 'module.schema.json'
-        elif 'case' in file_name:
-            schema_path = script_dir / 'test-case.schema.json'
-        else:
-            # 尝试从第一个对象推断
-            if objects:
-                _, first_obj = objects[0]
-                if 'module_id' in first_obj and 'test_items' in first_obj:
-                    schema_path = script_dir / 'module.schema.json'
-                elif 'test_item' in first_obj and 'is_negative' in first_obj:
-                    schema_path = script_dir / 'test-case.schema.json'
-
-    if schema_path is None or not schema_path.exists():
-        # Schema 文件不存在，跳过验证（TypeScript 定义在 SKILL.md 中）
-        return []
-
-    # 加载 Schema
-    try:
-        with open(schema_path, 'r', encoding='utf-8') as f:
-            schema = json.load(f)
-    except Exception as e:
-        errors.append(ValidationError(
-            str(file_path),
-            0,
-            "Schema 错误",
-            f"无法加载 Schema 文件：{e}"
-        ))
-        return errors
-
-    # 验证每个对象
-    for line_num, obj in objects:
-        try:
-            jsonschema.validate(obj, schema)
-        except jsonschema.ValidationError as e:
-            # 提取关键错误信息
-            error_path = ' -> '.join(str(p) for p in e.path) if e.path else '根对象'
-            errors.append(ValidationError(
-                str(file_path),
-                line_num,
-                "Schema 错误",
-                f"{error_path}: {e.message}"
-            ))
-
-    return errors
-
-
-def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) -> Tuple[List[ValidationError], List[ValidationWarning]]:
-    """
-    第 3 层：业务规则验证
-
-    Args:
-        objects: [(line_num, obj), ...]
-        file_path: JSONL 文件路径
-
-    Returns:
-        (errors, warnings)
-    """
+def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) -> Tuple[List[ValidationError], List[ValidationError]]:
+    """业务规则验证"""
     errors = []
     warnings = []
 
-    # 提取所有对象（不含行号）
-    objs = [obj for _, obj in objects]
-
-    # 规则 1：ID 唯一性检查
-    ids = [obj.get('id') for obj in objs if 'id' in obj]
+    # 规则 1：ID 唯一性
+    ids = [obj.get('id') for _, obj in objects if 'id' in obj]
     id_counts = Counter(ids)
-    duplicates = [id for id, count in id_counts.items() if count > 1]
-
-    if duplicates:
-        # 找出重复 ID 的行号
-        for dup_id in duplicates:
-            line_nums = [line_num for line_num, obj in objects if obj.get('id') == dup_id]
+    for dup_id, count in id_counts.items():
+        if count > 1:
+            line_nums = [ln for ln, obj in objects if obj.get('id') == dup_id]
             errors.append(ValidationError(
-                str(file_path),
-                line_nums[0],
-                "业务规则",
-                f"重复 ID '{dup_id}'，出现在行 {', '.join(map(str, line_nums))}"
+                str(file_path), line_nums[0], "重复ID",
+                f"ID '{dup_id}' 重复，出现在行 {', '.join(map(str, line_nums))}"
             ))
 
-    # 规则 2：前置条件检查（测试用例）
+    # 规则 2：ID 格式检查
+    case_id_pattern = re.compile(r'^M[0-9]{2}-[0-9]{3}$')
+    module_id_pattern = re.compile(r'^M[0-9]{2}$')
+
     for line_num, obj in objects:
-        if 'preconditions' in obj:
-            preconditions = obj['preconditions']
-            if not preconditions:
-                warnings.append(ValidationWarning(
-                    str(file_path),
-                    line_num,
-                    "空前置条件",
-                    f"前置条件为空（用例：{obj.get('name', obj.get('id'))}）"
-                ))
-
-    # 规则 3：steps 格式检查（测试用例）
-    for line_num, obj in objects:
-        if 'steps' in obj:
-            steps = obj['steps']
-            has_expected = False
-            for i, step in enumerate(steps, 1):
-                if not isinstance(step, dict):
-                    errors.append(ValidationError(
-                        str(file_path),
-                        line_num,
-                        "业务规则",
-                        f"步骤 {i} 格式错误：应为对象，包含 action 字段"
-                    ))
-                    continue
-
-                if 'action' not in step:
-                    errors.append(ValidationError(
-                        str(file_path),
-                        line_num,
-                        "业务规则",
-                        f"步骤 {i} 缺少 action 字段"
-                    ))
-
-                if 'expected' in step and step['expected']:
-                    has_expected = True
-
-            # 至少需要一个验证点（有 expected 的步骤）
-            if not has_expected:
+        case_id = obj.get('id', '')
+        if 'test_item' in obj:  # 测试用例
+            if not case_id_pattern.match(case_id):
                 errors.append(ValidationError(
-                    str(file_path),
-                    line_num,
-                    "业务规则",
-                    f"用例 '{obj.get('id', '?')}' 缺少验证点（至少一个步骤需要 expected）"
+                    str(file_path), line_num, "ID格式",
+                    f"用例 ID '{case_id}' 格式错误，应为 M01-001", case_id
+                ))
+        elif 'test_items' in obj:  # 模块
+            module_id = obj.get('module_id', '')
+            if not module_id_pattern.match(module_id):
+                errors.append(ValidationError(
+                    str(file_path), line_num, "ID格式",
+                    f"module_id '{module_id}' 格式错误，应为 M01"
                 ))
 
-    # 规则 4：module_name 长度检查
+    # 规则 3：steps 必须有验证点
     for line_num, obj in objects:
-        if 'module_name' in obj:
-            module_name = obj['module_name']
-            if len(module_name) > 15:
-                warnings.append(ValidationWarning(
-                    str(file_path),
-                    line_num,
-                    "测试项过长",
-                    f"测试项 '{module_name}' 超过 15 字符，建议简化"
-                ))
+        if 'steps' not in obj:
+            continue
+        steps = obj['steps']
+        case_id = obj.get('id', '?')
 
-    # 规则 5：用例名称主谓宾格式检查
+        has_expected = False
+        for i, step in enumerate(steps, 1):
+            if not isinstance(step, dict):
+                errors.append(ValidationError(
+                    str(file_path), line_num, "格式错误",
+                    f"步骤 {i} 应为对象", case_id
+                ))
+                continue
+            if 'action' not in step:
+                errors.append(ValidationError(
+                    str(file_path), line_num, "格式错误",
+                    f"步骤 {i} 缺少 action", case_id
+                ))
+            if step.get('expected'):
+                has_expected = True
+
+        if not has_expected:
+            errors.append(ValidationError(
+                str(file_path), line_num, "缺少验证点",
+                f"至少一个步骤需要 expected", case_id
+            ))
+
+    # 规则 4：名称以"验证"开头
     for line_num, obj in objects:
-        if 'name' in obj and 'steps' in obj:  # 只检查测试用例
+        if 'name' in obj and 'steps' in obj:
             name = obj['name']
             if not name.startswith('验证'):
-                warnings.append(ValidationWarning(
-                    str(file_path),
-                    line_num,
-                    "名称格式",
-                    f"用例名称 '{name}' 建议以'验证'开头（主谓宾格式）"
-                ))
-
-    # 规则 6：ID 格式检查（新格式 M01-001）
-    import re
-    module_id_pattern = re.compile(r'^M[0-9]{2}-[0-9]{3}$')
-    for line_num, obj in objects:
-        if 'id' in obj and 'test_item' in obj:  # 测试用例
-            case_id = obj['id']
-            if not module_id_pattern.match(case_id):
-                errors.append(ValidationError(
-                    str(file_path),
-                    line_num,
-                    "ID 格式错误",
-                    f"用例 ID '{case_id}' 格式错误，应为 {{module_id}}-{{seq:03d}}（如 M01-001）"
-                ))
-
-    # 规则 7：module_id 格式检查（测试项文件）
-    module_id_pattern_item = re.compile(r'^M[0-9]{2}$')
-    for line_num, obj in objects:
-        if 'module_id' in obj and 'test_items' in obj:  # 测试项
-            module_id = obj['module_id']
-            if not module_id_pattern_item.match(module_id):
-                errors.append(ValidationError(
-                    str(file_path),
-                    line_num,
-                    "module_id 格式错误",
-                    f"module_id '{module_id}' 格式错误，应为 M01-M99"
+                warnings.append(ValidationError(
+                    str(file_path), line_num, "名称格式",
+                    f"建议以'验证'开头", obj.get('id')
                 ))
 
     return errors, warnings
 
 
-def validate_file(file_path: Path, schema_path: Path = None, strict: bool = False) -> Tuple[int, List[ValidationError], List[ValidationWarning]]:
-    """
-    验证单个 JSONL 文件
+def audit_forbidden_words(objects: List[Tuple[int, Dict]]) -> List[AuditItem]:
+    """禁用词检测"""
+    items = []
 
-    Args:
-        file_path: JSONL 文件路径
-        schema_path: JSON Schema 文件路径（可选）
-        strict: 是否启用严格模式（业务规则验证）
+    for _, obj in objects:
+        if 'steps' not in obj:
+            continue
+        case_id = obj.get('id', '?')
 
-    Returns:
-        (object_count, errors, warnings)
-    """
+        # 检查步骤
+        for i, step in enumerate(obj['steps'], 1):
+            action = step.get('action', '')
+            expected = step.get('expected', '')
+
+            for word in FORBIDDEN_WORDS_STEP:
+                if word in action:
+                    items.append(AuditItem(
+                        "禁用词", case_id, f"步骤{i}",
+                        f"包含 '{word}'", action[:50]
+                    ))
+
+            for word in FORBIDDEN_WORDS_EXPECTED:
+                if word in expected:
+                    items.append(AuditItem(
+                        "禁用词", case_id, f"预期{i}",
+                        f"包含 '{word}'", expected[:50]
+                    ))
+
+    return items
+
+
+def audit_executable(objects: List[Tuple[int, Dict]]) -> List[AuditItem]:
+    """可执行性检测（黑盒原则）"""
+    items = []
+
+    for _, obj in objects:
+        if 'steps' not in obj:
+            continue
+        case_id = obj.get('id', '?')
+
+        for i, step in enumerate(obj['steps'], 1):
+            action = step.get('action', '')
+            expected = step.get('expected', '')
+
+            for word in NON_BLACKBOX_WORDS:
+                if word.lower() in action.lower():
+                    items.append(AuditItem(
+                        "可执行", case_id, f"步骤{i}",
+                        f"包含非黑盒词 '{word}'", action[:50]
+                    ))
+                if word.lower() in expected.lower():
+                    items.append(AuditItem(
+                        "可执行", case_id, f"预期{i}",
+                        f"包含非黑盒词 '{word}'", expected[:50]
+                    ))
+
+    return items
+
+
+def audit_coverage(cases: List[Dict], modules: List[Dict]) -> List[AuditItem]:
+    """覆盖完整性检测"""
+    items = []
+
+    # 构建 test_item -> cases 映射
+    item_cases = defaultdict(list)
+    for case in cases:
+        item = case.get('test_item', '')
+        item_cases[item].append(case)
+
+    # 检查每个模块的测试项
+    for module in modules:
+        module_id = module.get('module_id', '?')
+        module_name = module.get('module_name', '?')
+        test_items = module.get('test_items', [])
+
+        for ti in test_items:
+            item_name = ti.get('item', '')
+            biz_value = ti.get('business_value', '中')
+            cases_for_item = item_cases.get(item_name, [])
+
+            if not cases_for_item:
+                items.append(AuditItem(
+                    "覆盖", f"{module_id}", item_name,
+                    f"无用例（business_value={biz_value}）"
+                ))
+                continue
+
+            # 检查正向/反向覆盖
+            positive = [c for c in cases_for_item if not c.get('is_negative', False)]
+            negative = [c for c in cases_for_item if c.get('is_negative', False)]
+
+            if not positive:
+                items.append(AuditItem(
+                    "覆盖", f"{module_id}", item_name,
+                    f"缺少正向用例（共 {len(cases_for_item)} 条）"
+                ))
+
+            if not negative:
+                items.append(AuditItem(
+                    "覆盖", f"{module_id}", item_name,
+                    f"缺少异常/边界用例（共 {len(cases_for_item)} 条）"
+                ))
+
+    return items
+
+
+def validate_files(file_paths: List[Path], strict: bool = False) -> Tuple[int, List[ValidationError], List[ValidationError]]:
+    """验证多个文件"""
+    total_objects = 0
     all_errors = []
     all_warnings = []
 
-    # 第 1 层：JSON 语法验证
-    objects, syntax_errors = validate_json_syntax(file_path)
-    all_errors.extend(syntax_errors)
+    for file_path in file_paths:
+        objects, syntax_errors = load_jsonl(file_path)
+        all_errors.extend(syntax_errors)
 
-    if syntax_errors:
-        # 如果语法错误，后续验证无意义
-        return 0, all_errors, all_warnings
+        if syntax_errors:
+            continue
 
-    # 第 2 层：Schema 验证
-    schema_errors = validate_schema(objects, file_path, schema_path)
-    all_errors.extend(schema_errors)
+        total_objects += len(objects)
 
-    # 第 3 层：业务规则验证（strict 模式）
-    if strict:
-        business_errors, business_warnings = validate_business_rules(objects, file_path)
-        all_errors.extend(business_errors)
-        all_warnings.extend(business_warnings)
+        if strict:
+            errors, warnings = validate_business_rules(objects, file_path)
+            all_errors.extend(errors)
+            all_warnings.extend(warnings)
 
-    return len(objects), all_errors, all_warnings
+    return total_objects, all_errors, all_warnings
+
+
+def audit_files(case_files: List[Path], modules_path: Path = None) -> List[AuditItem]:
+    """审查模式"""
+    all_items = []
+    all_cases = []
+
+    # 加载所有用例
+    for file_path in case_files:
+        objects, _ = load_jsonl(file_path)
+        all_cases.extend([obj for _, obj in objects])
+
+    # 禁用词检测
+    for file_path in case_files:
+        objects, _ = load_jsonl(file_path)
+        all_items.extend(audit_forbidden_words(objects))
+
+    # 可执行性检测
+    for file_path in case_files:
+        objects, _ = load_jsonl(file_path)
+        all_items.extend(audit_executable(objects))
+
+    # 覆盖完整性检测
+    if modules_path and modules_path.exists():
+        modules_objects, _ = load_jsonl(modules_path)
+        modules = [obj for _, obj in modules_objects]
+        all_items.extend(audit_coverage(all_cases, modules))
+
+    return all_items
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='JSONL 格式验证工具',
+        description='JSONL 验证与审查工具',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例：
-  python validate_jsonl.py test-items.jsonl
-  python validate_jsonl.py cases.jsonl
-  python validate_jsonl.py cases.jsonl --strict
-  python validate_jsonl.py cases/*.jsonl --strict
-  python validate_jsonl.py cases.jsonl --schema test-case.schema.json
+  python validate.py cases.jsonl --strict
+  python validate.py cases/*.jsonl --audit --modules modules.jsonl
         """
     )
-    parser.add_argument('files', nargs='+', help='要验证的 JSONL 文件（支持通配符）')
-    parser.add_argument('--schema', type=Path, help='JSON Schema 文件路径（可选，自动推断）')
-    parser.add_argument('--strict', action='store_true', help='启用严格模式（业务规则验证）')
+    parser.add_argument('files', nargs='+', help='JSONL 文件（支持通配符）')
+    parser.add_argument('--strict', action='store_true', help='严格模式（业务规则验证）')
+    parser.add_argument('--audit', action='store_true', help='审查模式（输出待审查项）')
+    parser.add_argument('--modules', type=Path, help='模块文件（用于覆盖检查）')
 
     args = parser.parse_args()
 
-    # 收集所有文件
+    # 收集文件
     all_files = []
-    for file_pattern in args.files:
-        file_path = Path(file_pattern)
-        if file_path.is_file():
-            all_files.append(file_path)
+    for pattern in args.files:
+        p = Path(pattern)
+        if p.is_file():
+            all_files.append(p)
         else:
-            # 处理通配符
-            parent = file_path.parent if file_path.parent.exists() else Path('.')
-            pattern = file_path.name
-            matched = list(parent.glob(pattern))
-            all_files.extend(matched)
+            parent = p.parent if p.parent.exists() else Path('.')
+            all_files.extend(parent.glob(p.name))
 
     if not all_files:
-        print("错误：未找到任何文件")
+        print("错误：未找到文件")
         sys.exit(1)
 
-    # 验证所有文件
-    total_objects = 0
-    total_errors = []
-    total_warnings = []
+    # 验证
+    total, errors, warnings = validate_files(all_files, args.strict)
 
-    for file_path in all_files:
-        object_count, errors, warnings = validate_file(file_path, args.schema, args.strict)
-        total_objects += object_count
-        total_errors.extend(errors)
-        total_warnings.extend(warnings)
-
-        # 单文件报告
-        if errors:
-            print(f"❌ {file_path}: {object_count} 条记录，{len(errors)} 个错误")
-        elif warnings:
-            print(f"⚠️  {file_path}: {object_count} 条记录，{len(warnings)} 个警告")
+    # 输出验证结果
+    for f in all_files:
+        objs, errs = load_jsonl(f)
+        if errs:
+            print(f"❌ {f}: 语法错误")
+        elif errors:
+            print(f"⚠️  {f}: {len(objs)} 条")
         else:
-            print(f"✅ {file_path}: {object_count} 条记录，无错误")
+            print(f"✅ {f}: {len(objs)} 条")
 
-    # 输出详细错误和警告
-    if total_errors:
-        print("\n" + "="*60)
-        print("错误详情：")
-        print("="*60)
-        for error in total_errors:
-            print(f"  {error}")
+    if errors:
+        print(f"\n{'='*60}\n错误（必须修复）：\n{'='*60}")
+        for e in errors:
+            print(f"  {e}")
 
-    if total_warnings:
-        print("\n" + "="*60)
-        print("警告详情：")
-        print("="*60)
-        for warning in total_warnings:
-            print(f"  {warning}")
+    if warnings:
+        print(f"\n{'='*60}\n警告：\n{'='*60}")
+        for w in warnings:
+            print(f"  {w}")
 
-    # 汇总报告
-    print("\n" + "="*60)
-    print("汇总报告：")
-    print("="*60)
-    print(f"总文件数：{len(all_files)}")
-    print(f"总记录数：{total_objects}")
-    print(f"错误数：{len(total_errors)}")
-    print(f"警告数：{len(total_warnings)}")
+    # 审查模式
+    if args.audit:
+        audit_items = audit_files(all_files, args.modules)
 
-    if total_errors:
-        print("\n❌ 验证失败")
-        sys.exit(1)
-    elif total_warnings:
-        print("\n⚠️  验证通过（有警告）")
-        sys.exit(0)
-    else:
-        print("\n✅ 验证通过")
-        sys.exit(0)
+        if audit_items:
+            print(f"\n{'='*60}\n待审查项（共 {len(audit_items)} 项，需 Agent 判断）：\n{'='*60}")
+
+            # 按类别分组
+            by_category = defaultdict(list)
+            for item in audit_items:
+                by_category[item.category].append(item)
+
+            for cat in ['覆盖', '禁用词', '可执行']:
+                if cat in by_category:
+                    print(f"\n[{cat}]")
+                    for item in by_category[cat]:
+                        print(f"  {item.case_id}:{item.location} - {item.message}")
+                        if item.context:
+                            print(f"    原文: {item.context}")
+        else:
+            print(f"\n✅ 审查完成，无待审查项")
+
+    # 汇总
+    print(f"\n{'='*60}\n汇总：\n{'='*60}")
+    print(f"文件数：{len(all_files)}")
+    print(f"用例数：{total}")
+    print(f"错误：{len(errors)}")
+    print(f"警告：{len(warnings)}")
+    if args.audit:
+        print(f"待审查：{len(audit_items) if args.audit else 0}")
+
+    sys.exit(1 if errors else 0)
 
 
 if __name__ == '__main__':
