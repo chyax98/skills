@@ -107,7 +107,7 @@ def build_case_node(parent_topic, case: Dict):
         case_topic.addMarker(PRIORITY_MAP[priority])
 
 
-    # 测试项
+    # 测试项（XMind 中 test_type 显示为"测试项"）
     test_type = case.get('test_type')
     if test_type:
         node = case_topic.addSubTopic()
