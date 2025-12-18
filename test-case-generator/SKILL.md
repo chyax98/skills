@@ -385,7 +385,6 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 ### 内容质量
 - [ ] 步骤具体可执行，预期可验证
 - [ ] 黑盒可执行：步骤基于界面，预期通过界面可验证，无需查库/看日志
-- [ ] 禁用词：正确、正常、合适、成功、失败、应该
 - [ ] 反向用例标记 is_negative: true
 
 ---

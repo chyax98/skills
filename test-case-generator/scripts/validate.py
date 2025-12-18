@@ -23,10 +23,6 @@ from typing import List, Dict, Tuple
 from collections import Counter, defaultdict
 
 
-# 禁用词配置
-FORBIDDEN_WORDS_STEP = ['正确操作', '正确输入', '按要求操作', '按要求输入']
-FORBIDDEN_WORDS_EXPECTED = ['正确', '正常', '合适', '应该']
-
 # 非黑盒关键词（可执行性检测）
 NON_BLACKBOX_WORDS = [
     '数据库', 'SQL', 'API', '接口', '日志', 'log', '缓存', 'cache',
@@ -169,37 +165,6 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
     return errors, warnings
 
 
-def audit_forbidden_words(objects: List[Tuple[int, Dict]]) -> List[AuditItem]:
-    """禁用词检测"""
-    items = []
-
-    for _, obj in objects:
-        if 'steps' not in obj:
-            continue
-        case_id = obj.get('id', '?')
-
-        # 检查步骤
-        for i, step in enumerate(obj['steps'], 1):
-            action = step.get('action', '')
-            expected = step.get('expected', '')
-
-            for word in FORBIDDEN_WORDS_STEP:
-                if word in action:
-                    items.append(AuditItem(
-                        "禁用词", case_id, f"步骤{i}",
-                        f"包含 '{word}'", action[:50]
-                    ))
-
-            for word in FORBIDDEN_WORDS_EXPECTED:
-                if word in expected:
-                    items.append(AuditItem(
-                        "禁用词", case_id, f"预期{i}",
-                        f"包含 '{word}'", expected[:50]
-                    ))
-
-    return items
-
-
 def audit_executable(objects: List[Tuple[int, Dict]]) -> List[AuditItem]:
     """可执行性检测（黑盒原则）"""
     items = []
@@ -308,11 +273,6 @@ def audit_files(case_files: List[Path], modules_path: Path = None) -> List[Audit
         objects, _ = load_jsonl(file_path)
         all_cases.extend([obj for _, obj in objects])
 
-    # 禁用词检测
-    for file_path in case_files:
-        objects, _ = load_jsonl(file_path)
-        all_items.extend(audit_forbidden_words(objects))
-
     # 可执行性检测
     for file_path in case_files:
         objects, _ = load_jsonl(file_path)
@@ -393,7 +353,7 @@ def main():
             for item in audit_items:
                 by_category[item.category].append(item)
 
-            for cat in ['覆盖', '禁用词', '可执行']:
+            for cat in ['覆盖', '可执行']:
                 if cat in by_category:
                     print(f"\n[{cat}]")
                     for item in by_category[cat]:
