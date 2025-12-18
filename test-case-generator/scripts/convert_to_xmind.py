@@ -1,313 +1,279 @@
-
+#!/usr/bin/env python3
 """
-测试用例 Markdown 转 XMind 工具
+JSONL 转 XMind 思维导图工具
 
-将 Markdown 格式的测试用例转换为 XMind 思维导图。
+功能：
+1. 将 JSONL 格式的测试用例转换为 XMind 思维导图
+2. 支持按模块和测试点分层展示
+3. 支持优先级图标标记
+4. 步骤与预期结果形成父子结构
 
-使用方法：
-    uv run convert_to_xmind.py test-cases.md -o test-cases.xmind
-    uv run convert_to_xmind.py test-cases.md  # 默认输出同名 xmind 文件
+用法：
+    python convert_to_xmind.py cases.jsonl -o output.xmind
+    python convert_to_xmind.py cases.jsonl -o output.xmind --name "用户管理"
+    python convert_to_xmind.py cases.jsonl -o output.xmind --flat
+
+依赖：
+    pip install xmind
 """
 
-import re
+import json
+import sys
 import argparse
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Dict
+from collections import defaultdict
+
+try:
+    import xmind
+    from xmind.core.workbook import WorkbookDocument
+except ImportError:
+    print("错误：需要安装 xmind 库")
+    print("执行：pip install xmind")
+    sys.exit(1)
 
 
-@dataclass
-class TestCase:
-    """测试用例数据结构"""
-    module: str = ""
-    scenario: str = ""
-    name: str = ""
-    priority: str = ""
-    test_type: str = ""
-    is_negative: bool = False
-    preconditions: str = ""
-    steps: list = field(default_factory=list)
-    notes: str = ""
+# 优先级映射：P1-P5 对应 XMind 的 priority-1 到 priority-5
+PRIORITY_MAP = {
+    "P1": "priority-1",
+    "P2": "priority-2",
+    "P3": "priority-3",
+    "P4": "priority-4",
+    "P5": "priority-5"
+}
 
 
-def parse_metadata(line: str) -> tuple[str, str, bool]:
-    """
-    解析元数据行：P1|功能|反向
-    返回：(priority, test_type, is_negative)
-    """
-    parts = [p.strip() for p in line.split('|')]
-    priority = parts[0] if parts else ""
-    test_type = parts[1] if len(parts) > 1 else ""
-    is_negative = len(parts) > 2 and '反向' in parts[2]
-    return priority, test_type, is_negative
-
-
-def parse_steps(lines: list[str]) -> list[tuple[str, str]]:
-    """解析步骤行"""
-    steps = []
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-
-        match = re.match(r'^\d+\.\s*(.+)$', line)
-        if match:
-            content = match.group(1)
-            # 使用 ➡️ 作为分隔符
-            if '➡️' in content:
-                parts = content.split('➡️', 1)
-                action = parts[0].strip()
-                expected = parts[1].strip() if len(parts) > 1 else ""
-            else:
-                action = content.strip()
-                expected = ""
-            steps.append((action, expected))
-
-    return steps
-
-
-def parse_markdown(content: str) -> list[TestCase]:
-    """解析 Markdown 内容"""
-    cases = []
-    lines = content.split('\n')
-
-    current_module = ""
-    current_scenario = ""
-    current_case: Optional[TestCase] = None
-    current_section = None
-    section_lines = []
-
-    def save_section():
-        nonlocal current_case, current_section, section_lines
-        if current_case and current_section and section_lines:
-            if current_section == 'preconditions':
-                precond_list = []
-                for line in section_lines:
-                    line = line.strip()
-                    if line.startswith('- '):
-                        line = line[2:]
-                    if line:
-                        precond_list.append(line)
-                current_case.preconditions = '；'.join(precond_list)
-            elif current_section == 'steps':
-                current_case.steps = parse_steps(section_lines)
-            elif current_section == 'notes':
-                current_case.notes = ' '.join(line.strip() for line in section_lines if line.strip())
-        section_lines = []
-        current_section = None
-
-    def save_case():
-        nonlocal current_case
-        save_section()
-        if current_case and current_case.name:
-            cases.append(current_case)
-        current_case = None
-
-    for line in lines:
-        stripped = line.strip()
-
-        if stripped == '---':
-            continue
-
-        if line.startswith('# ') and not line.startswith('## '):
-            save_case()
-            current_module = line[2:].strip()
-            current_scenario = ""
-            continue
-
-        if line.startswith('## '):
-            save_case()
-            current_scenario = line[3:].strip()
-            continue
-
-        if line.startswith('### '):
-            save_case()
-            current_case = TestCase(
-                module=current_module,
-                scenario=current_scenario,
-                name=line[4:].strip()
-            )
-            continue
-
-        if current_case and re.match(r'^P[1-5]\|', stripped):
-            save_section()
-            priority, test_type, is_negative = parse_metadata(stripped)
-            current_case.priority = priority
-            current_case.test_type = test_type
-            current_case.is_negative = is_negative
-            continue
-
-        if stripped.startswith('[前置]'):
-            if current_case:
-                save_section()
-                current_section = 'preconditions'
-                rest = stripped[4:].strip()
-                if rest:
-                    section_lines.append(rest)
-            continue
-
-        if stripped.startswith('[步骤]'):
-            if current_case:
-                save_section()
-                current_section = 'steps'
-            continue
-
-        if stripped.startswith('[备注]'):
-            if current_case:
-                save_section()
-                current_section = 'notes'
-                rest = stripped[4:].strip()
-                if rest:
-                    section_lines.append(rest)
-            continue
-
-        if current_section and stripped:
-            section_lines.append(stripped)
-
-    save_case()
-    return cases
-
-
-def create_xmind(cases: list[TestCase], output_path: Path, title: str = "测试用例"):
-    """创建 XMind 文件"""
+def load_jsonl(file_path: Path) -> List[Dict]:
+    """加载 JSONL 文件"""
+    objects = []
     try:
-        import xmind
-        from xmind.core.markerref import MarkerId
-    except ImportError:
-        print("错误：需要安装 xmind")
-        print("请执行：pip install xmind")
-        return False
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                if not line:
+                    continue
 
+                try:
+                    obj = json.loads(line)
+                    objects.append(obj)
+                except json.JSONDecodeError as e:
+                    print(f"警告：{file_path}:{line_num} JSON 解析失败：{e}", file=sys.stderr)
+                    continue
+    except Exception as e:
+        print(f"错误：无法读取文件 {file_path}：{e}", file=sys.stderr)
+        sys.exit(1)
+
+    return objects
+
+
+def group_by_module(test_cases: List[Dict]) -> Dict[str, Dict[str, List[Dict]]]:
+    """
+    按模块和测试点分组
+
+    返回结构：{module_name: {test_point_name: [cases]}}
+    """
+    structure = defaultdict(lambda: defaultdict(list))
+    for case in test_cases:
+        module = case.get('module_name', '未命名模块')
+        point = case.get('test_point_name', '默认测试点')
+        structure[module][point].append(case)
+    return structure
+
+
+def build_case_node(parent_topic, case: Dict):
+    """
+    构建单个用例节点
+
+    结构：
+    用例节点（带优先级图标）
+    ├── 测试项
+    ├── 前置条件
+    ├── 步骤1
+    │   └── 预期结果1
+    ├── 步骤2
+    │   └── 预期结果2
+    └── 备注
+    """
+    # 用例节点
+    name = case.get('name', '')
+    title = name
+
+    case_topic = parent_topic.addSubTopic()
+    case_topic.setTitle(title)
+
+    # 优先级图标
+    priority = case.get('priority')
+    if priority in PRIORITY_MAP:
+        case_topic.addMarker(PRIORITY_MAP[priority])
+
+
+    # 测试项
+    test_type = case.get('test_type')
+    if test_type:
+        node = case_topic.addSubTopic()
+        node.setTitle(f"测试项： {test_type}")
+
+    # 前置条件
+    preconditions = case.get('preconditions', [])
+    if preconditions:
+        content = " ".join(preconditions)
+        node = case_topic.addSubTopic()
+        node.setTitle(f"前置条件： {content}")
+
+    # 步骤与预期结果（父子结构）
+    steps = case.get('steps', [])
+    for i, step in enumerate(steps, 1):
+        action = step.get('action', '')
+        expected = step.get('expected', '')
+
+        # 步骤节点
+        step_topic = case_topic.addSubTopic()
+        step_topic.setTitle(f"步骤： {i} {action}")
+
+        # 预期结果节点（挂在步骤下）
+        if expected:
+            exp_topic = step_topic.addSubTopic()
+            exp_topic.setTitle(f"预期结果： {i} {expected}")
+
+    # 备注
+    notes = case.get('notes')
+    if notes:
+        node = case_topic.addSubTopic()
+        node.setTitle(f"备注： {notes}")
+
+
+def convert_to_xmind(
+    test_cases: List[Dict],
+    output_path: Path,
+    root_name: str = "测试用例",
+    flat_mode: bool = False
+):
+    """
+    转换测试用例为 XMind 思维导图
+
+    Args:
+        test_cases: 测试用例列表
+        output_path: 输出文件路径
+        root_name: 根节点名称
+        flat_mode: 扁平模式（跳过测试点层级）
+    """
     # 创建工作簿
-    workbook = xmind.Workbook()
+    workbook = xmind.load(str(output_path))
     sheet = workbook.getPrimarySheet()
-    sheet.setTitle(title)
+    sheet.setTitle("测试用例")
 
     # 根节点
     root = sheet.getRootTopic()
-    root.setTitle(title)
-
-    # 优先级标记映射
-    priority_markers = {
-        'P1': MarkerId.starRed,
-        'P2': MarkerId.starOrange,
-        'P3': MarkerId.starYellow,
-        'P4': MarkerId.starBlue,
-        'P5': MarkerId.starGreen,
-    }
+    root.setTitle(root_name)
 
     # 按模块分组
-    modules = {}
-    for case in cases:
-        module_name = case.module or "(未分组)"
-        if module_name not in modules:
-            modules[module_name] = {}
+    grouped = group_by_module(test_cases)
 
-        scenario_name = case.scenario or "(默认场景)"
-        if scenario_name not in modules[module_name]:
-            modules[module_name][scenario_name] = []
+    for module_name in sorted(grouped.keys()):
+        points = grouped[module_name]
 
-        modules[module_name][scenario_name].append(case)
-
-    # 构建思维导图结构
-    for module_name, scenarios in modules.items():
         # 模块节点
-        module_topic = root.addSubTopic()
-        module_topic.setTitle(module_name)
+        mod_topic = root.addSubTopic()
+        mod_topic.setTitle(module_name)
 
-        for scenario_name, case_list in scenarios.items():
-            # 场景节点
-            scenario_topic = module_topic.addSubTopic()
-            scenario_topic.setTitle(scenario_name)
+        for point_name in sorted(points.keys()):
+            cases = points[point_name]
 
-            for case in case_list:
-                # 用例节点
-                case_topic = scenario_topic.addSubTopic()
+            # 判断是否需要测试点层级
+            # 条件：flat 模式、测试点名与模块名相同、或为默认测试点
+            skip_point_level = (
+                flat_mode or
+                point_name == module_name or
+                point_name == "默认测试点"
+            )
 
-                # 标题：用例名称 + 元数据
-                meta_parts = []
-                if case.priority:
-                    meta_parts.append(case.priority)
-                if case.test_type:
-                    meta_parts.append(case.test_type)
-                if case.is_negative:
-                    meta_parts.append("反向")
+            if skip_point_level:
+                parent_for_case = mod_topic
+            else:
+                point_topic = mod_topic.addSubTopic()
+                point_topic.setTitle(point_name)
+                parent_for_case = point_topic
 
-                title_text = case.name
-                if meta_parts:
-                    title_text += f" [{'/'.join(meta_parts)}]"
-
-                case_topic.setTitle(title_text)
-
-                # 添加优先级标记
-                if case.priority in priority_markers:
-                    case_topic.addMarker(priority_markers[case.priority])
-
-                # 前置条件
-                if case.preconditions:
-                    precond_topic = case_topic.addSubTopic()
-                    precond_topic.setTitle(f"前置：{case.preconditions}")
-
-                # 步骤
-                if case.steps:
-                    steps_topic = case_topic.addSubTopic()
-                    steps_topic.setTitle("步骤")
-
-                    for i, (action, expected) in enumerate(case.steps, 1):
-                        step_topic = steps_topic.addSubTopic()
-                        step_text = f"{i}. {action}"
-                        if expected:
-                            step_text += f" → {expected}"
-                        step_topic.setTitle(step_text)
-
-                # 备注
-                if case.notes:
-                    case_topic.setPlainNotes(case.notes)
+            # 用例节点
+            for case in cases:
+                build_case_node(parent_for_case, case)
 
     # 保存
     xmind.save(workbook, str(output_path))
-    return True
+
+
+def print_stats(test_cases: List[Dict], output_path: Path):
+    """打印统计信息"""
+    # 按优先级统计
+    priority_count = defaultdict(int)
+    for case in test_cases:
+        priority_count[case.get('priority', 'N/A')] += 1
+
+    # 按模块统计
+    module_count = defaultdict(int)
+    for case in test_cases:
+        module_count[case.get('module_name', '未分类')] += 1
+
+    print("\n" + "=" * 60)
+    print("转换报告：")
+    print("=" * 60)
+    print(f"用例总数：{len(test_cases)}")
+    print(f"输出文件：{output_path}")
+    print()
+    print("按优先级：")
+    for p in ['P1', 'P2', 'P3', 'P4', 'P5']:
+        if priority_count[p] > 0:
+            print(f"  {p}: {priority_count[p]} 条")
+    print()
+    print("按模块：")
+    for module, count in sorted(module_count.items()):
+        print(f"  {module}: {count} 条")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='将 Markdown 格式的测试用例转换为 XMind 思维导图',
+        description='JSONL 转 XMind 思维导图工具',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
+        epilog="""
 示例：
-    uv run convert_to_xmind.py test-cases.md -o test-cases.xmind
-    uv run convert_to_xmind.py test-cases.md --name "项目测试用例"
-        '''
+  python convert_to_xmind.py cases.jsonl -o output.xmind
+  python convert_to_xmind.py cases.jsonl -o output.xmind --name "用户管理"
+  python convert_to_xmind.py cases.jsonl -o output.xmind --flat
+        """
     )
-    parser.add_argument('input', help='输入的 Markdown 文件路径')
-    parser.add_argument('-o', '--output', help='输出的 XMind 文件路径（默认同名 .xmind）')
-    parser.add_argument('--name', default='测试用例', help='思维导图根节点名称')
+    parser.add_argument('input', type=Path, help='输入 JSONL 文件')
+    parser.add_argument('-o', '--output', type=Path, required=True, help='输出 XMind 文件路径')
+    parser.add_argument('--name', default='测试用例', help='根节点名称（默认：测试用例）')
+    parser.add_argument('--flat', action='store_true', help='扁平模式：跳过测试点层级，用例直接挂在模块下')
 
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    if not input_path.exists():
-        print(f"错误：文件不存在 {input_path}")
-        return 1
+    # 检查输入文件
+    if not args.input.exists():
+        print(f"错误：文件不存在 {args.input}")
+        sys.exit(1)
 
-    output_path = Path(args.output) if args.output else input_path.with_suffix('.xmind')
+    # 加载数据
+    test_cases = load_jsonl(args.input)
 
-    # 读取并解析
-    content = input_path.read_text(encoding='utf-8')
-    cases = parse_markdown(content)
+    if not test_cases:
+        print("错误：JSONL 文件为空")
+        sys.exit(1)
 
-    if not cases:
-        print("警告：未解析到任何测试用例")
-        return 1
+    # 确保输出目录存在
+    args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    # 创建 XMind
-    if create_xmind(cases, output_path, title=args.name):
-        print(f"转换完成：{output_path}")
-        print(f"共 {len(cases)} 条用例")
-        return 0
-    else:
-        return 1
+    # 转换
+    convert_to_xmind(
+        test_cases,
+        args.output,
+        root_name=args.name,
+        flat_mode=args.flat
+    )
+
+    print(f"转换完成：{args.output}")
+    print_stats(test_cases, args.output)
 
 
 if __name__ == '__main__':
-    exit(main())
+    main()

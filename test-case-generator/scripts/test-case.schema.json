@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/test-case.schema.json",
+  "title": "TestCase",
+  "description": "测试用例 Schema",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "module_name",
+    "test_item",
+    "scenario_type",
+    "priority",
+    "test_type",
+    "is_negative",
+    "preconditions",
+    "steps"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^M[0-9]{2}-[0-9]{3}$",
+      "description": "用例 ID，格式：{module_id}-{seq:03d}，例如：M01-001"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "用例名称，主谓宾格式，以"验证"开头，例如：验证用户成功登录系统"
+    },
+    "module_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 15,
+      "description": "功能模块，≤15 字符，例如：用户登录、订单管理"
+    },
+    "test_item": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "所属测试项，对应 TestItem.item"
+    },
+    "scenario_type": {
+      "type": "string",
+      "enum": ["正向场景", "边界场景", "异常场景", "性能场景", "安全场景"],
+      "description": "场景类型"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["P1", "P2", "P3", "P4", "P5"],
+      "description": "优先级：P1（核心功能正向）、P2（基本功能正向）、P3（核心功能反向）、P4（基本功能反向）、P5（不常用功能）"
+    },
+    "test_type": {
+      "type": "string",
+      "enum": [
+        "功能测试",
+        "易用性测试",
+        "兼容性测试",
+        "性能测试",
+        "安全性测试",
+        "稳定性测试",
+        "集成测试",
+        "可靠性测试",
+        "可维护性测试",
+        "可移植性测试",
+        "埋点测试",
+        "AI效果测试",
+        "硬件效果测试"
+      ],
+      "description": "测试类型"
+    },
+    "is_negative": {
+      "type": "boolean",
+      "description": "是否为反向用例（异常、边界测试）"
+    },
+    "preconditions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "description": "前置条件列表"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["action", "expected"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "操作步骤"
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "预期结果"
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "测试步骤列表，每个步骤包含 action 和 expected"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "备注说明（可选）"
+    }
+  },
+  "additionalProperties": false
+}

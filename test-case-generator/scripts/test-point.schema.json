@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/test-point.schema.json",
+  "title": "TestPoint",
+  "description": "测试点 Schema",
+  "type": "object",
+  "required": [
+    "id",
+    "module_name",
+    "name",
+    "scene",
+    "check",
+    "tags",
+    "business_value"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^TP-[0-9]{3,4}$",
+      "description": "测试点 ID，格式：TP-序号，例如：TP-001、TP-0012"
+    },
+    "module_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 15,
+      "description": "测试项（被测对象/模块），简洁表达，例如：用户登录、订单管理"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "测试场景名称，例如：正常登录流程、密码错误处理"
+    },
+    "scene": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "场景描述，1-2 句话"
+    },
+    "check": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "验证点，1-2 句话"
+    },
+    "tags": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "enum": [
+          "核心功能",
+          "基本功能",
+          "不常用功能",
+          "正向场景",
+          "边界场景",
+          "异常场景",
+          "性能场景",
+          "安全场景"
+        ]
+      },
+      "description": "标签列表，从预定义标签中选择"
+    },
+    "business_value": {
+      "type": "string",
+      "enum": ["高", "中", "低"],
+      "description": "业务价值：高（核心流程）、中（辅助功能）、低（边缘功能）"
+    }
+  },
+  "additionalProperties": false
+}
