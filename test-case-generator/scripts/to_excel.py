@@ -94,7 +94,8 @@ def format_steps(steps: List[Dict]) -> str:
         action = step.get('action', '')
         expected = step.get('expected', '')
         lines.append(f"{i}. {action}")
-        lines.append(f"   预期：{expected}")
+        if expected:
+            lines.append(f"   预期：{expected}")
     return "\n".join(lines)
 
 

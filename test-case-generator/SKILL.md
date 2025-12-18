@@ -202,7 +202,7 @@ interface TestCase {
   preconditions: string[];     // 前置条件（具体明确）
   steps: Array<{
     action: string;            // 操作步骤（具体可执行）
-    expected: string;          // 预期结果（可验证）
+    expected?: string;         // 预期结果（可选，仅在需要验证时填写）
   }>;
   notes?: string;              // 备注（可选）
 }
@@ -224,15 +224,33 @@ interface TestCase {
 ```
 
 **步骤描述**：具体可执行，避免模糊
+
+**预期结果原则**：只在验证点写预期，过渡步骤省略
 ```
-✅ action: "在用户名输入框输入 testuser"
-   expected: "用户名输入框显示 testuser"
+✅ action: "打开登录页面"
+   （无预期 - 过渡步骤）
+
+✅ action: "输入用户名 testuser"
+   （无预期 - 过渡步骤）
+
+✅ action: "输入密码 Test@123456"
+   （无预期 - 过渡步骤）
+
+✅ action: "点击登录按钮"
+   expected: "登录成功，跳转到系统首页，显示用户昵称"
+   （有预期 - 这是验证点）
 
 ✅ action: "输入21个字符的用户名 abcdefghijklmnopqrstu"
    expected: "提示\"用户名长度不能超过20字符\""
+   （有预期 - 边界验证点）
+
+❌ action: "输入用户名 testuser"
+   expected: "用户名输入框显示 testuser"
+   （废话 - 不需要验证输入框能显示）
 
 ❌ action: "输入正确的用户名"
    expected: "正常显示"
+   （模糊 - action 和 expected 都不具体）
 ```
 
 **前置条件**：具体明确
@@ -265,12 +283,11 @@ interface TestCase {
     "存在测试账号 testuser/Test@123456"
   ],
   "steps": [
-    {"action": "打开系统登录页面", "expected": "页面显示登录表单，包含用户名、密码输入框和登录按钮"},
-    {"action": "在用户名输入框输入 testuser", "expected": "输入框显示 testuser"},
-    {"action": "在密码输入框输入 Test@123456", "expected": "密码显示为密文（圆点或星号）"},
-    {"action": "点击登录按钮", "expected": "登录成功，跳转到系统首页，页面显示用户昵称"}
-  ],
-  "notes": "核心功能正向用例"
+    {"action": "打开系统登录页面"},
+    {"action": "输入用户名 testuser"},
+    {"action": "输入密码 Test@123456"},
+    {"action": "点击登录按钮", "expected": "登录成功，跳转到系统首页，显示用户昵称"}
+  ]
 }
 ```
 
@@ -290,12 +307,11 @@ interface TestCase {
     "存在测试账号 testuser/Test@123456"
   ],
   "steps": [
-    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
-    {"action": "在用户名输入框输入 testuser", "expected": "输入框显示 testuser"},
-    {"action": "在密码输入框输入错误密码 wrongpassword", "expected": "密码显示为密文"},
-    {"action": "点击登录按钮", "expected": "登录失败，页面提示\"用户名或密码错误\"，停留在登录页面"}
-  ],
-  "notes": "核心功能反向用例"
+    {"action": "打开系统登录页面"},
+    {"action": "输入用户名 testuser"},
+    {"action": "输入错误密码 wrongpassword"},
+    {"action": "点击登录按钮", "expected": "登录失败，提示\"用户名或密码错误\""}
+  ]
 }
 ```
 
@@ -312,11 +328,10 @@ interface TestCase {
   "is_negative": true,
   "preconditions": ["系统已部署并可正常访问"],
   "steps": [
-    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
-    {"action": "在用户名输入框输入21个字符 abcdefghijklmnopqrstu", "expected": "输入框显示输入内容"},
+    {"action": "打开系统登录页面"},
+    {"action": "输入21个字符的用户名 abcdefghijklmnopqrstu"},
     {"action": "点击登录按钮", "expected": "提示\"用户名长度不能超过20字符\""}
-  ],
-  "notes": "边界值测试"
+  ]
 }
 ```
 
@@ -333,12 +348,11 @@ interface TestCase {
   "is_negative": true,
   "preconditions": ["系统已部署并可正常访问"],
   "steps": [
-    {"action": "打开系统登录页面", "expected": "页面显示登录表单"},
-    {"action": "在用户名输入框输入 ' OR '1'='1", "expected": "输入被接受"},
-    {"action": "在密码输入框输入任意内容", "expected": "输入被接受"},
+    {"action": "打开系统登录页面"},
+    {"action": "在用户名输入框输入 ' OR '1'='1"},
+    {"action": "输入任意密码"},
     {"action": "点击登录按钮", "expected": "登录失败，返回正常错误提示，不会绕过认证"}
-  ],
-  "notes": "安全测试-SQL注入防护"
+  ]
 }
 ```
 
@@ -527,11 +541,11 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 
 | 脚本 | 功能 |
 |-----|------|
-| validate_jsonl.py | 验证 JSONL 格式、Schema、业务规则 |
-| merge_jsonl.py | 合并多个 JSONL 文件 |
-| convert_to_excel.py | 转换为 Excel |
-| convert_to_xmind.py | 转换为 XMind 思维导图 |
-| stats_report.py | 生成统计报告 |
+| validate.py | 验证 JSONL 格式、Schema、业务规则 |
+| merge.py | 合并多个 JSONL 文件 |
+| to_excel.py | 转换为 Excel |
+| to_xmind.py | 转换为 XMind 思维导图 |
+| stats.py | 生成统计报告 |
 
 ---
 
@@ -541,13 +555,11 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 
 | 文档 | 读取时机 | 内容 |
 |------|---------|------|
-| `references/priority-guide.md` | 判定优先级时遇到特殊场景 | 优先级判定决策树、特殊场景处理、常见错误 |
-| `references/test-type-guide.md` | 选择测试类型时需要更多指导 | 各测试类型详细说明和更多示例 |
-| `assets/case-template.jsonl` | Step 2 首次生成前 | 完整的用例格式示例（10条） |
-| `assets/modules-template.jsonl` | Step 1 需要模块规划示例时 | 模块规划格式示例 |
+| `assets/priority-guide.md` | 判定优先级时遇到特殊场景 | 优先级判定决策树、特殊场景处理、常见错误 |
+| `assets/test-type-guide.md` | 选择测试类型时需要更多指导 | 各测试类型详细说明和更多示例 |
+| `assets/cases.jsonl` | Step 2 首次生成前 | 完整的用例格式示例（10条） |
+| `assets/modules.jsonl` | Step 1 需要模块规划示例时 | 模块规划格式示例 |
 | `assets/review-prompt.md` | Step 3 启动审查 Agent 时 | 审查 Agent 的完整提示词 |
-| `scripts/module.schema.json` | 需要精确了解模块字段约束时 | 模块规划 JSON Schema |
-| `scripts/test-case.schema.json` | 需要精确了解用例字段约束时 | 测试用例 JSON Schema |
 
 ---
 
@@ -558,4 +570,4 @@ python {skill_dir}/scripts/stats.py {workspace}/cases.jsonl \
 3. **每个模块生成后立即检验**，不要等到最后
 4. **保持全局上下文**，生成时参考前面模块的风格
 5. **断点可恢复**，已生成的文件不会丢失
-6. **按需读取参考文档**，不要一开始就加载所有 references
+6. **按需读取参考文档**，不要一开始就加载所有 assets
