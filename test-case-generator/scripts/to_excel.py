@@ -36,7 +36,6 @@ COLUMNS = [
     ('name', '用例名称', 50),
     ('module_name', '模块', 15),
     ('test_item', '测试项', 20),
-    ('scenario_type', '场景类型', 12),
     ('priority', '优先级', 10),
     ('test_type', '测试类型', 15),
     ('is_negative', '反向用例', 10),

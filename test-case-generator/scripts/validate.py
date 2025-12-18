@@ -126,7 +126,7 @@ def validate_schema(objects: List[Tuple[int, Dict]], file_path: Path, schema_pat
                 _, first_obj = objects[0]
                 if 'module_id' in first_obj and 'test_items' in first_obj:
                     schema_path = script_dir / 'module.schema.json'
-                elif 'test_item' in first_obj and 'scenario_type' in first_obj:
+                elif 'test_item' in first_obj and 'is_negative' in first_obj:
                     schema_path = script_dir / 'test-case.schema.json'
 
     if schema_path is None or not schema_path.exists():
@@ -271,7 +271,7 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
     import re
     module_id_pattern = re.compile(r'^M[0-9]{2}-[0-9]{3}$')
     for line_num, obj in objects:
-        if 'id' in obj and 'scenario_type' in obj:  # 测试用例
+        if 'id' in obj and 'test_item' in obj:  # 测试用例
             case_id = obj['id']
             if not module_id_pattern.match(case_id):
                 errors.append(ValidationError(
@@ -281,20 +281,7 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
                     f"用例 ID '{case_id}' 格式错误，应为 {{module_id}}-{{seq:03d}}（如 M01-001）"
                 ))
 
-    # 规则 7：scenario_type 有效值检查
-    valid_scenarios = ['正向场景', '边界场景', '异常场景', '性能场景', '安全场景']
-    for line_num, obj in objects:
-        if 'scenario_type' in obj:
-            scenario = obj['scenario_type']
-            if scenario not in valid_scenarios:
-                errors.append(ValidationError(
-                    str(file_path),
-                    line_num,
-                    "场景类型错误",
-                    f"scenario_type '{scenario}' 无效，应为：{', '.join(valid_scenarios)}"
-                ))
-
-    # 规则 8：module_id 格式检查（测试项文件）
+    # 规则 7：module_id 格式检查（测试项文件）
     module_id_pattern_item = re.compile(r'^M[0-9]{2}$')
     for line_num, obj in objects:
         if 'module_id' in obj and 'test_items' in obj:  # 测试项
