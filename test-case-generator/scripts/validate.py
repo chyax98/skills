@@ -5,7 +5,7 @@ JSONL 格式验证与审查工具
 功能：
 1. 验证 JSONL 文件的 JSON 语法
 2. 验证业务规则（ID 唯一性、格式规范）
-3. 审查模式：发现待审查项（禁用词、可执行性、覆盖完整性）
+3. 审查模式：检测覆盖完整性
 
 用法：
     python validate.py cases.jsonl
@@ -21,13 +21,6 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Tuple
 from collections import Counter, defaultdict
-
-
-# 非黑盒关键词（可执行性检测）
-NON_BLACKBOX_WORDS = [
-    '数据库', 'SQL', 'API', '接口', '日志', 'log', '缓存', 'cache',
-    '后台', '服务端', '响应码', '状态码', '返回值', '配置文件'
-]
 
 
 class ValidationError:
@@ -47,11 +40,11 @@ class ValidationError:
 class AuditItem:
     """待审查项（需要 Agent 判断）"""
     def __init__(self, category: str, case_id: str, location: str, message: str, context: str = None):
-        self.category = category  # 覆盖/禁用词/可执行
+        self.category = category  # 覆盖
         self.case_id = case_id
-        self.location = location  # 步骤/预期/名称
+        self.location = location
         self.message = message
-        self.context = context  # 原文
+        self.context = context
 
     def __str__(self):
         ctx = f' "{self.context}"' if self.context else ""
@@ -165,34 +158,6 @@ def validate_business_rules(objects: List[Tuple[int, Dict]], file_path: Path) ->
     return errors, warnings
 
 
-def audit_executable(objects: List[Tuple[int, Dict]]) -> List[AuditItem]:
-    """可执行性检测（黑盒原则）"""
-    items = []
-
-    for _, obj in objects:
-        if 'steps' not in obj:
-            continue
-        case_id = obj.get('id', '?')
-
-        for i, step in enumerate(obj['steps'], 1):
-            action = step.get('action', '')
-            expected = step.get('expected', '')
-
-            for word in NON_BLACKBOX_WORDS:
-                if word.lower() in action.lower():
-                    items.append(AuditItem(
-                        "可执行", case_id, f"步骤{i}",
-                        f"包含非黑盒词 '{word}'", action[:50]
-                    ))
-                if word.lower() in expected.lower():
-                    items.append(AuditItem(
-                        "可执行", case_id, f"预期{i}",
-                        f"包含非黑盒词 '{word}'", expected[:50]
-                    ))
-
-    return items
-
-
 def audit_coverage(cases: List[Dict], modules: List[Dict]) -> List[AuditItem]:
     """覆盖完整性检测"""
     items = []
@@ -264,7 +229,7 @@ def validate_files(file_paths: List[Path], strict: bool = False) -> Tuple[int, L
 
 
 def audit_files(case_files: List[Path], modules_path: Path = None) -> List[AuditItem]:
-    """审查模式"""
+    """审查模式：检测覆盖完整性"""
     all_items = []
     all_cases = []
 
@@ -272,11 +237,6 @@ def audit_files(case_files: List[Path], modules_path: Path = None) -> List[Audit
     for file_path in case_files:
         objects, _ = load_jsonl(file_path)
         all_cases.extend([obj for _, obj in objects])
-
-    # 可执行性检测
-    for file_path in case_files:
-        objects, _ = load_jsonl(file_path)
-        all_items.extend(audit_executable(objects))
 
     # 覆盖完整性检测
     if modules_path and modules_path.exists():
@@ -353,7 +313,7 @@ def main():
             for item in audit_items:
                 by_category[item.category].append(item)
 
-            for cat in ['覆盖', '可执行']:
+            for cat in ['覆盖']:
                 if cat in by_category:
                     print(f"\n[{cat}]")
                     for item in by_category[cat]:
