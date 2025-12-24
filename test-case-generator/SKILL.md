@@ -12,22 +12,19 @@ description: 从需求文档生成结构化测试用例。按 test_item 逐个�
 ```
 ./                                    # 当前工作目录
 └── {需求名称}/                        # 工作区（自动创建）
-    ├── 相框创建/                      # 模块文件夹（无 M01- 前缀）
-    │   ├── README.md                 # 模块规划与进度
-    │   ├── 相框类型选择.jsonl         # test_item 文件（无 id, 无 module_name, 无 test_item）
+    ├── 相框创建/                      # 模块文件夹
+    │   ├── 相框类型选择.jsonl         # test_item 文件（极简 Schema：6 字段）
     │   └── 自用相框创建.jsonl
     ├── 成员邀请/
-    │   ├── README.md
-    │   └── ...
+    │   └── 邀请码生成.jsonl
     ├── 成员管理/
-    │   ├── README.md
-    │   └── ...
-    ├── 相框创建.jsonl                 # Step 4: 模块合并（已添加 module_name, test_item）
-    ├── 成员邀请.jsonl
-    ├── 成员管理.jsonl
-    ├── {需求名称}-测试用例.jsonl      # Step 4: 最终合并
+    │   └── 成员列表展示.jsonl
+    ├── 相框创建.jsonl                 # Step 3: 模块合并（已添加 module_name, test_item）
+    ├── 成员邀请.jsonl                 # Step 3: 模块合并
+    ├── 成员管理.jsonl                 # Step 3: 模块合并
+    ├── {需求名称}-测试用例.jsonl      # Step 4: 最终合并（8 字段完整版）
     ├── {需求名称}-测试用例.xlsx       # Step 4: Excel 导出
-    ├── {需求名称}-测试用例.xmind      # Step 4: XMind 导出
+    ├── {需求名称}-测试用例.xmind      # Step 4: XMind 导出（可选）
     ├── review-report.md              # Step 3: 审查报告
     └── stats-report.md               # Step 4: 统计报告
 ```
@@ -76,50 +73,34 @@ description: 从需求文档生成结构化测试用例。按 test_item 逐个�
 
 6. **创建目录结构**：
    ```bash
-   mkdir {workspace}/{module_name}/
+   mkdir -p {workspace}/{module_name}/
    ```
 
-7. **生成 README.md**：为每个模块创建规划文件
+7. **内存规划格式**（不写文件）：
+   ```python
+   modules = [
+       {
+           "name": "相框创建",
+           "test_items": [
+               {"name": "相框类型选择", "function_level": "核心功能"},
+               {"name": "自用相框创建", "function_level": "核心功能"},
+               {"name": "礼物相框创建", "function_level": "核心功能"}
+           ]
+       },
+       {
+           "name": "成员邀请",
+           "test_items": [
+               {"name": "邀请码生成", "function_level": "核心功能"},
+               {"name": "扫码加入", "function_level": "基本功能"}
+           ]
+       }
+   ]
+   ```
 
-**README.md 模板**：
-```markdown
-# {module_name}
-
-## 测试项规划
-
-| test_item | 功能等级 | 正向 | 异常 | 预估 | 实际 | 状态 |
-|-----------|---------|-----|-----|-----|-----|------|
-| 相框类型选择 | 核心功能 | 2 | 0 | 2 | 0 | ⬜ |
-| 自用相框创建 | 核心功能 | 1 | 4 | 5 | 0 | ⬜ |
-| 礼物相框创建 | 核心功能 | 1 | 5 | 6 | 0 | ⬜ |
-
-**模块信息**：
-- 总测试项：3
-- 已完成：0/3（0%）
-
-## PRD 原文
-
-{该模块的需求原文}
-```
-
-**状态说明**：
-- ⬜ 未开始
-- 🔄 进行中
-- ✅ 已完成
-- ❌ 失败
-
-**Step 1 完成后**：使用 TodoWrite 创建各模块的生成任务
-
-**输出结构**：
-```
-Frame相框管理/
-├── 相框创建/
-│   └── README.md
-├── 成员邀请/
-│   └── README.md
-└── 成员管理/
-    └── README.md
-```
+**Step 1 完成后**：
+- 使用 TodoWrite 创建各模块的生成任务
+- 规划保存在对话上下文中（AI 记忆）
+- 创建模块文件夹（空文件夹，Step 2 填充）
 
 ---
 
@@ -140,35 +121,32 @@ case_examples = read_file("{skill_dir}/assets/cases.jsonl")
 **核心循环**：
 
 ```python
-# 遍历所有模块文件夹
-for module_dir in sorted(glob("{workspace}/*/")):
-    module_name = os.path.basename(module_dir.rstrip("/"))
+# 使用 Step 1 内存中的规划
+for module in modules:  # modules 来自 Step 1
+    module_name = module["name"]
 
-    # 读取 README.md
-    readme_path = f"{module_dir}/README.md"
-    readme_table = parse_markdown_table(readme_path, "测试项规划")
+    # 遍历该模块的每个 test_item
+    for test_item in module["test_items"]:
+        test_item_name = test_item["name"]
+        function_level = test_item["function_level"]
 
-    # 遍历每个 test_item
-    for row in readme_table:
-        test_item_name = row["test_item"]
-        function_level = row["功能等级"]
-        status = row["状态"]
-
-        # 跳过已完成的
-        if status == "✅":
+        # 1. 检查是否已生成（断点恢复）
+        file_path = f"{workspace}/{module_name}/{test_item_name}.jsonl"
+        if os.path.exists(file_path):
+            print(f"⏭️  跳过已生成：{module_name}/{test_item_name}")
             continue
 
-        # 1. 更新 README.md 状态为 🔄
-        update_readme_status(readme_path, test_item_name, "🔄")
+        # 2. 更新 TodoWrite：标记当前 test_item 为 in_progress
+        TodoWrite(...)
 
-        # 2. 场景分析
+        # 3. 场景分析
         scenarios = analyze_scenarios(
             test_item=test_item_name,
             function_level=function_level,
             priority_guide=priority_guide
         )
 
-        # 3. 生成用例（无 id, 无 module_name, 无 test_item）
+        # 4. 生成用例（极简 Schema：6 字段）
         cases = []
         for scenario in scenarios:
             scenario_cases = generate_cases(
@@ -179,16 +157,15 @@ for module_dir in sorted(glob("{workspace}/*/")):
             )
             cases.extend(scenario_cases)
 
-        # 4. 写入文件
-        file_path = f"{module_dir}/{test_item_name}.jsonl"
+        # 5. 写入文件
         write_jsonl(file_path, cases)
 
-        # 5. 即时检验（编码+格式）
-        validate_format(file_path)
-        validate_encoding(file_path)
+        # 6. 即时检验（编码+格式）
+        bash(f"grep -n '�' {file_path}")  # 无输出 = 通过
+        bash(f"python3 {{skill_dir}}/scripts/validate.py {file_path} --strict")
 
-        # 6. 更新 README.md 状态为 ✅
-        update_readme_status(readme_path, test_item_name, "✅", actual_count=len(cases))
+        # 7. 更新 TodoWrite：标记当前 test_item 为 completed
+        TodoWrite(...)
 ```
 
 ### 场景分析维度
@@ -569,12 +546,12 @@ python3 {skill_dir}/scripts/stats.py \\
 
 | 脚本 | 功能 |
 |-----|------|
-| validate.py | 验证格式 + 编码检查 |
-| merge.py | 合并 JSONL 文件，从路径推断 module_name 和 test_item |
+| validate.py | 验证格式 + 编码检查（极简 Schema） |
+| merge.py | 合并 JSONL 文件，从路径推断 module_name 和 test_item（支持多次合并） |
+| detect_duplicates.py | 检测相似/重复用例（Jaccard 相似度 + 编辑距离） |
 | to_excel.py | 转换为 Excel（11 列格式） |
 | to_xmind.py | 转换为 XMind 思维导图 |
 | stats.py | 生成统计报告 |
-| parse_readme.py | 解析 README.md 表格（辅助工具） |
 
 ---
 

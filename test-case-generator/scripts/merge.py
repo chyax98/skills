@@ -26,14 +26,16 @@ def load_jsonl(file_path: Path) -> List[Dict]:
     加载 JSONL 文件，并从路径推断 module_name 和 test_item
 
     路径格式：需求名称/模块名/测试项.jsonl
-    - module_name = 父目录名
-    - test_item = 文件名（去掉 .jsonl）
+    - module_name = 父目录名（仅当用例中不存在时）
+    - test_item = 文件名（仅当用例中不存在时）
+
+    如果用例中已有这两个字段，则不覆盖（支持多次合并）
     """
     objects = []
 
-    # 从路径推断元信息
-    module_name = file_path.parent.name  # 父目录名 = 模块名
-    test_item = file_path.stem  # 文件名（不含扩展名）= 测试项
+    # 从路径推断元信息（备用值）
+    module_name_from_path = file_path.parent.name  # 父目录名
+    test_item_from_path = file_path.stem  # 文件名（不含扩展名）
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -45,9 +47,11 @@ def load_jsonl(file_path: Path) -> List[Dict]:
                 try:
                     obj = json.loads(line)
 
-                    # 添加元信息字段
-                    obj['module_name'] = module_name
-                    obj['test_item'] = test_item
+                    # 只在字段不存在时才添加（避免覆盖已有值）
+                    if 'module_name' not in obj:
+                        obj['module_name'] = module_name_from_path
+                    if 'test_item' not in obj:
+                        obj['test_item'] = test_item_from_path
 
                     objects.append(obj)
                 except json.JSONDecodeError as e:
