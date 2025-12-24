@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
-测试用例统计报告工具
+测试用例统计报告工具（适配极简 Schema）
 
 功能：
 1. 生成测试用例统计报告
-2. 分析覆盖率、优先级分布、模块分布
-3. 生成质量指标
+2. 分析模块分布、测试项分布、优先级分布
+3. 生成质量指标和建议
 
 用法：
-    python stats_report.py cases.jsonl -o stats-report.md
-    python stats_report.py cases.jsonl --modules modules.jsonl -o stats-report.md
+    python stats.py 需求名称-测试用例.jsonl -o 需求名称-统计报告.md
 """
 
 import json
@@ -43,13 +42,12 @@ def load_jsonl(file_path: Path) -> List[Dict]:
     return objects
 
 
-def generate_stats_report(test_cases: List[Dict], modules: List[Dict] = None) -> str:
+def generate_stats_report(test_cases: List[Dict]) -> str:
     """
     生成统计报告
 
     Args:
-        test_cases: 测试用例列表
-        modules: 模块规划列表（可选）
+        test_cases: 测试用例列表（已包含 module_name 和 test_item）
 
     Returns:
         Markdown 格式的统计报告
@@ -67,12 +65,24 @@ def generate_stats_report(test_cases: List[Dict], modules: List[Dict] = None) ->
     total_cases = len(test_cases)
     lines.append(f"- 测试用例总数：{total_cases}")
 
-    if modules:
-        total_modules = len(modules)
-        total_items = sum(len(m.get('test_items', [])) for m in modules)
-        lines.append(f"- 模块总数：{total_modules}")
-        lines.append(f"- 测试项总数：{total_items}")
-        lines.append(f"- 平均每测试项用例数：{total_cases / total_items:.2f}" if total_items > 0 else "")
+    # 统计模块和测试项
+    modules_set = set()
+    test_items_set = set()
+    for case in test_cases:
+        module_name = case.get('module_name')
+        test_item = case.get('test_item')
+        if module_name:
+            modules_set.add(module_name)
+        if test_item:
+            test_items_set.add((module_name, test_item))
+
+    total_modules = len(modules_set)
+    total_items = len(test_items_set)
+
+    lines.append(f"- 模块总数：{total_modules}")
+    lines.append(f"- 测试项总数：{total_items}")
+    if total_items > 0:
+        lines.append(f"- 平均每测试项用例数：{total_cases / total_items:.2f}")
 
     lines.append("")
 
@@ -92,6 +102,27 @@ def generate_stats_report(test_cases: List[Dict], modules: List[Dict] = None) ->
         count = len(cases)
         percentage = (count / total_cases) * 100 if total_cases > 0 else 0
         lines.append(f"| {module_name} | {count} | {percentage:.1f}% |")
+
+    lines.append("")
+
+    # 测试项分布（Top 10）
+    lines.append("## 测试项分布（Top 10）")
+    lines.append("")
+
+    test_items = defaultdict(list)
+    for case in test_cases:
+        module_name = case.get('module_name', '未分类')
+        test_item = case.get('test_item', '未分类')
+        key = f"{module_name}/{test_item}"
+        test_items[key].append(case)
+
+    lines.append("| 测试项 | 测试用例 | 占比 |")
+    lines.append("|--------|---------|------|")
+
+    for test_item, cases in sorted(test_items.items(), key=lambda x: len(x[1]), reverse=True)[:10]:
+        count = len(cases)
+        percentage = (count / total_cases) * 100 if total_cases > 0 else 0
+        lines.append(f"| {test_item} | {count} | {percentage:.1f}% |")
 
     lines.append("")
 
@@ -172,17 +203,15 @@ def generate_stats_report(test_cases: List[Dict], modules: List[Dict] = None) ->
 
 def main():
     parser = argparse.ArgumentParser(
-        description='测试用例统计报告工具',
+        description='测试用例统计报告工具（极简 Schema）',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例：
-  python stats_report.py cases.jsonl -o stats-report.md
-  python stats_report.py cases.jsonl --modules modules.jsonl -o stats-report.md
+  python stats.py Frame相框管理-测试用例.jsonl -o Frame相框管理-统计报告.md
         """
     )
-    parser.add_argument('cases', type=Path, help='测试用例 JSONL 文件')
+    parser.add_argument('cases', type=Path, help='测试用例 JSONL 文件（已合并，包含 module_name 和 test_item）')
     parser.add_argument('-o', '--output', type=Path, required=True, help='输出报告文件路径')
-    parser.add_argument('--modules', type=Path, help='模块规划 JSONL 文件（可选）')
 
     args = parser.parse_args()
 
@@ -193,13 +222,8 @@ def main():
         print("错误：测试用例文件为空")
         sys.exit(1)
 
-    # 加载模块规划（可选）
-    modules = None
-    if args.modules and args.modules.exists():
-        modules = load_jsonl(args.modules)
-
     # 生成报告
-    report = generate_stats_report(test_cases, modules)
+    report = generate_stats_report(test_cases)
 
     # 写入文件
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -212,8 +236,10 @@ def main():
     print("统计摘要：")
     print("="*60)
     print(f"测试用例总数：{len(test_cases)}")
-    if modules:
-        print(f"模块总数：{len(modules)}")
+
+    # 统计模块数
+    modules_set = {case.get('module_name') for case in test_cases if case.get('module_name')}
+    print(f"模块总数：{len(modules_set)}")
 
 
 if __name__ == '__main__':

@@ -4,14 +4,14 @@ JSONL 合并工具
 
 功能：
 1. 合并多个 JSONL 文件
-2. 支持按模块、优先级、ID 排序
-3. 自动去重
+2. 从文件路径推断 module_name 和 test_item
+3. 支持按模块、优先级排序
+4. 自动去重
 
 用法：
-    python merge_jsonl.py cases/*.jsonl -o cases.jsonl
-    python merge_jsonl.py cases/*.jsonl -o cases.jsonl --sort-by module
-    python merge_jsonl.py cases/*.jsonl -o cases.jsonl --sort-by priority
-    python merge_jsonl.py cases/*.jsonl -o cases.jsonl --deduplicate
+    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl
+    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl --sort-by module
+    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl --sort-by priority
 """
 
 import json
@@ -22,8 +22,19 @@ from typing import List, Dict, Any
 
 
 def load_jsonl(file_path: Path) -> List[Dict]:
-    """加载 JSONL 文件"""
+    """
+    加载 JSONL 文件，并从路径推断 module_name 和 test_item
+
+    路径格式：需求名称/模块名/测试项.jsonl
+    - module_name = 父目录名
+    - test_item = 文件名（去掉 .jsonl）
+    """
     objects = []
+
+    # 从路径推断元信息
+    module_name = file_path.parent.name  # 父目录名 = 模块名
+    test_item = file_path.stem  # 文件名（不含扩展名）= 测试项
+
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
@@ -33,6 +44,11 @@ def load_jsonl(file_path: Path) -> List[Dict]:
 
                 try:
                     obj = json.loads(line)
+
+                    # 添加元信息字段
+                    obj['module_name'] = module_name
+                    obj['test_item'] = test_item
+
                     objects.append(obj)
                 except json.JSONDecodeError as e:
                     print(f"警告：{file_path}:{line_num} JSON 解析失败：{e}", file=sys.stderr)
@@ -49,7 +65,7 @@ def merge_jsonl_files(file_paths: List[Path], deduplicate: bool = False) -> List
 
     Args:
         file_paths: JSONL 文件路径列表
-        deduplicate: 是否去重（基于 ID）
+        deduplicate: 是否去重（基于 name 字段）
 
     Returns:
         合并后的对象列表
@@ -63,20 +79,20 @@ def merge_jsonl_files(file_paths: List[Path], deduplicate: bool = False) -> List
     # 去重
     if deduplicate:
         unique_map = {}
-        objects_without_id = []
+        objects_without_name = []
 
         for obj in all_objects:
-            obj_id = obj.get('id')
-            if obj_id:
-                if obj_id in unique_map:
-                    print(f"警告：发现重复 ID '{obj_id}'，保留第一个", file=sys.stderr)
+            name = obj.get('name')
+            if name:
+                if name in unique_map:
+                    print(f"警告：发现重复用例名称 '{name}'，保留第一个", file=sys.stderr)
                 else:
-                    unique_map[obj_id] = obj
+                    unique_map[name] = obj
             else:
-                # 没有 ID 的对象单独保存
-                objects_without_id.append(obj)
+                # 没有 name 的对象单独保存
+                objects_without_name.append(obj)
 
-        all_objects = list(unique_map.values()) + objects_without_id
+        all_objects = list(unique_map.values()) + objects_without_name
 
     return all_objects
 
@@ -87,28 +103,27 @@ def sort_objects(objects: List[Dict], sort_by: str) -> List[Dict]:
 
     Args:
         objects: 对象列表
-        sort_by: 排序依据（module, priority, id）
+        sort_by: 排序依据（module, priority）
 
     Returns:
         排序后的对象列表
     """
     if sort_by == 'module':
-        # 按模块名称 + 对象 ID 排序
+        # 按模块名称 + 测试项 + 用例名称排序
         objects.sort(key=lambda x: (
             x.get('module_name', ''),
-            x.get('id', '')
+            x.get('test_item', ''),
+            x.get('name', '')
         ))
     elif sort_by == 'priority':
-        # 按优先级 + 模块名称 + 对象 ID 排序
+        # 按优先级 + 模块名称 + 测试项 + 用例名称排序
         priority_order = {'P1': 1, 'P2': 2, 'P3': 3, 'P4': 4, 'P5': 5}
         objects.sort(key=lambda x: (
             priority_order.get(x.get('priority', 'P5'), 99),
             x.get('module_name', ''),
-            x.get('id', '')
+            x.get('test_item', ''),
+            x.get('name', '')
         ))
-    elif sort_by == 'id':
-        # 按对象 ID 排序
-        objects.sort(key=lambda x: x.get('id', ''))
     else:
         print(f"警告：未知的排序方式 '{sort_by}'，跳过排序", file=sys.stderr)
 
@@ -130,20 +145,25 @@ def write_jsonl(file_path: Path, objects: List[Dict]):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='JSONL 合并工具',
+        description='JSONL 合并工具 - 自动从路径推断 module_name 和 test_item',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例：
-  python merge_jsonl.py cases/*.jsonl -o cases.jsonl
-  python merge_jsonl.py cases/*.jsonl -o cases.jsonl --sort-by module
-  python merge_jsonl.py cases/*.jsonl -o cases.jsonl --sort-by priority
-  python merge_jsonl.py cases/*.jsonl -o cases.jsonl --deduplicate
+  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl
+  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --sort-by module
+  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --sort-by priority
+  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --deduplicate
+
+路径格式：
+  需求名称/模块名/测试项.jsonl
+  - module_name 从父目录名推断
+  - test_item 从文件名推断
         """
     )
     parser.add_argument('files', nargs='+', help='要合并的 JSONL 文件（支持通配符）')
     parser.add_argument('-o', '--output', type=Path, required=True, help='输出文件路径')
-    parser.add_argument('--sort-by', choices=['module', 'priority', 'id'], help='排序方式')
-    parser.add_argument('--deduplicate', action='store_true', help='去重（基于 ID）')
+    parser.add_argument('--sort-by', choices=['module', 'priority'], help='排序方式')
+    parser.add_argument('--deduplicate', action='store_true', help='去重（基于 name 字段）')
 
     args = parser.parse_args()
 
