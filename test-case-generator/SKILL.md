@@ -1,297 +1,340 @@
 ---
 name: test-case-generator
-description: 从需求文档生成结构化测试用例。按测试点逐个生成并即时校验，输出 JSONL/Excel/XMind 格式。触发词：生成测试用例、需求转用例、测试用例生成。
+description: This skill generates structured test cases from requirement documents. Use when users ask to create test cases, convert requirements to test cases, or generate test suites. Outputs JSONL/Excel/XMind formats.
 ---
 
 # 测试用例生成器
 
-**流程**：Step 1（规划）→ Step 2（生成）→ Step 3（输出）
+**核心理念**：测试点 = 用例名称。"验证用户成功登录" 本身就是测试点，是评审核心。
 
 ---
 
-## 输出结构
+## 成功标准
 
-```
-./需求名称/
-├── 模块A/
-│   ├── 测试点1.jsonl
-│   └── 测试点2.jsonl
-├── 模块B/
-│   └── 测试点3.jsonl
-├── 需求名称-测试用例.jsonl   # 合并后
-├── 需求名称-测试用例.xlsx    # Excel
-├── 需求名称-测试用例.xmind   # XMind（可选）
-├── review-report.md          # 审查报告
-└── stats-report.md           # 统计报告
-```
+1. 格式校验 0 错误
+2. 无真正重复用例（相似度 ≥ 0.7 需人工判断，同场景同预期则删除）
+3. 优先级按规范判定，分布可解释（无固定比例要求）
+4. 每个测试项 ≥1 正向 + ≥1 反向用例
+5. 所有用例名称以"验证"开头，包含预期结果
 
 ---
 
-## Step 1: 规划
+## 用例 Schema
 
-**输入**：需求文档
+### 字段定义
 
-**处理**：
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|-----|------|
+| name | string | ✅ | 以"验证"开头，主谓宾结构，包含场景+预期结果 |
+| priority | enum | ✅ | P1/P2/P3/P4/P5，按决策树判定 |
+| is_negative | boolean | ✅ | true=反向用例，false=正向用例 |
+| test_type | string | ✅ | 见测试类型列表，默认"功能测试" |
+| preconditions | string[] | ✅ | 前置条件数组，无则填 [] |
+| steps | Step[] | ✅ | 操作步骤数组，至少 1 个 |
+| notes | string | ❌ | 备注，可选 |
 
-1. **读取需求文档**，理解完整业务
+### Step 结构
 
-2. **划分模块**（≤8 个），按功能内聚原则
+| 字段 | 类型 | 必填 | 说明 |
+|-----|------|-----|------|
+| action | string | ✅ | 具体操作，包含实际值 |
+| expected | string | ❌ | 预期结果，验证点必填，过渡步骤省略 |
 
-3. **识别测试点**：
-   - 每个用户可执行的操作 = 1 个测试点
-   - 每个系统自动行为 = 1 个测试点
-   - 每个 CRUD 操作 = 各 1 个测试点
-   - 每个关键业务规则 = 1 个测试点
-
-4. **评估功能等级**：
-
-   | 等级 | 定义 | 占比 | 示例 |
-   |-----|------|-----|------|
-   | 核心功能 | 失败导致系统核心价值丧失 | 10-15% | 登录、创建、支付 |
-   | 基本功能 | 失败影响体验但不阻塞核心流程 | 60-70% | 列表、筛选、通知 |
-   | 不常用功能 | 低频扩展功能 | 15-25% | 批量操作、高级搜索 |
-
-5. **创建目录结构**：
-   ```bash
-   mkdir -p {workspace}/{module_name}/
-   ```
-
-6. **使用 TodoWrite** 创建生成任务清单
-
-**输出**：目录结构 + TodoWrite 任务清单
-
----
-
-## Step 2: 生成
-
-**处理**：遍历每个模块的每个测试点
-
-```python
-for module in modules:
-    for test_point in module["test_points"]:
-
-        # 1. 断点恢复：已存在则跳过
-        file_path = f"{workspace}/{module['name']}/{test_point['name']}.jsonl"
-        if file_exists(file_path):
-            continue
-
-        # 2. 更新 TodoWrite 状态
-
-        # 3. 分析场景 + 生成用例
-        cases = generate_cases(test_point)
-
-        # 4. 写入文件
-        write_jsonl(file_path, cases)
-
-        # 5. 即时校验
-        run(f"python3 {skill_dir}/scripts/validate.py {file_path}")
-
-        # 6. 标记完成
-```
-
-### 场景覆盖
-
-| 功能等级 | 覆盖要求 |
-|---------|---------|
-| 核心功能 | 正向 + 边界 + 异常 + 性能/安全（如适用） |
-| 基本功能 | 正向 + 边界 + 异常 |
-| 不常用功能 | 正向 + 主要异常 |
-
-### 优先级判定
-
-| 功能等级 | 正向场景 | 反向场景 |
-|---------|---------|---------|
-| 核心功能 | **P1** | **P3** |
-| 基本功能 | **P2** | **P4** |
-| 不常用功能 | **P5** | **P5** |
-
-**口诀**：核心正向必P1，基本正向上P2，核心反向是P3，基本反向给P4，不常用都P5
-
-**目标分布**：P1(10-15%) P2(25-35%) P3(20-30%) P4(15-25%) P5(5-10%)
-
-### 用例 Schema
+### TypeScript 定义
 
 ```typescript
 interface TestCase {
-  name: string;                    // 以"验证"开头，唯一标识
+  name: string;
   priority: "P1" | "P2" | "P3" | "P4" | "P5";
-  test_type: string;               // 功能测试、安全性测试等
-  is_negative: boolean;            // 是否反向用例
-  preconditions: string[];         // 前置条件
-  steps: Array<{
-    action: string;                // 操作步骤
-    expected?: string;             // 预期结果（验证点必填）
-  }>;
-  notes?: string;                  // 备注
+  is_negative: boolean;
+  test_type: string;
+  preconditions: string[];
+  steps: Array<{ action: string; expected?: string }>;
+  notes?: string;
+}
+
+// merge.py 自动添加的字段
+interface MergedTestCase extends TestCase {
+  module_name: string;  // 从父目录名推断
+  test_item: string;    // 从文件名推断
 }
 ```
 
-### 用例示例
+### 完整示例
 
 ```jsonl
-{"name":"验证用户成功创建自用相框","priority":"P1","test_type":"功能测试","is_negative":false,"preconditions":["用户已登录","用户未达到相框数量上限"],"steps":[{"action":"进入创建相框页面"},{"action":"选择'为自己创建'类型"},{"action":"输入相框名称'家庭相框'"},{"action":"点击创建按钮","expected":"相框创建成功，跳转到相框页面"}]}
-{"name":"验证相框名称超长时提示错误","priority":"P3","test_type":"功能测试","is_negative":true,"preconditions":["用户已登录"],"steps":[{"action":"进入创建相框页面"},{"action":"输入超过50字符的相框名称"},{"action":"点击创建按钮","expected":"提示'相框名称不能超过50字符'"}]}
+{"name":"验证用户输入正确账号密码时成功登录并跳转首页","priority":"P1","is_negative":false,"test_type":"功能测试","preconditions":["用户已注册","账号未被锁定"],"steps":[{"action":"打开登录页面"},{"action":"输入用户名 testuser"},{"action":"输入密码 Test@123"},{"action":"点击登录按钮","expected":"登录成功，跳转到首页"}]}
+{"name":"验证用户输入错误密码时登录失败并提示密码错误","priority":"P3","is_negative":true,"test_type":"功能测试","preconditions":["用户已注册"],"steps":[{"action":"打开登录页"},{"action":"输入用户名 testuser"},{"action":"输入错误密码 wrong123"},{"action":"点击登录按钮","expected":"提示密码错误，保留在登录页"}]}
 ```
 
-### 用例规范
-
-**名称**：主谓宾格式，以"验证"开头
-```
-✅ 验证用户成功创建自用相框
-✅ 验证系统拒绝超过20字符的用户名
-❌ 登录测试
-❌ 密码错误
-```
-
-**步骤**：具体可执行
-```
-✅ 输入用户名 testuser
-✅ 输入21个字符的用户名 abcdefghijklmnopqrstu
-❌ 输入正确的用户名
-```
-
-**预期**：只在验证点写，过渡步骤省略
-```
-✅ action: "点击登录按钮"
-   expected: "登录成功，跳转到首页"
-
-✅ action: "输入用户名 testuser"
-   （无预期 - 过渡步骤）
-
-❌ action: "输入用户名 testuser"
-   expected: "用户名输入框显示 testuser"  // 废话
-```
-
-**前置条件**：明确状态
-```
-✅ 用户已登录
-✅ 相框已绑定实体设备
-❌ 系统正常
-```
-
-### 即时校验
-
-```bash
-# 每个测试点生成后立即执行
-python3 {skill_dir}/scripts/validate.py {file_path}
-```
+**CRITICAL**：用例名称 = 测试点，必须包含：场景 + 预期结果
 
 ---
 
-## Step 3: 输出
+## 优先级规范
 
-### 3.1 合并
+| 功能等级 | 定义 | 正向 | 反向 | 功能示例 |
+|---------|------|-----|-----|---------|
+| 核心功能 | 失败导致系统核心价值丧失 | P1 | P3 | 登录、创建、支付 |
+| 基本功能 | 失败影响体验但不阻塞核心流程 | P2 | P4 | 列表、筛选、通知 |
+| 不常用功能 | 低频扩展功能 | P5 | P5 | 批量操作、高级搜索 |
 
-```bash
-python3 {skill_dir}/scripts/merge.py \
-    {workspace}/*/*.jsonl \
-    -o {workspace}/{需求名称}-测试用例.jsonl \
-    --sort-by priority
-```
+### 用例优先级示例
 
-### 3.2 审查（独立 Agent）
+| 用例名称 | 功能等级 | 场景 | 优先级 |
+|---------|---------|-----|-------|
+| 验证用户输入正确账号密码时成功登录 | 核心 | 正向 | P1 |
+| 验证用户输入错误密码时登录失败 | 核心 | 反向 | P3 |
+| 验证用户成功查看商品列表 | 基本 | 正向 | P2 |
+| 验证商品列表为空时显示空状态提示 | 基本 | 反向 | P4 |
+| 验证用户成功使用高级搜索筛选商品 | 不常用 | 正向 | P5 |
+| 验证高级搜索条件无效时提示错误 | 不常用 | 反向 | P5 |
 
-启动审查 Agent：
-
-```python
-Task(
-    subagent_type="general-purpose",
-    prompt=read_file("{skill_dir}/assets/review-prompt.md")
-           .replace("{workspace}", workspace_path)
-           .replace("{skill_dir}", skill_dir_path)
-           .replace("{requirement_doc}", requirement_doc_path)
-           .replace("{需求名称}", requirement_name)
-)
-```
-
-审查 Agent 执行：
-1. 格式校验（validate.py）
-2. 重复检测 + 裁决（detect_duplicates.py）
-3. 覆盖性检查（对照需求文档）
-4. 优先级分布检查
-5. 输出 `review-report.md`
-
-### 3.3 导出
-
-```bash
-# Excel
-python3 {skill_dir}/scripts/to_excel.py \
-    {workspace}/{需求名称}-测试用例.jsonl \
-    -o {workspace}/{需求名称}-测试用例.xlsx
-
-# XMind（可选）
-python3 {skill_dir}/scripts/to_xmind.py \
-    {workspace}/{需求名称}-测试用例.jsonl \
-    -o {workspace}/{需求名称}-测试用例.xmind \
-    --name "{需求名称}"
-
-# 统计报告
-python3 {skill_dir}/scripts/stats.py \
-    {workspace}/{需求名称}-测试用例.jsonl \
-    -o {workspace}/stats-report.md
-```
-
-**输出确认**：
-
-```markdown
-## ✅ 测试用例生成完成
-
-| 文件 | 说明 |
-|------|------|
-| {需求名称}-测试用例.jsonl | 合并用例（N 条） |
-| {需求名称}-测试用例.xlsx | Excel 格式 |
-| {需求名称}-测试用例.xmind | XMind 思维导图 |
-| review-report.md | 审查报告 |
-| stats-report.md | 统计报告 |
-```
+**判定原则**：先判断功能等级（核心/基本/不常用），再根据正向/反向确定优先级。分布由需求本身决定，无固定比例要求。
 
 ---
 
 ## 测试类型
 
-| 类型 | 适用场景 |
+| 类型 | 选择条件 |
 |-----|---------|
-| **功能测试** | 业务逻辑验证（主体，50-60%） |
-| 安全性测试 | 认证授权、攻击防护 |
-| 性能测试 | 响应时间、并发能力 |
-| 易用性测试 | 用户体验、界面交互 |
-| 兼容性测试 | 跨环境运行 |
-| 稳定性测试 | 长期运行稳定性 |
-| 集成测试 | 模块间协作 |
-
-> 详细说明见 `{skill_dir}/assets/test-type-guide.md`
-
----
-
-## 质量标准
-
-| 指标 | 目标 |
-|------|-----|
-| 测试点覆盖率 | 100% |
-| 场景覆盖 | 每个测试点至少 1 正向 + 1 异常/边界 |
-| 格式校验 | 0 错误 |
-| 优先级分布 | P1(10-15%) P2(25-35%) P3(20-30%) P4(15-25%) P5(5-10%) |
+| **功能测试** | 默认（业务逻辑验证） |
+| 集成测试 | 涉及多个模块协作 |
+| 安全性测试 | 关注认证授权、攻击防护 |
+| 性能测试 | 关注响应时间、并发能力 |
+| 易用性测试 | 关注用户体验、界面交互 |
+| 兼容性测试 | 关注跨环境运行 |
+| 稳定性测试 | 关注长期运行稳定性 |
+| 可靠性测试 | 关注故障恢复 |
+| 埋点测试 | 关注数据上报 |
+| AI效果测试 | 关注 AI 输出质量 |
+| 硬件效果测试 | 关注硬件交互 |
 
 ---
 
-## 工具脚本
+## 用例编写规范
 
-| 脚本 | 功能 |
-|-----|------|
-| validate.py | 格式校验 |
-| merge.py | 合并 JSONL，从路径推断 module_name 和 test_item |
-| detect_duplicates.py | 相似度检测 |
-| to_excel.py | 导出 Excel |
-| to_xmind.py | 导出 XMind |
-| stats.py | 生成统计报告 |
+### 命名规范
+
+**格式**：验证 + [主体] + [动作/条件] + [预期结果]
+
+```
+✅ 验证用户成功创建订单
+✅ 验证系统拒绝超过50字符的用户名
+✅ 验证未登录用户访问个人中心时跳转登录页
+
+❌ 登录测试（缺少"验证"）
+❌ 验证密码错误（缺少预期结果）
+❌ 测试用户注册功能（不是验证点格式）
+```
+
+### 前置条件规范
+
+**原则**：明确具体状态，无废话
+
+```
+✅ 用户已登录
+✅ 购物车中有商品
+✅ 账号连续错误4次
+
+❌ 系统正常（废话）
+❌ 网络正常（默认条件）
+❌ 无（应填空数组 []）
+```
+
+### 操作步骤规范
+
+**原则**：具体可执行，包含实际值
+
+```
+✅ 输入用户名 testuser
+✅ 输入21个字符的用户名 abcdefghijklmnopqrstu
+✅ 点击"提交"按钮
+
+❌ 输入正确的用户名（不具体）
+❌ 输入用户名（缺少值）
+❌ 操作系统（不可执行）
+```
+
+### 预期结果规范
+
+**原则**：只在验证点写，明确可验证
+
+```
+✅ 步骤: "点击登录按钮"
+   预期: "登录成功，跳转到首页"
+
+✅ 步骤: "输入用户名 testuser"
+   （无预期 - 过渡步骤）
+
+❌ 步骤: "输入用户名 testuser"
+   预期: "用户名输入框显示 testuser"（废话预期）
+```
+
+### 覆盖完整性
+
+| 功能等级 | 覆盖要求 |
+|---------|---------|
+| 核心功能 | 正向 + 边界 + 异常 + 性能/安全 |
+| 基本功能 | 正向 + 边界 + 异常 |
+| 不常用功能 | 正向 + 主要异常 |
+
+**CRITICAL**：每个测试项至少 1 正向 + 1 反向用例
 
 ---
 
-## 参考文档
+## 流程概览
 
-| 文档 | 用途 |
-|------|-----|
-| `assets/priority-guide.md` | 优先级判定详细指南 |
-| `assets/test-type-guide.md` | 测试类型详细说明 |
-| `assets/cases.jsonl` | 用例格式示例 |
-| `assets/review-prompt.md` | 审查 Agent 提示词 |
+```
+Phase 1: 理解需求 → Phase 2: 规划 → Phase 3: 逐模块生成 → Phase 4: 合并检测 → Phase 5: 评估修正 → Phase 6: 导出
+```
+
+---
+
+## Phase 1: 理解需求
+
+1. 阅读需求文档，理解业务全貌
+2. 识别核心业务流程（用于判断功能等级）
+3. 标记需求中的边界条件和异常场景
+
+---
+
+## Phase 2: 规划
+
+1. 划分模块（≤8 个）
+2. 识别每个模块下的测试项
+3. 使用 TodoWrite 建立任务清单
+4. 创建目录结构
+
+```bash
+# 在当前工作目录下创建 workspace（不要在 skill 目录下创建）
+workspace="${PWD}/需求名称"
+mkdir -p "${workspace}/{模块名}/"
+```
+
+---
+
+## Phase 3: 逐模块生成
+
+```python
+for 模块 in 所有模块:
+    for 测试项 in 模块.测试项:
+        生成完整用例 → ${workspace}/${模块}/${测试项}.jsonl
+        python3 scripts/validate.py ${workspace}/${模块}/${测试项}.jsonl
+
+    # 合并单模块
+    python3 scripts/merge.py ${workspace}/${模块}/*.jsonl \
+        -o ${workspace}/${模块}/_merged.jsonl
+
+    # 模块内重复检测
+    python3 scripts/detect_duplicates.py ${workspace}/${模块}/_merged.jsonl
+
+    # 执行模块自审检查清单
+```
+
+**CRITICAL - 用例名称规范**：
+- 以"验证"开头，主谓宾结构
+- 包含：验证 + [主体] + [动作/条件] + [预期结果]
+- ✅ `验证用户输入超过20字符的用户名时系统提示长度错误`
+- ❌ `验证用户名长度`（缺少预期结果）
+
+---
+
+## Phase 4: 合并 + 跨模块检测
+
+```bash
+# 跨模块合并（默认：去重 + 按优先级排序 + 排除 _merged 文件）
+python3 scripts/merge.py ${workspace}/*/*.jsonl \
+    -o ${workspace}/${需求名称}-测试用例.jsonl
+
+# 重复检测
+python3 scripts/detect_duplicates.py ${workspace}/${需求名称}-测试用例.jsonl
+
+# 统计
+python3 scripts/stats.py ${workspace}/${需求名称}-测试用例.jsonl \
+    -o ${workspace}/统计报告.md
+```
+
+---
+
+## Phase 5: 评估 + 修正
+
+根据 detect_duplicates.py 和 stats.py 的输出，逐项评估并修正。
+
+**重复用例判断**：
+
+detect_duplicates.py 会输出相似度 ≥ 0.7 的用例对（默认阈值，可用 --threshold 调整）。对于每一对，根据以下问题自主判断：
+
+1. **是否测试同一场景？** 对比用例名称中的"条件"和"预期结果"
+2. **是否覆盖不同边界？** 如"输入为空"vs"输入超长"是不同边界，保留两者
+3. **是否正向/反向互补？** 正向和反向用例即使名称相似也应保留
+
+**处理原则**：
+- 测试同一场景且预期相同 → 删除其中一个
+- 测试同一场景但预期不同 → 保留或合并
+- 测试不同边界/条件 → 保留两者
+
+**优先级分布评估**：
+- 检查每个优先级的用例是否符合判定规范
+- 分布无固定比例要求，但需可解释
+- 可解释 = 能说明为什么某功能是核心/基本/不常用
+
+**循环直到**：符合成功标准
+
+---
+
+## Phase 6: 导出
+
+```bash
+python3 scripts/to_excel.py ${workspace}/${需求名称}-测试用例.jsonl \
+    -o ${workspace}/${需求名称}-测试用例.xlsx
+
+python3 scripts/to_xmind.py ${workspace}/${需求名称}-测试用例.jsonl \
+    -o ${workspace}/${需求名称}-测试用例.xmind
+```
+
+---
+
+## 最终验收清单
+
+| 检查项 | 失败时修正 |
+|-------|-----------|
+| 用例名称以"验证"开头 | 重写用例名称 |
+| 用例名称包含预期结果 | 补充预期结果描述 |
+| steps 非空且有 expected | 补充步骤和预期 |
+| preconditions 为数组 | 修正格式 |
+| 每测试项 ≥1正向+≥1反向 | 补充缺失用例 |
+| 核心功能有 P1 用例 | 调整优先级 |
+| 重复用例 0 个 | 删除或合并重复项 |
+| 格式校验 0 错误 | 按错误提示修正 |
+| 优先级按规范判定 | 重新评估功能等级 |
+| 分布可解释 | 补充判定理由 |
+
+---
+
+## 目录结构
+
+```
+${workspace}/
+├── 模块A/
+│   ├── 测试项1.jsonl
+│   ├── 测试项2.jsonl
+│   └── _merged.jsonl
+├── ${需求名称}-测试用例.jsonl
+├── ${需求名称}-测试用例.xlsx
+├── ${需求名称}-测试用例.xmind
+└── 统计报告.md
+```
+
+---
+
+## 脚本
+
+| 脚本 | 功能 | 状态 |
+|-----|------|------|
+| scripts/validate.py | 格式校验、必填字段、名称唯一性 | ✅ |
+| scripts/merge.py | 合并 JSONL，推断 module_name/test_item | ✅ |
+| scripts/detect_duplicates.py | 相似度检测（名称+步骤+预期） | ✅ |
+| scripts/to_excel.py | 导出 Excel | ✅ |
+| scripts/to_xmind.py | 导出 XMind | ✅ |
+| scripts/stats.py | 优先级分布统计 | ✅ |

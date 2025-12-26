@@ -43,7 +43,7 @@ def load_jsonl(file_path: Path) -> Tuple[List[Tuple[int, Dict]], List[Validation
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate[str](f, 1):
+            for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue

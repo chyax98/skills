@@ -9,9 +9,9 @@ JSONL 合并工具
 4. 自动去重
 
 用法：
-    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl
-    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl --sort-by module
-    python merge.py 需求名称/*/测试项*.jsonl -o 需求名称-测试用例.jsonl --sort-by priority
+    python merge.py 需求名称/**/cases.jsonl -o 需求名称-测试用例.jsonl
+    python merge.py 需求名称/**/cases.jsonl -o 需求名称-测试用例.jsonl --sort-by module
+    python merge.py 需求名称/**/cases.jsonl -o 需求名称-测试用例.jsonl --sort-by priority
 """
 
 import json
@@ -25,17 +25,20 @@ def load_jsonl(file_path: Path) -> List[Dict]:
     """
     加载 JSONL 文件，并从路径推断 module_name 和 test_item
 
-    路径格式：需求名称/模块名/测试项.jsonl
-    - module_name = 父目录名（仅当用例中不存在时）
-    - test_item = 文件名（仅当用例中不存在时）
+    路径格式：{workspace}/{模块}/{测试项}/cases.jsonl
+    - module_name = 父目录的父目录名（仅当用例中不存在时）
+    - test_item = 父目录名（仅当用例中不存在时）
 
     如果用例中已有这两个字段，则不覆盖（支持多次合并）
     """
     objects = []
 
     # 从路径推断元信息（备用值）
-    module_name_from_path = file_path.parent.name  # 父目录名
-    test_item_from_path = file_path.stem  # 文件名（不含扩展名）
+    # 目录结构：{workspace}/{模块}/{测试项}.jsonl
+    # - 文件名（不含扩展名）= 测试项
+    # - 父目录名 = 模块
+    test_item_from_path = file_path.stem  # 文件名（不含扩展名）= 测试项
+    module_name_from_path = file_path.parent.name  # 父目录名 = 模块
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -153,10 +156,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例：
-  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl
-  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --sort-by module
-  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --sort-by priority
-  python merge.py Frame相框管理/*/*.jsonl -o Frame相框管理-测试用例.jsonl --deduplicate
+  python merge.py 需求名称/*/*.jsonl -o 需求名称-测试用例.jsonl
+  python merge.py 需求名称/*/*.jsonl -o 需求名称-测试用例.jsonl --sort-by module
+
+默认行为：
+  - 自动去重（基于 name 字段）
+  - 自动排除 _merged 文件
+  - 按优先级排序
 
 路径格式：
   需求名称/模块名/测试项.jsonl
@@ -166,8 +172,10 @@ def main():
     )
     parser.add_argument('files', nargs='+', help='要合并的 JSONL 文件（支持通配符）')
     parser.add_argument('-o', '--output', type=Path, required=True, help='输出文件路径')
-    parser.add_argument('--sort-by', choices=['module', 'priority'], help='排序方式')
-    parser.add_argument('--deduplicate', action='store_true', help='去重（基于 name 字段）')
+    parser.add_argument('--sort-by', choices=['module', 'priority'], default='priority', help='排序方式（默认 priority）')
+    # 内置默认行为，无需手动指定
+    # - 默认去重
+    # - 默认排除 _merged.jsonl
 
     args = parser.parse_args()
 
@@ -184,6 +192,13 @@ def main():
             matched = list(parent.glob(pattern))
             all_files.extend(matched)
 
+    # 默认排除 _merged.jsonl（避免重复合并）
+    before_count = len(all_files)
+    all_files = [f for f in all_files if '_merged' not in f.name]
+    excluded_count = before_count - len(all_files)
+    if excluded_count > 0:
+        print(f"已排除 {excluded_count} 个 _merged 文件")
+
     if not all_files:
         print("错误：未找到任何文件")
         sys.exit(1)
@@ -192,13 +207,12 @@ def main():
     for file_path in all_files:
         print(f"  - {file_path}")
 
-    # 合并文件
-    all_objects = merge_jsonl_files(all_files, args.deduplicate)
+    # 合并文件（默认去重）
+    all_objects = merge_jsonl_files(all_files, deduplicate=True)
 
-    # 排序
-    if args.sort_by:
-        all_objects = sort_objects(all_objects, args.sort_by)
-        print(f"✅ 已按 '{args.sort_by}' 排序")
+    # 排序（默认按优先级）
+    all_objects = sort_objects(all_objects, args.sort_by)
+    print(f"✅ 已按 '{args.sort_by}' 排序")
 
     # 写入输出文件
     write_jsonl(args.output, all_objects)
@@ -209,10 +223,7 @@ def main():
     print("="*60)
     print(f"输入文件数：{len(all_files)}")
     print(f"总记录数：{len(all_objects)}")
-    if args.deduplicate:
-        print("去重：已启用")
-    if args.sort_by:
-        print(f"排序方式：{args.sort_by}")
+    print(f"排序方式：{args.sort_by}")
     print(f"输出文件：{args.output}")
 
 
