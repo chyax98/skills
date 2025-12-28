@@ -1,0 +1,636 @@
+{
+  "version": "1.0.0",
+  "description": "Domain-specific Assets Knowledge Base for DrawIO Generator",
+  "last_updated": "2025-01",
+  "domains": {
+    "ai_ml": {
+      "description": "AI/ML Pipeline and Architecture Assets",
+      "components": {
+        "models": [
+          {
+            "id": "frozen_model",
+            "name": "Frozen Model",
+            "name_cn": "冻结模型",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;gradientColor=#0D47A1;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+            "icon": "❄",
+            "tags": ["model", "frozen", "pretrained", "冻结", "预训练"]
+          },
+          {
+            "id": "trainable_model",
+            "name": "Trainable Model",
+            "name_cn": "可训练模型",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FF5722;gradientColor=#E64A19;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+            "icon": "🔥",
+            "tags": ["model", "trainable", "finetuning", "可训练", "微调"]
+          },
+          {
+            "id": "pretrained_model",
+            "name": "Pretrained Model",
+            "name_cn": "预训练模型",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;gradientColor=#4A148C;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+            "icon": "🎓",
+            "tags": ["model", "pretrained", "预训练", "基础模型"]
+          },
+          {
+            "id": "ensemble_model",
+            "name": "Ensemble Model",
+            "name_cn": "集成模型",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#5D4037;gradientColor=#3E2723;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+            "icon": "🔀",
+            "tags": ["model", "ensemble", "voting", "集成", "投票"]
+          }
+        ],
+        "data": [
+          {
+            "id": "input_data",
+            "name": "Input Data",
+            "name_cn": "输入数据",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontColor=#333333;arcSize=15;",
+            "icon": "📥",
+            "tags": ["data", "input", "输入", "数据"]
+          },
+          {
+            "id": "output_data",
+            "name": "Output Data",
+            "name_cn": "输出数据",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FF7043;gradientColor=#E64A19;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+            "icon": "📤",
+            "tags": ["data", "output", "result", "输出", "结果"]
+          },
+          {
+            "id": "feature_vector",
+            "name": "Feature Vector",
+            "name_cn": "特征向量",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#AB47BC;gradientColor=#7B1FA2;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=20;",
+            "icon": "📊",
+            "tags": ["feature", "vector", "embedding", "特征", "向量", "嵌入"]
+          },
+          {
+            "id": "tensor",
+            "name": "Tensor",
+            "name_cn": "张量",
+            "style": "shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#E8EAF6;strokeColor=#3F51B5;",
+            "tags": ["tensor", "array", "matrix", "张量", "矩阵"]
+          }
+        ],
+        "operations": [
+          {
+            "id": "attention",
+            "name": "Attention",
+            "name_cn": "注意力机制",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE082;strokeColor=#FFA000;fontColor=#333333;",
+            "icon": "👁",
+            "tags": ["attention", "transformer", "注意力", "Transformer"]
+          },
+          {
+            "id": "layer_norm",
+            "name": "Layer Norm",
+            "name_cn": "层归一化",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fillColor=#E0E0E0;strokeColor=#9E9E9E;fontColor=#333333;",
+            "tags": ["normalization", "layer", "归一化", "LayerNorm"]
+          },
+          {
+            "id": "feedforward",
+            "name": "Feed Forward",
+            "name_cn": "前馈网络",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#81D4FA;strokeColor=#0288D1;fontColor=#333333;",
+            "icon": "➡",
+            "tags": ["feedforward", "mlp", "前馈", "MLP"]
+          },
+          {
+            "id": "residual",
+            "name": "Residual Connection",
+            "name_cn": "残差连接",
+            "style": "edgeStyle=orthogonalEdgeStyle;curved=1;html=1;dashed=1;strokeColor=#4CAF50;endArrow=classic;",
+            "icon": "🔄",
+            "tags": ["residual", "skip", "残差", "跳跃连接"]
+          },
+          {
+            "id": "pooling",
+            "name": "Pooling",
+            "name_cn": "池化",
+            "style": "shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fillColor=#EEEEEE;strokeColor=#666666;",
+            "tags": ["pooling", "max", "average", "池化"]
+          },
+          {
+            "id": "softmax",
+            "name": "Softmax",
+            "name_cn": "Softmax",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#C5E1A5;strokeColor=#7CB342;fontColor=#333333;",
+            "tags": ["softmax", "activation", "probability", "激活", "概率"]
+          }
+        ],
+        "loss": [
+          {
+            "id": "loss_function",
+            "name": "Loss Function",
+            "name_cn": "损失函数",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#EF5350;gradientColor=#C62828;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;shadow=1;",
+            "icon": "📉",
+            "tags": ["loss", "objective", "损失", "目标函数"]
+          },
+          {
+            "id": "optimizer",
+            "name": "Optimizer",
+            "name_cn": "优化器",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#7E57C2;strokeColor=#5E35B1;fontColor=#FFFFFF;",
+            "icon": "⚙",
+            "tags": ["optimizer", "sgd", "adam", "优化器"]
+          }
+        ],
+        "metrics": [
+          {
+            "id": "accuracy",
+            "name": "Accuracy",
+            "name_cn": "准确率",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#26A69A;strokeColor=#00897B;fontColor=#FFFFFF;",
+            "tags": ["metric", "accuracy", "准确率", "指标"]
+          },
+          {
+            "id": "confidence_score",
+            "name": "Confidence Score",
+            "name_cn": "置信度",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCA28;strokeColor=#F9A825;fontColor=#333333;",
+            "tags": ["confidence", "probability", "置信度", "概率"]
+          }
+        ]
+      },
+      "edges": {
+        "forward_pass": {
+          "style": "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#00BCD4;strokeWidth=2;endArrow=classic;",
+          "tags": ["forward", "inference", "前向", "推理"]
+        },
+        "backward_pass": {
+          "style": "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F44336;strokeWidth=2;dashed=1;dashPattern=8 4;endArrow=classic;",
+          "tags": ["backward", "gradient", "反向", "梯度"]
+        }
+      }
+    },
+    "devops": {
+      "description": "DevOps and CI/CD Assets",
+      "components": {
+        "pipeline_stages": [
+          {
+            "id": "source",
+            "name": "Source",
+            "name_cn": "源码",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#546E7A;strokeColor=#37474F;fontColor=#FFFFFF;shadow=1;",
+            "icon": "📥",
+            "tags": ["source", "git", "code", "源码", "代码"]
+          },
+          {
+            "id": "build",
+            "name": "Build",
+            "name_cn": "构建",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;gradientColor=#0D47A1;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🔨",
+            "tags": ["build", "compile", "构建", "编译"]
+          },
+          {
+            "id": "test",
+            "name": "Test",
+            "name_cn": "测试",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;gradientColor=#4A148C;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🧪",
+            "tags": ["test", "unit", "integration", "测试"]
+          },
+          {
+            "id": "security_scan",
+            "name": "Security Scan",
+            "name_cn": "安全扫描",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#C62828;gradientColor=#B71C1C;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🔒",
+            "tags": ["security", "scan", "vulnerability", "安全", "扫描"]
+          },
+          {
+            "id": "deploy_staging",
+            "name": "Deploy Staging",
+            "name_cn": "部署测试环境",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#F57C00;gradientColor=#E65100;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🚀",
+            "tags": ["deploy", "staging", "test", "部署", "测试环境"]
+          },
+          {
+            "id": "approval",
+            "name": "Approval",
+            "name_cn": "审批",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FFA000;gradientColor=#FF8F00;fontColor=#FFFFFF;shadow=1;",
+            "icon": "✋",
+            "tags": ["approval", "manual", "gate", "审批", "人工"]
+          },
+          {
+            "id": "deploy_prod",
+            "name": "Deploy Production",
+            "name_cn": "部署生产环境",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;gradientColor=#1B5E20;fontColor=#FFFFFF;shadow=1;",
+            "icon": "✅",
+            "tags": ["deploy", "production", "release", "部署", "生产"]
+          }
+        ],
+        "containers": [
+          {
+            "id": "docker_container",
+            "name": "Docker Container",
+            "name_cn": "Docker 容器",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#2196F3;strokeColor=#1565C0;fontColor=#FFFFFF;arcSize=15;",
+            "icon": "🐳",
+            "tags": ["docker", "container", "容器"]
+          },
+          {
+            "id": "docker_image",
+            "name": "Docker Image",
+            "name_cn": "Docker 镜像",
+            "style": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#2196F3;strokeColor=#1565C0;fontColor=#FFFFFF;",
+            "icon": "📦",
+            "tags": ["docker", "image", "镜像"]
+          },
+          {
+            "id": "registry",
+            "name": "Container Registry",
+            "name_cn": "容器仓库",
+            "style": "shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#1976D2;strokeColor=#0D47A1;fontColor=#FFFFFF;",
+            "icon": "🏪",
+            "tags": ["registry", "repository", "仓库"]
+          }
+        ],
+        "monitoring": [
+          {
+            "id": "prometheus",
+            "name": "Prometheus",
+            "name_cn": "Prometheus",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#E65100;strokeColor=#BF360C;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🔥",
+            "tags": ["prometheus", "metrics", "monitoring", "监控", "指标"]
+          },
+          {
+            "id": "grafana",
+            "name": "Grafana",
+            "name_cn": "Grafana",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#F57C00;strokeColor=#E65100;fontColor=#FFFFFF;shadow=1;",
+            "icon": "📈",
+            "tags": ["grafana", "dashboard", "visualization", "仪表盘", "可视化"]
+          },
+          {
+            "id": "alert",
+            "name": "Alert",
+            "name_cn": "告警",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#D32F2F;strokeColor=#B71C1C;fontColor=#FFFFFF;",
+            "icon": "🚨",
+            "tags": ["alert", "alarm", "notification", "告警", "通知"]
+          },
+          {
+            "id": "log",
+            "name": "Log",
+            "name_cn": "日志",
+            "style": "shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#E0E0E0;strokeColor=#9E9E9E;",
+            "icon": "📝",
+            "tags": ["log", "logging", "日志"]
+          }
+        ],
+        "git": [
+          {
+            "id": "branch_main",
+            "name": "Main Branch",
+            "name_cn": "主分支",
+            "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;fontColor=#FFFFFF;",
+            "tags": ["git", "branch", "main", "master", "主分支"]
+          },
+          {
+            "id": "branch_develop",
+            "name": "Develop Branch",
+            "name_cn": "开发分支",
+            "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=#0D47A1;fontColor=#FFFFFF;",
+            "tags": ["git", "branch", "develop", "开发分支"]
+          },
+          {
+            "id": "branch_feature",
+            "name": "Feature Branch",
+            "name_cn": "功能分支",
+            "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#7B1FA2;strokeColor=#4A148C;fontColor=#FFFFFF;",
+            "tags": ["git", "branch", "feature", "功能分支"]
+          },
+          {
+            "id": "branch_hotfix",
+            "name": "Hotfix Branch",
+            "name_cn": "热修复分支",
+            "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#C62828;strokeColor=#B71C1C;fontColor=#FFFFFF;",
+            "tags": ["git", "branch", "hotfix", "热修复"]
+          },
+          {
+            "id": "commit",
+            "name": "Commit",
+            "name_cn": "提交",
+            "style": "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#333333;strokeColor=#333333;",
+            "tags": ["git", "commit", "提交"]
+          }
+        ]
+      }
+    },
+    "network": {
+      "description": "Network Topology Assets",
+      "components": {
+        "devices": [
+          {
+            "id": "router",
+            "name": "Router",
+            "name_cn": "路由器",
+            "style": "shape=mxgraph.cisco.routers.router;html=1;fillColor=#036897;strokeColor=#ffffff;strokeWidth=2;verticalLabelPosition=bottom;verticalAlign=top;",
+            "icon": "🌐",
+            "tags": ["router", "network", "routing", "路由器", "网络"]
+          },
+          {
+            "id": "switch_l2",
+            "name": "L2 Switch",
+            "name_cn": "二层交换机",
+            "style": "shape=mxgraph.cisco.switches.workgroup_switch;html=1;fillColor=#29B6F6;strokeColor=#01579B;verticalLabelPosition=bottom;verticalAlign=top;",
+            "tags": ["switch", "l2", "network", "交换机", "二层"]
+          },
+          {
+            "id": "switch_l3",
+            "name": "L3 Switch",
+            "name_cn": "三层交换机",
+            "style": "shape=mxgraph.cisco.switches.multilayer_switch;html=1;fillColor=#26A69A;strokeColor=#00695C;verticalLabelPosition=bottom;verticalAlign=top;",
+            "tags": ["switch", "l3", "network", "交换机", "三层"]
+          },
+          {
+            "id": "firewall",
+            "name": "Firewall",
+            "name_cn": "防火墙",
+            "style": "shape=mxgraph.cisco.security.firewall;html=1;fillColor=#EF5350;strokeColor=#B71C1C;verticalLabelPosition=bottom;verticalAlign=top;",
+            "icon": "🔥",
+            "tags": ["firewall", "security", "防火墙", "安全"]
+          },
+          {
+            "id": "load_balancer",
+            "name": "Load Balancer",
+            "name_cn": "负载均衡器",
+            "style": "shape=mxgraph.cisco.misc.load_balancer;html=1;fillColor=#AB47BC;strokeColor=#6A1B9A;verticalLabelPosition=bottom;verticalAlign=top;",
+            "icon": "⚖",
+            "tags": ["load balancer", "lb", "负载均衡"]
+          },
+          {
+            "id": "server",
+            "name": "Server",
+            "name_cn": "服务器",
+            "style": "shape=mxgraph.cisco.servers.standard_host;html=1;fillColor=#5C6BC0;strokeColor=#283593;verticalLabelPosition=bottom;verticalAlign=top;",
+            "tags": ["server", "host", "服务器"]
+          },
+          {
+            "id": "storage",
+            "name": "Storage",
+            "name_cn": "存储",
+            "style": "shape=mxgraph.cisco.storage.storage;html=1;fillColor=#A1887F;strokeColor=#5D4037;verticalLabelPosition=bottom;verticalAlign=top;",
+            "tags": ["storage", "nas", "san", "存储"]
+          },
+          {
+            "id": "wireless_ap",
+            "name": "Wireless AP",
+            "name_cn": "无线接入点",
+            "style": "shape=mxgraph.cisco.wireless.wireless_access_point;html=1;fillColor=#00ACC1;strokeColor=#00838F;",
+            "icon": "📶",
+            "tags": ["wireless", "wifi", "ap", "无线"]
+          }
+        ],
+        "zones": [
+          {
+            "id": "dmz",
+            "name": "DMZ",
+            "name_cn": "DMZ 区域",
+            "style": "swimlane;horizontal=1;startSize=30;fillColor=#FFECB3;strokeColor=#FF8F00;strokeWidth=2;dashed=1;",
+            "tags": ["dmz", "zone", "security", "DMZ", "隔离区"]
+          },
+          {
+            "id": "internal",
+            "name": "Internal Network",
+            "name_cn": "内网",
+            "style": "swimlane;horizontal=1;startSize=30;fillColor=#C8E6C9;strokeColor=#43A047;strokeWidth=2;",
+            "tags": ["internal", "intranet", "内网", "局域网"]
+          },
+          {
+            "id": "external",
+            "name": "External Network",
+            "name_cn": "外网",
+            "style": "swimlane;horizontal=1;startSize=30;fillColor=#FFCDD2;strokeColor=#E53935;strokeWidth=2;",
+            "tags": ["external", "internet", "外网", "互联网"]
+          },
+          {
+            "id": "cloud_zone",
+            "name": "Cloud",
+            "name_cn": "云",
+            "style": "ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1976D2;",
+            "icon": "☁",
+            "tags": ["cloud", "public", "云", "公有云"]
+          },
+          {
+            "id": "vpc",
+            "name": "VPC",
+            "name_cn": "虚拟私有云",
+            "style": "swimlane;horizontal=1;startSize=30;fillColor=#E8EAF6;strokeColor=#3F51B5;strokeWidth=2;dashed=1;",
+            "tags": ["vpc", "virtual", "network", "虚拟网络"]
+          },
+          {
+            "id": "subnet",
+            "name": "Subnet",
+            "name_cn": "子网",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#C5CAE9;strokeColor=#3F51B5;dashed=1;",
+            "tags": ["subnet", "cidr", "子网"]
+          }
+        ],
+        "connections": [
+          {
+            "id": "ethernet",
+            "name": "Ethernet",
+            "name_cn": "以太网",
+            "style": "edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#1976D2;endArrow=none;",
+            "tags": ["ethernet", "cable", "以太网"]
+          },
+          {
+            "id": "fiber",
+            "name": "Fiber",
+            "name_cn": "光纤",
+            "style": "edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=4;strokeColor=#FF9800;endArrow=none;",
+            "tags": ["fiber", "optical", "光纤"]
+          },
+          {
+            "id": "vpn_tunnel",
+            "name": "VPN Tunnel",
+            "name_cn": "VPN 隧道",
+            "style": "edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=8 8;strokeWidth=2;strokeColor=#00897B;endArrow=none;",
+            "tags": ["vpn", "tunnel", "encrypted", "VPN", "隧道"]
+          },
+          {
+            "id": "wireless",
+            "name": "Wireless",
+            "name_cn": "无线",
+            "style": "edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#00BCD4;dashed=1;dashPattern=4 4;endArrow=none;",
+            "tags": ["wireless", "wifi", "无线"]
+          }
+        ]
+      }
+    },
+    "microservices": {
+      "description": "Microservices Architecture Assets",
+      "components": {
+        "services": [
+          {
+            "id": "api_gateway",
+            "name": "API Gateway",
+            "name_cn": "API 网关",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#DD344C;strokeColor=#B71C1C;fontColor=#FFFFFF;shadow=1;",
+            "icon": "🚪",
+            "tags": ["gateway", "api", "entry", "API 网关", "入口"]
+          },
+          {
+            "id": "microservice",
+            "name": "Microservice",
+            "name_cn": "微服务",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#326CE5;strokeColor=#1E3A8A;fontColor=#FFFFFF;",
+            "tags": ["microservice", "service", "微服务"]
+          },
+          {
+            "id": "service_registry",
+            "name": "Service Registry",
+            "name_cn": "服务注册中心",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;strokeColor=#4A148C;fontColor=#FFFFFF;",
+            "icon": "📋",
+            "tags": ["registry", "discovery", "注册中心", "服务发现"]
+          },
+          {
+            "id": "config_server",
+            "name": "Config Server",
+            "name_cn": "配置中心",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#00897B;strokeColor=#004D40;fontColor=#FFFFFF;",
+            "icon": "⚙",
+            "tags": ["config", "configuration", "配置中心"]
+          },
+          {
+            "id": "message_broker",
+            "name": "Message Broker",
+            "name_cn": "消息代理",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FF6600;strokeColor=#CC5200;fontColor=#FFFFFF;",
+            "icon": "📨",
+            "tags": ["message", "broker", "queue", "消息队列", "消息代理"]
+          },
+          {
+            "id": "cache",
+            "name": "Cache",
+            "name_cn": "缓存",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#DC382D;strokeColor=#B32D24;fontColor=#FFFFFF;",
+            "icon": "⚡",
+            "tags": ["cache", "redis", "缓存"]
+          }
+        ],
+        "patterns": [
+          {
+            "id": "circuit_breaker",
+            "name": "Circuit Breaker",
+            "name_cn": "熔断器",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#EF5350;strokeColor=#C62828;fontColor=#FFFFFF;",
+            "icon": "⚡",
+            "tags": ["circuit breaker", "resilience", "熔断器", "容错"]
+          },
+          {
+            "id": "load_balancer",
+            "name": "Load Balancer",
+            "name_cn": "负载均衡",
+            "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#AB47BC;strokeColor=#6A1B9A;fontColor=#FFFFFF;",
+            "icon": "⚖",
+            "tags": ["load balancer", "distribution", "负载均衡"]
+          },
+          {
+            "id": "sidecar",
+            "name": "Sidecar",
+            "name_cn": "边车",
+            "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#78909C;strokeColor=#455A64;fontColor=#FFFFFF;dashed=1;",
+            "tags": ["sidecar", "proxy", "边车", "代理"]
+          }
+        ],
+        "databases": [
+          {
+            "id": "sql_db",
+            "name": "SQL Database",
+            "name_cn": "关系型数据库",
+            "style": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#336791;strokeColor=#1E3A5F;fontColor=#FFFFFF;",
+            "icon": "🐘",
+            "tags": ["database", "sql", "relational", "数据库", "关系型"]
+          },
+          {
+            "id": "nosql_db",
+            "name": "NoSQL Database",
+            "name_cn": "NoSQL 数据库",
+            "style": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#47A248;strokeColor=#2E7D32;fontColor=#FFFFFF;",
+            "icon": "🍃",
+            "tags": ["database", "nosql", "document", "数据库", "文档"]
+          }
+        ]
+      }
+    },
+    "business": {
+      "description": "Business Process Assets",
+      "components": {
+        "actors": [
+          {
+            "id": "user",
+            "name": "User",
+            "name_cn": "用户",
+            "style": "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;",
+            "icon": "👤",
+            "tags": ["user", "actor", "person", "用户", "人员"]
+          },
+          {
+            "id": "admin",
+            "name": "Administrator",
+            "name_cn": "管理员",
+            "style": "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FF7043;",
+            "icon": "👨‍💼",
+            "tags": ["admin", "administrator", "管理员"]
+          },
+          {
+            "id": "customer",
+            "name": "Customer",
+            "name_cn": "客户",
+            "style": "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#42A5F5;",
+            "icon": "🧑",
+            "tags": ["customer", "client", "客户"]
+          }
+        ],
+        "documents": [
+          {
+            "id": "document",
+            "name": "Document",
+            "name_cn": "文档",
+            "style": "shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FFFFFF;strokeColor=#666666;",
+            "icon": "📄",
+            "tags": ["document", "file", "文档", "文件"]
+          },
+          {
+            "id": "report",
+            "name": "Report",
+            "name_cn": "报告",
+            "style": "shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#E3F2FD;strokeColor=#1976D2;",
+            "icon": "📊",
+            "tags": ["report", "analysis", "报告", "分析"]
+          }
+        ],
+        "communication": [
+          {
+            "id": "email",
+            "name": "Email",
+            "name_cn": "邮件",
+            "style": "shape=mxgraph.basic.email;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;",
+            "icon": "📧",
+            "tags": ["email", "mail", "邮件"]
+          },
+          {
+            "id": "notification",
+            "name": "Notification",
+            "name_cn": "通知",
+            "style": "shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fillColor=#FFECB3;strokeColor=#FFA000;",
+            "icon": "🔔",
+            "tags": ["notification", "alert", "通知", "提醒"]
+          }
+        ]
+      }
+    }
+  }
+}

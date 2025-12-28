@@ -1,0 +1,1019 @@
+{
+  "version": "1.0.0",
+  "description": "Cloud Service Icons Knowledge Base for DrawIO Generator",
+  "last_updated": "2025-01",
+  "categories": {
+    "aws": {
+      "description": "Amazon Web Services Icons",
+      "shape_prefix": "mxgraph.aws3",
+      "default_style": "outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;",
+      "icons": {
+        "compute": [
+          {
+            "id": "aws_lambda",
+            "name": "Lambda",
+            "name_cn": "Lambda 函数",
+            "shape": "mxgraph.aws3.lambda_function",
+            "fillColor": "#F58534",
+            "size": {"width": 80, "height": 80},
+            "tags": ["serverless", "function", "compute", "无服务器", "函数计算"]
+          },
+          {
+            "id": "aws_ec2",
+            "name": "EC2",
+            "name_cn": "EC2 实例",
+            "shape": "mxgraph.aws3.ec2_instance",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["virtual machine", "server", "compute", "虚拟机", "服务器"]
+          },
+          {
+            "id": "aws_ecs",
+            "name": "ECS",
+            "name_cn": "容器服务",
+            "shape": "mxgraph.aws3.ecs_container",
+            "fillColor": "#F58534",
+            "size": {"width": 80, "height": 80},
+            "tags": ["container", "docker", "orchestration", "容器"]
+          },
+          {
+            "id": "aws_eks",
+            "name": "EKS",
+            "name_cn": "Kubernetes 服务",
+            "shape": "mxgraph.aws3.eks",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["kubernetes", "k8s", "container", "容器编排"]
+          },
+          {
+            "id": "aws_fargate",
+            "name": "Fargate",
+            "name_cn": "Fargate",
+            "shape": "mxgraph.aws3.fargate",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["serverless", "container", "无服务器容器"]
+          },
+          {
+            "id": "aws_batch",
+            "name": "Batch",
+            "name_cn": "批处理",
+            "shape": "mxgraph.aws3.batch",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["batch", "job", "批处理", "作业"]
+          }
+        ],
+        "storage": [
+          {
+            "id": "aws_s3",
+            "name": "S3",
+            "name_cn": "对象存储",
+            "shape": "mxgraph.aws3.s3_bucket",
+            "fillColor": "#569A31",
+            "size": {"width": 80, "height": 80},
+            "tags": ["storage", "object", "bucket", "存储", "对象存储"]
+          },
+          {
+            "id": "aws_ebs",
+            "name": "EBS",
+            "name_cn": "块存储",
+            "shape": "mxgraph.aws3.ebs_volume",
+            "fillColor": "#569A31",
+            "size": {"width": 80, "height": 80},
+            "tags": ["storage", "block", "disk", "磁盘", "块存储"]
+          },
+          {
+            "id": "aws_efs",
+            "name": "EFS",
+            "name_cn": "文件存储",
+            "shape": "mxgraph.aws3.efs",
+            "fillColor": "#569A31",
+            "size": {"width": 80, "height": 80},
+            "tags": ["storage", "file", "nfs", "文件存储"]
+          },
+          {
+            "id": "aws_glacier",
+            "name": "Glacier",
+            "name_cn": "归档存储",
+            "shape": "mxgraph.aws3.glacier",
+            "fillColor": "#569A31",
+            "size": {"width": 80, "height": 80},
+            "tags": ["storage", "archive", "backup", "归档", "备份"]
+          }
+        ],
+        "database": [
+          {
+            "id": "aws_rds",
+            "name": "RDS",
+            "name_cn": "关系型数据库",
+            "shape": "mxgraph.aws3.rds_instance",
+            "fillColor": "#7AA116",
+            "size": {"width": 80, "height": 80},
+            "tags": ["database", "relational", "mysql", "postgresql", "数据库", "关系型"]
+          },
+          {
+            "id": "aws_dynamodb",
+            "name": "DynamoDB",
+            "name_cn": "NoSQL 数据库",
+            "shape": "mxgraph.aws3.dynamodb_table",
+            "fillColor": "#4053A6",
+            "size": {"width": 80, "height": 80},
+            "tags": ["database", "nosql", "key-value", "文档数据库"]
+          },
+          {
+            "id": "aws_elasticache",
+            "name": "ElastiCache",
+            "name_cn": "缓存服务",
+            "shape": "mxgraph.aws3.elasticache",
+            "fillColor": "#7AA116",
+            "size": {"width": 80, "height": 80},
+            "tags": ["cache", "redis", "memcached", "缓存"]
+          },
+          {
+            "id": "aws_redshift",
+            "name": "Redshift",
+            "name_cn": "数据仓库",
+            "shape": "mxgraph.aws3.redshift",
+            "fillColor": "#7AA116",
+            "size": {"width": 80, "height": 80},
+            "tags": ["database", "warehouse", "analytics", "数据仓库", "分析"]
+          },
+          {
+            "id": "aws_aurora",
+            "name": "Aurora",
+            "name_cn": "Aurora 数据库",
+            "shape": "mxgraph.aws3.aurora",
+            "fillColor": "#7AA116",
+            "size": {"width": 80, "height": 80},
+            "tags": ["database", "relational", "mysql", "postgresql", "高可用"]
+          }
+        ],
+        "networking": [
+          {
+            "id": "aws_vpc",
+            "name": "VPC",
+            "name_cn": "虚拟私有云",
+            "shape": "mxgraph.aws3.vpc",
+            "fillColor": "#5A30B5",
+            "size": {"width": 80, "height": 80},
+            "tags": ["network", "vpc", "virtual network", "虚拟网络"]
+          },
+          {
+            "id": "aws_elb",
+            "name": "ELB",
+            "name_cn": "负载均衡",
+            "shape": "mxgraph.aws3.elastic_load_balancer",
+            "fillColor": "#8C4799",
+            "size": {"width": 80, "height": 80},
+            "tags": ["load balancer", "network", "负载均衡"]
+          },
+          {
+            "id": "aws_cloudfront",
+            "name": "CloudFront",
+            "name_cn": "CDN",
+            "shape": "mxgraph.aws3.cloudfront",
+            "fillColor": "#A1666F",
+            "size": {"width": 80, "height": 80},
+            "tags": ["cdn", "cache", "distribution", "内容分发"]
+          },
+          {
+            "id": "aws_route53",
+            "name": "Route 53",
+            "name_cn": "DNS 服务",
+            "shape": "mxgraph.aws3.route_53",
+            "fillColor": "#8C4799",
+            "size": {"width": 80, "height": 80},
+            "tags": ["dns", "domain", "routing", "域名"]
+          },
+          {
+            "id": "aws_api_gateway",
+            "name": "API Gateway",
+            "name_cn": "API 网关",
+            "shape": "mxgraph.aws3.api_gateway",
+            "fillColor": "#DD344C",
+            "size": {"width": 80, "height": 80},
+            "tags": ["api", "gateway", "rest", "API 网关"]
+          },
+          {
+            "id": "aws_direct_connect",
+            "name": "Direct Connect",
+            "name_cn": "专线连接",
+            "shape": "mxgraph.aws3.direct_connect",
+            "fillColor": "#8C4799",
+            "size": {"width": 80, "height": 80},
+            "tags": ["network", "dedicated", "专线"]
+          }
+        ],
+        "integration": [
+          {
+            "id": "aws_sqs",
+            "name": "SQS",
+            "name_cn": "消息队列",
+            "shape": "mxgraph.aws3.sqs_queue",
+            "fillColor": "#FF5252",
+            "size": {"width": 80, "height": 80},
+            "tags": ["queue", "message", "消息队列"]
+          },
+          {
+            "id": "aws_sns",
+            "name": "SNS",
+            "name_cn": "通知服务",
+            "shape": "mxgraph.aws3.sns_topic",
+            "fillColor": "#D86613",
+            "size": {"width": 80, "height": 80},
+            "tags": ["notification", "pub-sub", "通知", "发布订阅"]
+          },
+          {
+            "id": "aws_eventbridge",
+            "name": "EventBridge",
+            "name_cn": "事件总线",
+            "shape": "mxgraph.aws3.eventbridge",
+            "fillColor": "#FF5252",
+            "size": {"width": 80, "height": 80},
+            "tags": ["event", "bus", "事件", "事件驱动"]
+          },
+          {
+            "id": "aws_step_functions",
+            "name": "Step Functions",
+            "name_cn": "工作流编排",
+            "shape": "mxgraph.aws3.step_functions",
+            "fillColor": "#F58534",
+            "size": {"width": 80, "height": 80},
+            "tags": ["workflow", "orchestration", "state machine", "工作流"]
+          }
+        ],
+        "security": [
+          {
+            "id": "aws_iam",
+            "name": "IAM",
+            "name_cn": "身份访问管理",
+            "shape": "mxgraph.aws3.iam_role",
+            "fillColor": "#DD344C",
+            "size": {"width": 80, "height": 80},
+            "tags": ["security", "identity", "access", "身份", "权限"]
+          },
+          {
+            "id": "aws_cognito",
+            "name": "Cognito",
+            "name_cn": "用户池",
+            "shape": "mxgraph.aws3.cognito",
+            "fillColor": "#DD344C",
+            "size": {"width": 80, "height": 80},
+            "tags": ["authentication", "user", "identity", "认证", "用户"]
+          },
+          {
+            "id": "aws_kms",
+            "name": "KMS",
+            "name_cn": "密钥管理",
+            "shape": "mxgraph.aws3.kms",
+            "fillColor": "#DD344C",
+            "size": {"width": 80, "height": 80},
+            "tags": ["encryption", "key", "security", "加密", "密钥"]
+          },
+          {
+            "id": "aws_waf",
+            "name": "WAF",
+            "name_cn": "Web 防火墙",
+            "shape": "mxgraph.aws3.waf",
+            "fillColor": "#DD344C",
+            "size": {"width": 80, "height": 80},
+            "tags": ["firewall", "security", "web", "防火墙"]
+          }
+        ],
+        "monitoring": [
+          {
+            "id": "aws_cloudwatch",
+            "name": "CloudWatch",
+            "name_cn": "监控服务",
+            "shape": "mxgraph.aws3.cloudwatch_alarm",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["monitoring", "metrics", "logs", "监控", "日志"]
+          },
+          {
+            "id": "aws_xray",
+            "name": "X-Ray",
+            "name_cn": "分布式追踪",
+            "shape": "mxgraph.aws3.xray",
+            "fillColor": "#FF9900",
+            "size": {"width": 80, "height": 80},
+            "tags": ["tracing", "debug", "distributed", "追踪", "调试"]
+          }
+        ],
+        "ai_ml": [
+          {
+            "id": "aws_sagemaker",
+            "name": "SageMaker",
+            "name_cn": "机器学习平台",
+            "shape": "mxgraph.aws3.sagemaker",
+            "fillColor": "#5294CF",
+            "size": {"width": 80, "height": 80},
+            "tags": ["ml", "machine learning", "training", "机器学习", "训练"]
+          },
+          {
+            "id": "aws_rekognition",
+            "name": "Rekognition",
+            "name_cn": "图像识别",
+            "shape": "mxgraph.aws3.rekognition",
+            "fillColor": "#5294CF",
+            "size": {"width": 80, "height": 80},
+            "tags": ["ml", "vision", "image", "图像识别", "CV"]
+          },
+          {
+            "id": "aws_comprehend",
+            "name": "Comprehend",
+            "name_cn": "自然语言处理",
+            "shape": "mxgraph.aws3.comprehend",
+            "fillColor": "#5294CF",
+            "size": {"width": 80, "height": 80},
+            "tags": ["ml", "nlp", "text", "自然语言", "NLP"]
+          },
+          {
+            "id": "aws_bedrock",
+            "name": "Bedrock",
+            "name_cn": "基础模型服务",
+            "shape": "mxgraph.aws3.bedrock",
+            "fillColor": "#5294CF",
+            "size": {"width": 80, "height": 80},
+            "tags": ["ml", "llm", "foundation model", "大模型", "AI"]
+          }
+        ]
+      }
+    },
+    "azure": {
+      "description": "Microsoft Azure Icons",
+      "shape_prefix": "mxgraph.azure",
+      "default_style": "outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;",
+      "icons": {
+        "compute": [
+          {
+            "id": "azure_vm",
+            "name": "Virtual Machine",
+            "name_cn": "虚拟机",
+            "shape": "mxgraph.azure.vm_windows",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["virtual machine", "server", "compute", "虚拟机", "服务器"]
+          },
+          {
+            "id": "azure_app_service",
+            "name": "App Service",
+            "name_cn": "应用服务",
+            "shape": "mxgraph.azure.app_service",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["web", "app", "paas", "Web 应用"]
+          },
+          {
+            "id": "azure_functions",
+            "name": "Azure Functions",
+            "name_cn": "函数计算",
+            "shape": "mxgraph.azure.azure_functions",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["serverless", "function", "无服务器", "函数"]
+          },
+          {
+            "id": "azure_aks",
+            "name": "AKS",
+            "name_cn": "Kubernetes 服务",
+            "shape": "mxgraph.azure.aks",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["kubernetes", "k8s", "container", "容器"]
+          },
+          {
+            "id": "azure_container_instances",
+            "name": "Container Instances",
+            "name_cn": "容器实例",
+            "shape": "mxgraph.azure.container_instances",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["container", "docker", "容器"]
+          }
+        ],
+        "storage": [
+          {
+            "id": "azure_storage",
+            "name": "Storage Account",
+            "name_cn": "存储账户",
+            "shape": "mxgraph.azure.storage_account",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "blob", "存储"]
+          },
+          {
+            "id": "azure_blob",
+            "name": "Blob Storage",
+            "name_cn": "Blob 存储",
+            "shape": "mxgraph.azure.blob_storage",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "object", "blob", "对象存储"]
+          },
+          {
+            "id": "azure_disk",
+            "name": "Managed Disk",
+            "name_cn": "托管磁盘",
+            "shape": "mxgraph.azure.managed_disk",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "disk", "block", "磁盘"]
+          }
+        ],
+        "database": [
+          {
+            "id": "azure_sql",
+            "name": "SQL Database",
+            "name_cn": "SQL 数据库",
+            "shape": "mxgraph.azure.sql_database",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "sql", "relational", "数据库"]
+          },
+          {
+            "id": "azure_cosmos",
+            "name": "Cosmos DB",
+            "name_cn": "Cosmos DB",
+            "shape": "mxgraph.azure.cosmos_db",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "nosql", "global", "全球分布"]
+          },
+          {
+            "id": "azure_redis",
+            "name": "Azure Cache for Redis",
+            "name_cn": "Redis 缓存",
+            "shape": "mxgraph.azure.redis_cache",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["cache", "redis", "缓存"]
+          }
+        ],
+        "networking": [
+          {
+            "id": "azure_vnet",
+            "name": "Virtual Network",
+            "name_cn": "虚拟网络",
+            "shape": "mxgraph.azure.virtual_network",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["network", "vnet", "虚拟网络"]
+          },
+          {
+            "id": "azure_lb",
+            "name": "Load Balancer",
+            "name_cn": "负载均衡器",
+            "shape": "mxgraph.azure.load_balancer",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["load balancer", "network", "负载均衡"]
+          },
+          {
+            "id": "azure_app_gateway",
+            "name": "Application Gateway",
+            "name_cn": "应用网关",
+            "shape": "mxgraph.azure.application_gateway",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["gateway", "waf", "网关"]
+          },
+          {
+            "id": "azure_front_door",
+            "name": "Front Door",
+            "name_cn": "Front Door",
+            "shape": "mxgraph.azure.front_door",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["cdn", "global", "全球负载均衡"]
+          },
+          {
+            "id": "azure_dns",
+            "name": "Azure DNS",
+            "name_cn": "DNS 服务",
+            "shape": "mxgraph.azure.azure_dns",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["dns", "domain", "域名"]
+          }
+        ],
+        "integration": [
+          {
+            "id": "azure_service_bus",
+            "name": "Service Bus",
+            "name_cn": "服务总线",
+            "shape": "mxgraph.azure.service_bus",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["message", "queue", "消息队列"]
+          },
+          {
+            "id": "azure_event_hub",
+            "name": "Event Hub",
+            "name_cn": "事件中心",
+            "shape": "mxgraph.azure.event_hub",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["event", "streaming", "事件流"]
+          },
+          {
+            "id": "azure_logic_apps",
+            "name": "Logic Apps",
+            "name_cn": "逻辑应用",
+            "shape": "mxgraph.azure.logic_apps",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["workflow", "integration", "工作流"]
+          },
+          {
+            "id": "azure_api_management",
+            "name": "API Management",
+            "name_cn": "API 管理",
+            "shape": "mxgraph.azure.api_management",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["api", "gateway", "API 网关"]
+          }
+        ],
+        "security": [
+          {
+            "id": "azure_ad",
+            "name": "Azure AD",
+            "name_cn": "Azure AD",
+            "shape": "mxgraph.azure.azure_active_directory",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["identity", "authentication", "身份认证"]
+          },
+          {
+            "id": "azure_key_vault",
+            "name": "Key Vault",
+            "name_cn": "密钥保管库",
+            "shape": "mxgraph.azure.key_vault",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["security", "key", "secret", "密钥"]
+          }
+        ],
+        "ai_ml": [
+          {
+            "id": "azure_ml",
+            "name": "Azure ML",
+            "name_cn": "机器学习",
+            "shape": "mxgraph.azure.machine_learning",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ml", "machine learning", "机器学习"]
+          },
+          {
+            "id": "azure_cognitive",
+            "name": "Cognitive Services",
+            "name_cn": "认知服务",
+            "shape": "mxgraph.azure.cognitive_services",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ai", "vision", "nlp", "AI 服务"]
+          },
+          {
+            "id": "azure_openai",
+            "name": "Azure OpenAI",
+            "name_cn": "Azure OpenAI",
+            "shape": "mxgraph.azure.openai",
+            "fillColor": "#0078D4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ai", "llm", "gpt", "大模型"]
+          }
+        ]
+      }
+    },
+    "gcp": {
+      "description": "Google Cloud Platform Icons",
+      "shape_prefix": "mxgraph.gcp2",
+      "default_style": "outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;",
+      "icons": {
+        "compute": [
+          {
+            "id": "gcp_compute",
+            "name": "Compute Engine",
+            "name_cn": "计算引擎",
+            "shape": "mxgraph.gcp2.compute_engine",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["virtual machine", "server", "compute", "虚拟机"]
+          },
+          {
+            "id": "gcp_cloud_run",
+            "name": "Cloud Run",
+            "name_cn": "Cloud Run",
+            "shape": "mxgraph.gcp2.cloud_run",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["serverless", "container", "无服务器"]
+          },
+          {
+            "id": "gcp_functions",
+            "name": "Cloud Functions",
+            "name_cn": "云函数",
+            "shape": "mxgraph.gcp2.cloud_functions",
+            "fillColor": "#F4B400",
+            "size": {"width": 50, "height": 50},
+            "tags": ["serverless", "function", "函数"]
+          },
+          {
+            "id": "gcp_gke",
+            "name": "GKE",
+            "name_cn": "Kubernetes 引擎",
+            "shape": "mxgraph.gcp2.google_kubernetes_engine",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["kubernetes", "k8s", "container", "容器"]
+          }
+        ],
+        "storage": [
+          {
+            "id": "gcp_storage",
+            "name": "Cloud Storage",
+            "name_cn": "云存储",
+            "shape": "mxgraph.gcp2.cloud_storage",
+            "fillColor": "#0F9D58",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "object", "bucket", "存储"]
+          },
+          {
+            "id": "gcp_filestore",
+            "name": "Filestore",
+            "name_cn": "文件存储",
+            "shape": "mxgraph.gcp2.filestore",
+            "fillColor": "#0F9D58",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "file", "nfs", "文件"]
+          }
+        ],
+        "database": [
+          {
+            "id": "gcp_cloud_sql",
+            "name": "Cloud SQL",
+            "name_cn": "Cloud SQL",
+            "shape": "mxgraph.gcp2.cloud_sql",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "sql", "mysql", "postgresql", "数据库"]
+          },
+          {
+            "id": "gcp_bigquery",
+            "name": "BigQuery",
+            "name_cn": "BigQuery",
+            "shape": "mxgraph.gcp2.bigquery",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "warehouse", "analytics", "数据仓库"]
+          },
+          {
+            "id": "gcp_firestore",
+            "name": "Firestore",
+            "name_cn": "Firestore",
+            "shape": "mxgraph.gcp2.cloud_firestore",
+            "fillColor": "#F4B400",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "nosql", "document", "文档数据库"]
+          },
+          {
+            "id": "gcp_spanner",
+            "name": "Cloud Spanner",
+            "name_cn": "Cloud Spanner",
+            "shape": "mxgraph.gcp2.cloud_spanner",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["database", "global", "relational", "全球数据库"]
+          },
+          {
+            "id": "gcp_memorystore",
+            "name": "Memorystore",
+            "name_cn": "内存存储",
+            "shape": "mxgraph.gcp2.memorystore",
+            "fillColor": "#DB4437",
+            "size": {"width": 50, "height": 50},
+            "tags": ["cache", "redis", "memcached", "缓存"]
+          }
+        ],
+        "networking": [
+          {
+            "id": "gcp_vpc",
+            "name": "VPC",
+            "name_cn": "虚拟私有云",
+            "shape": "mxgraph.gcp2.virtual_private_cloud",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["network", "vpc", "虚拟网络"]
+          },
+          {
+            "id": "gcp_load_balancing",
+            "name": "Cloud Load Balancing",
+            "name_cn": "负载均衡",
+            "shape": "mxgraph.gcp2.cloud_load_balancing",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["load balancer", "network", "负载均衡"]
+          },
+          {
+            "id": "gcp_cdn",
+            "name": "Cloud CDN",
+            "name_cn": "CDN",
+            "shape": "mxgraph.gcp2.cloud_cdn",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["cdn", "cache", "内容分发"]
+          },
+          {
+            "id": "gcp_cloud_dns",
+            "name": "Cloud DNS",
+            "name_cn": "Cloud DNS",
+            "shape": "mxgraph.gcp2.cloud_dns",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["dns", "domain", "域名"]
+          }
+        ],
+        "integration": [
+          {
+            "id": "gcp_pubsub",
+            "name": "Pub/Sub",
+            "name_cn": "发布订阅",
+            "shape": "mxgraph.gcp2.cloud_pub_sub",
+            "fillColor": "#DB4437",
+            "size": {"width": 50, "height": 50},
+            "tags": ["message", "pubsub", "消息", "发布订阅"]
+          },
+          {
+            "id": "gcp_tasks",
+            "name": "Cloud Tasks",
+            "name_cn": "云任务",
+            "shape": "mxgraph.gcp2.cloud_tasks",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["queue", "task", "任务队列"]
+          },
+          {
+            "id": "gcp_workflows",
+            "name": "Workflows",
+            "name_cn": "工作流",
+            "shape": "mxgraph.gcp2.workflows",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["workflow", "orchestration", "工作流"]
+          }
+        ],
+        "ai_ml": [
+          {
+            "id": "gcp_vertex_ai",
+            "name": "Vertex AI",
+            "name_cn": "Vertex AI",
+            "shape": "mxgraph.gcp2.vertex_ai",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ml", "machine learning", "机器学习"]
+          },
+          {
+            "id": "gcp_vision_ai",
+            "name": "Vision AI",
+            "name_cn": "视觉 AI",
+            "shape": "mxgraph.gcp2.cloud_vision_api",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ml", "vision", "image", "图像识别"]
+          },
+          {
+            "id": "gcp_natural_language",
+            "name": "Natural Language",
+            "name_cn": "自然语言",
+            "shape": "mxgraph.gcp2.cloud_natural_language_api",
+            "fillColor": "#4285F4",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ml", "nlp", "text", "自然语言"]
+          }
+        ]
+      }
+    },
+    "kubernetes": {
+      "description": "Kubernetes Icons",
+      "shape_prefix": "mxgraph.kubernetes",
+      "default_style": "outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;",
+      "brand_color": "#326CE5",
+      "icons": {
+        "workloads": [
+          {
+            "id": "k8s_pod",
+            "name": "Pod",
+            "name_cn": "Pod",
+            "shape": "mxgraph.kubernetes.pod",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["pod", "workload", "container", "容器", "工作负载"]
+          },
+          {
+            "id": "k8s_deployment",
+            "name": "Deployment",
+            "name_cn": "部署",
+            "shape": "mxgraph.kubernetes.deployment",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["deployment", "workload", "部署", "工作负载"]
+          },
+          {
+            "id": "k8s_statefulset",
+            "name": "StatefulSet",
+            "name_cn": "有状态集",
+            "shape": "mxgraph.kubernetes.stateful_set",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["statefulset", "workload", "有状态", "数据库"]
+          },
+          {
+            "id": "k8s_daemonset",
+            "name": "DaemonSet",
+            "name_cn": "守护进程集",
+            "shape": "mxgraph.kubernetes.daemon_set",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["daemonset", "workload", "守护进程"]
+          },
+          {
+            "id": "k8s_replicaset",
+            "name": "ReplicaSet",
+            "name_cn": "副本集",
+            "shape": "mxgraph.kubernetes.replica_set",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["replicaset", "workload", "副本"]
+          },
+          {
+            "id": "k8s_job",
+            "name": "Job",
+            "name_cn": "作业",
+            "shape": "mxgraph.kubernetes.job",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["job", "batch", "作业", "批处理"]
+          },
+          {
+            "id": "k8s_cronjob",
+            "name": "CronJob",
+            "name_cn": "定时作业",
+            "shape": "mxgraph.kubernetes.cron_job",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["cronjob", "scheduled", "定时", "计划任务"]
+          }
+        ],
+        "networking": [
+          {
+            "id": "k8s_service",
+            "name": "Service",
+            "name_cn": "服务",
+            "shape": "mxgraph.kubernetes.service",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["service", "network", "服务", "网络"]
+          },
+          {
+            "id": "k8s_ingress",
+            "name": "Ingress",
+            "name_cn": "入口",
+            "shape": "mxgraph.kubernetes.ingress",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["ingress", "network", "http", "入口", "路由"]
+          },
+          {
+            "id": "k8s_endpoint",
+            "name": "Endpoints",
+            "name_cn": "端点",
+            "shape": "mxgraph.kubernetes.endpoints",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["endpoint", "network", "端点"]
+          },
+          {
+            "id": "k8s_network_policy",
+            "name": "NetworkPolicy",
+            "name_cn": "网络策略",
+            "shape": "mxgraph.kubernetes.network_policy",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["network", "policy", "security", "网络策略"]
+          }
+        ],
+        "storage": [
+          {
+            "id": "k8s_pv",
+            "name": "PersistentVolume",
+            "name_cn": "持久卷",
+            "shape": "mxgraph.kubernetes.persistent_volume",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "volume", "pv", "存储", "持久卷"]
+          },
+          {
+            "id": "k8s_pvc",
+            "name": "PersistentVolumeClaim",
+            "name_cn": "持久卷声明",
+            "shape": "mxgraph.kubernetes.persistent_volume_claim",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "volume", "pvc", "存储声明"]
+          },
+          {
+            "id": "k8s_storageclass",
+            "name": "StorageClass",
+            "name_cn": "存储类",
+            "shape": "mxgraph.kubernetes.storage_class",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["storage", "class", "存储类"]
+          }
+        ],
+        "config": [
+          {
+            "id": "k8s_configmap",
+            "name": "ConfigMap",
+            "name_cn": "配置映射",
+            "shape": "mxgraph.kubernetes.config_map",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["config", "configmap", "配置"]
+          },
+          {
+            "id": "k8s_secret",
+            "name": "Secret",
+            "name_cn": "密钥",
+            "shape": "mxgraph.kubernetes.secret",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["secret", "security", "密钥", "凭证"]
+          }
+        ],
+        "cluster": [
+          {
+            "id": "k8s_cluster",
+            "name": "Cluster",
+            "name_cn": "集群",
+            "shape": "mxgraph.kubernetes.cluster",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 80, "height": 80},
+            "tags": ["cluster", "集群"]
+          },
+          {
+            "id": "k8s_node",
+            "name": "Node",
+            "name_cn": "节点",
+            "shape": "mxgraph.kubernetes.node",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["node", "worker", "节点"]
+          },
+          {
+            "id": "k8s_namespace",
+            "name": "Namespace",
+            "name_cn": "命名空间",
+            "shape": "mxgraph.kubernetes.namespace",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["namespace", "isolation", "命名空间", "隔离"]
+          }
+        ],
+        "controllers": [
+          {
+            "id": "k8s_hpa",
+            "name": "HPA",
+            "name_cn": "水平自动扩缩",
+            "shape": "mxgraph.kubernetes.hpa",
+            "fillColor": "#326CE5",
+            "strokeColor": "#326CE5",
+            "size": {"width": 50, "height": 50},
+            "tags": ["autoscaling", "hpa", "自动扩缩"]
+          }
+        ]
+      }
+    }
+  }
+}

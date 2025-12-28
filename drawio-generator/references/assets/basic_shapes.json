@@ -1,0 +1,537 @@
+{
+  "version": "1.0.0",
+  "description": "Basic Shapes and Styles Knowledge Base for DrawIO Generator",
+  "last_updated": "2025-01",
+  "shapes": {
+    "basic": [
+      {
+        "id": "rectangle",
+        "name": "Rectangle",
+        "name_cn": "矩形",
+        "style": "whiteSpace=wrap;html=1;",
+        "tags": ["basic", "box", "container", "矩形", "方框"]
+      },
+      {
+        "id": "rounded_rectangle",
+        "name": "Rounded Rectangle",
+        "name_cn": "圆角矩形",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "rounded", "card", "圆角", "卡片"]
+      },
+      {
+        "id": "ellipse",
+        "name": "Ellipse",
+        "name_cn": "椭圆",
+        "style": "ellipse;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "oval", "椭圆"]
+      },
+      {
+        "id": "circle",
+        "name": "Circle",
+        "name_cn": "圆形",
+        "style": "ellipse;whiteSpace=wrap;html=1;aspect=fixed;",
+        "tags": ["basic", "round", "circle", "圆形", "圆"]
+      },
+      {
+        "id": "diamond",
+        "name": "Diamond",
+        "name_cn": "菱形",
+        "style": "rhombus;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "decision", "diamond", "菱形", "判断"]
+      },
+      {
+        "id": "triangle",
+        "name": "Triangle",
+        "name_cn": "三角形",
+        "style": "triangle;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "arrow", "triangle", "三角形"]
+      },
+      {
+        "id": "hexagon",
+        "name": "Hexagon",
+        "name_cn": "六边形",
+        "style": "shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "hexagon", "六边形"]
+      },
+      {
+        "id": "parallelogram",
+        "name": "Parallelogram",
+        "name_cn": "平行四边形",
+        "style": "shape=parallelogram;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "data", "parallelogram", "平行四边形", "数据"]
+      },
+      {
+        "id": "trapezoid",
+        "name": "Trapezoid",
+        "name_cn": "梯形",
+        "style": "shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "trapezoid", "梯形"]
+      },
+      {
+        "id": "cylinder",
+        "name": "Cylinder",
+        "name_cn": "圆柱",
+        "style": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;",
+        "tags": ["basic", "database", "storage", "圆柱", "数据库", "存储"]
+      },
+      {
+        "id": "cloud",
+        "name": "Cloud",
+        "name_cn": "云形",
+        "style": "ellipse;shape=cloud;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "cloud", "network", "云", "网络"]
+      },
+      {
+        "id": "double_ellipse",
+        "name": "Double Ellipse",
+        "name_cn": "双椭圆",
+        "style": "doubleEllipse;whiteSpace=wrap;html=1;",
+        "tags": ["basic", "end", "terminal", "双椭圆", "结束"]
+      }
+    ],
+    "flowchart": [
+      {
+        "id": "process",
+        "name": "Process",
+        "name_cn": "处理",
+        "style": "rounded=0;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "process", "activity", "处理", "流程"]
+      },
+      {
+        "id": "decision",
+        "name": "Decision",
+        "name_cn": "判断",
+        "style": "rhombus;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "decision", "condition", "判断", "条件"]
+      },
+      {
+        "id": "terminator",
+        "name": "Terminator",
+        "name_cn": "开始/结束",
+        "style": "rounded=1;whiteSpace=wrap;html=1;arcSize=50;",
+        "tags": ["flowchart", "start", "end", "terminal", "开始", "结束"]
+      },
+      {
+        "id": "data",
+        "name": "Data",
+        "name_cn": "数据",
+        "style": "shape=parallelogram;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "data", "input", "output", "数据", "输入", "输出"]
+      },
+      {
+        "id": "document",
+        "name": "Document",
+        "name_cn": "文档",
+        "style": "shape=document;whiteSpace=wrap;html=1;boundedLbl=1;",
+        "tags": ["flowchart", "document", "report", "文档", "报告"]
+      },
+      {
+        "id": "predefined_process",
+        "name": "Predefined Process",
+        "name_cn": "预定义处理",
+        "style": "shape=process;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "subroutine", "function", "子程序", "函数"]
+      },
+      {
+        "id": "preparation",
+        "name": "Preparation",
+        "name_cn": "准备",
+        "style": "shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "preparation", "initialize", "准备", "初始化"]
+      },
+      {
+        "id": "manual_input",
+        "name": "Manual Input",
+        "name_cn": "手动输入",
+        "style": "shape=manualInput;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "input", "manual", "手动输入"]
+      },
+      {
+        "id": "display",
+        "name": "Display",
+        "name_cn": "显示",
+        "style": "shape=display;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "display", "output", "显示", "输出"]
+      },
+      {
+        "id": "database",
+        "name": "Database",
+        "name_cn": "数据库",
+        "style": "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;",
+        "tags": ["flowchart", "database", "storage", "数据库", "存储"]
+      },
+      {
+        "id": "connector",
+        "name": "On-Page Connector",
+        "name_cn": "页内连接符",
+        "style": "ellipse;whiteSpace=wrap;html=1;aspect=fixed;",
+        "tags": ["flowchart", "connector", "reference", "连接符"]
+      },
+      {
+        "id": "off_page_connector",
+        "name": "Off-Page Connector",
+        "name_cn": "页外连接符",
+        "style": "shape=offPageConnector;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "connector", "page", "页外连接"]
+      },
+      {
+        "id": "delay",
+        "name": "Delay",
+        "name_cn": "延迟/队列",
+        "style": "shape=delay;whiteSpace=wrap;html=1;",
+        "tags": ["flowchart", "delay", "queue", "wait", "延迟", "队列"]
+      }
+    ],
+    "containers": [
+      {
+        "id": "swimlane_horizontal",
+        "name": "Horizontal Swimlane",
+        "name_cn": "水平泳道",
+        "style": "swimlane;horizontal=1;startSize=30;",
+        "tags": ["container", "swimlane", "group", "泳道", "分组"]
+      },
+      {
+        "id": "swimlane_vertical",
+        "name": "Vertical Swimlane",
+        "name_cn": "垂直泳道",
+        "style": "swimlane;horizontal=0;startSize=30;",
+        "tags": ["container", "swimlane", "group", "泳道", "分组"]
+      },
+      {
+        "id": "group_box",
+        "name": "Group Box",
+        "name_cn": "分组框",
+        "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=none;dashed=1;",
+        "tags": ["container", "group", "box", "分组框", "容器"]
+      },
+      {
+        "id": "frame",
+        "name": "Frame",
+        "name_cn": "边框",
+        "style": "shape=frame;whiteSpace=wrap;html=1;",
+        "tags": ["container", "frame", "border", "边框"]
+      }
+    ],
+    "special": [
+      {
+        "id": "note",
+        "name": "Note",
+        "name_cn": "注释",
+        "style": "shape=note;whiteSpace=wrap;html=1;",
+        "tags": ["special", "note", "comment", "注释", "备注"]
+      },
+      {
+        "id": "callout",
+        "name": "Callout",
+        "name_cn": "标注框",
+        "style": "shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;",
+        "tags": ["special", "callout", "tooltip", "标注", "提示"]
+      },
+      {
+        "id": "card",
+        "name": "Card",
+        "name_cn": "卡片",
+        "style": "shape=card;whiteSpace=wrap;html=1;",
+        "tags": ["special", "card", "卡片"]
+      },
+      {
+        "id": "cube",
+        "name": "Cube",
+        "name_cn": "立方体",
+        "style": "shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;",
+        "tags": ["special", "3d", "cube", "立方体", "三维"]
+      },
+      {
+        "id": "step",
+        "name": "Step",
+        "name_cn": "步骤",
+        "style": "shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;",
+        "tags": ["special", "step", "arrow", "步骤", "箭头"]
+      },
+      {
+        "id": "tape",
+        "name": "Tape",
+        "name_cn": "磁带",
+        "style": "shape=tape;whiteSpace=wrap;html=1;",
+        "tags": ["special", "tape", "storage", "磁带"]
+      },
+      {
+        "id": "actor",
+        "name": "Actor",
+        "name_cn": "角色",
+        "style": "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;",
+        "tags": ["uml", "actor", "user", "角色", "用户"]
+      }
+    ],
+    "devices": [
+      {
+        "id": "desktop",
+        "name": "Desktop",
+        "name_cn": "台式电脑",
+        "style": "shape=desktop;whiteSpace=wrap;html=1;",
+        "tags": ["device", "computer", "pc", "电脑", "台式机"]
+      },
+      {
+        "id": "laptop",
+        "name": "Laptop",
+        "name_cn": "笔记本",
+        "style": "shape=notebook;whiteSpace=wrap;html=1;",
+        "tags": ["device", "laptop", "notebook", "笔记本"]
+      },
+      {
+        "id": "mobile",
+        "name": "Mobile",
+        "name_cn": "手机",
+        "style": "shape=mobileDevice2;whiteSpace=wrap;html=1;",
+        "tags": ["device", "mobile", "phone", "手机"]
+      },
+      {
+        "id": "tablet",
+        "name": "Tablet",
+        "name_cn": "平板",
+        "style": "shape=tablet2;whiteSpace=wrap;html=1;",
+        "tags": ["device", "tablet", "ipad", "平板"]
+      },
+      {
+        "id": "server",
+        "name": "Server",
+        "name_cn": "服务器",
+        "style": "shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;",
+        "tags": ["device", "server", "服务器"]
+      }
+    ]
+  },
+  "edges": {
+    "basic": [
+      {
+        "id": "straight_arrow",
+        "name": "Straight Arrow",
+        "name_cn": "直线箭头",
+        "style": "endArrow=classic;html=1;",
+        "tags": ["edge", "arrow", "straight", "直线", "箭头"]
+      },
+      {
+        "id": "orthogonal_arrow",
+        "name": "Orthogonal Arrow",
+        "name_cn": "正交箭头",
+        "style": "edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;",
+        "tags": ["edge", "arrow", "orthogonal", "正交", "直角"]
+      },
+      {
+        "id": "curved_arrow",
+        "name": "Curved Arrow",
+        "name_cn": "曲线箭头",
+        "style": "edgeStyle=orthogonalEdgeStyle;curved=1;html=1;endArrow=classic;",
+        "tags": ["edge", "arrow", "curved", "曲线"]
+      },
+      {
+        "id": "dashed_line",
+        "name": "Dashed Line",
+        "name_cn": "虚线",
+        "style": "endArrow=none;dashed=1;html=1;",
+        "tags": ["edge", "dashed", "optional", "虚线", "可选"]
+      },
+      {
+        "id": "bidirectional_arrow",
+        "name": "Bidirectional Arrow",
+        "name_cn": "双向箭头",
+        "style": "endArrow=classic;startArrow=classic;html=1;",
+        "tags": ["edge", "arrow", "bidirectional", "双向"]
+      },
+      {
+        "id": "no_arrow",
+        "name": "Line (No Arrow)",
+        "name_cn": "无箭头线",
+        "style": "endArrow=none;html=1;",
+        "tags": ["edge", "line", "connection", "连接线"]
+      }
+    ],
+    "uml": [
+      {
+        "id": "inheritance",
+        "name": "Inheritance",
+        "name_cn": "继承",
+        "style": "endArrow=block;endFill=0;html=1;",
+        "tags": ["uml", "inheritance", "extends", "继承"]
+      },
+      {
+        "id": "implementation",
+        "name": "Implementation",
+        "name_cn": "实现",
+        "style": "endArrow=block;endFill=0;dashed=1;html=1;",
+        "tags": ["uml", "implementation", "implements", "实现"]
+      },
+      {
+        "id": "association",
+        "name": "Association",
+        "name_cn": "关联",
+        "style": "endArrow=none;html=1;",
+        "tags": ["uml", "association", "关联"]
+      },
+      {
+        "id": "aggregation",
+        "name": "Aggregation",
+        "name_cn": "聚合",
+        "style": "endArrow=diamondThin;endFill=0;html=1;",
+        "tags": ["uml", "aggregation", "聚合"]
+      },
+      {
+        "id": "composition",
+        "name": "Composition",
+        "name_cn": "组合",
+        "style": "endArrow=diamondThin;endFill=1;html=1;",
+        "tags": ["uml", "composition", "组合"]
+      },
+      {
+        "id": "dependency",
+        "name": "Dependency",
+        "name_cn": "依赖",
+        "style": "endArrow=open;dashed=1;html=1;",
+        "tags": ["uml", "dependency", "依赖"]
+      }
+    ],
+    "data_flow": [
+      {
+        "id": "data_flow",
+        "name": "Data Flow",
+        "name_cn": "数据流",
+        "style": "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeWidth=2;",
+        "tags": ["edge", "data", "flow", "数据流"]
+      },
+      {
+        "id": "backpropagation",
+        "name": "Backpropagation",
+        "name_cn": "反向传播",
+        "style": "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;dashed=1;strokeColor=#F44336;",
+        "tags": ["edge", "gradient", "backprop", "反向传播", "梯度"]
+      },
+      {
+        "id": "optional_flow",
+        "name": "Optional Flow",
+        "name_cn": "可选流",
+        "style": "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;dashed=1;strokeColor=#9E9E9E;",
+        "tags": ["edge", "optional", "可选"]
+      }
+    ]
+  },
+  "styles": {
+    "fill": {
+      "solid": {
+        "description": "Solid fill color",
+        "example": "fillColor=#dae8fc;"
+      },
+      "gradient": {
+        "description": "Gradient fill",
+        "example": "fillColor=#dae8fc;gradientColor=#6c8ebf;gradientDirection=south;"
+      },
+      "none": {
+        "description": "No fill (transparent)",
+        "example": "fillColor=none;"
+      },
+      "glass": {
+        "description": "Glass effect",
+        "example": "fillColor=#dae8fc;glass=1;"
+      }
+    },
+    "stroke": {
+      "solid": {
+        "description": "Solid stroke",
+        "example": "strokeColor=#6c8ebf;strokeWidth=1;"
+      },
+      "dashed": {
+        "description": "Dashed stroke",
+        "example": "strokeColor=#6c8ebf;dashed=1;dashPattern=8 8;"
+      },
+      "none": {
+        "description": "No stroke",
+        "example": "strokeColor=none;"
+      },
+      "thick": {
+        "description": "Thick stroke",
+        "example": "strokeColor=#6c8ebf;strokeWidth=3;"
+      }
+    },
+    "shadow": {
+      "default": {
+        "description": "Default shadow",
+        "example": "shadow=1;"
+      }
+    },
+    "font": {
+      "bold": {
+        "description": "Bold text",
+        "example": "fontStyle=1;"
+      },
+      "italic": {
+        "description": "Italic text",
+        "example": "fontStyle=2;"
+      },
+      "bold_italic": {
+        "description": "Bold italic text",
+        "example": "fontStyle=3;"
+      },
+      "underline": {
+        "description": "Underlined text",
+        "example": "fontStyle=4;"
+      }
+    }
+  },
+  "color_palettes": {
+    "blue": {
+      "fill_light": "#dae8fc",
+      "fill_medium": "#6c8ebf",
+      "stroke": "#6c8ebf",
+      "accent": "#1ba1e2",
+      "tags": ["blue", "蓝色", "技术", "数据"]
+    },
+    "green": {
+      "fill_light": "#d5e8d4",
+      "fill_medium": "#82b366",
+      "stroke": "#82b366",
+      "accent": "#00a300",
+      "tags": ["green", "绿色", "成功", "完成"]
+    },
+    "yellow": {
+      "fill_light": "#fff2cc",
+      "fill_medium": "#d6b656",
+      "stroke": "#d6b656",
+      "accent": "#f0a30a",
+      "tags": ["yellow", "黄色", "警告", "注意"]
+    },
+    "orange": {
+      "fill_light": "#ffe6cc",
+      "fill_medium": "#d79b00",
+      "stroke": "#d79b00",
+      "accent": "#fa6800",
+      "tags": ["orange", "橙色", "重要"]
+    },
+    "red": {
+      "fill_light": "#f8cecc",
+      "fill_medium": "#b85450",
+      "stroke": "#b85450",
+      "accent": "#e51400",
+      "tags": ["red", "红色", "错误", "危险"]
+    },
+    "purple": {
+      "fill_light": "#e1d5e7",
+      "fill_medium": "#9673a6",
+      "stroke": "#9673a6",
+      "accent": "#aa00ff",
+      "tags": ["purple", "紫色", "创意", "AI"]
+    },
+    "gray": {
+      "fill_light": "#f5f5f5",
+      "fill_medium": "#b3b3b3",
+      "stroke": "#666666",
+      "accent": "#333333",
+      "tags": ["gray", "灰色", "中性", "背景"]
+    },
+    "teal": {
+      "fill_light": "#e0f7fa",
+      "fill_medium": "#26a69a",
+      "stroke": "#00897b",
+      "accent": "#00bcd4",
+      "tags": ["teal", "青色", "数据流", "网络"]
+    }
+  }
+}

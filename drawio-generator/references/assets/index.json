@@ -1,0 +1,190 @@
+{
+  "version": "1.0.0",
+  "description": "DrawIO Generator Asset Knowledge Base Index",
+  "last_updated": "2025-01",
+  "files": [
+    {
+      "name": "cloud_icons.json",
+      "description": "Cloud service icons (AWS, Azure, GCP, Kubernetes)",
+      "categories": ["aws", "azure", "gcp", "kubernetes"],
+      "icon_count": 120
+    },
+    {
+      "name": "basic_shapes.json",
+      "description": "Basic mxGraph shapes and styles",
+      "categories": ["basic", "flowchart", "containers", "special", "devices", "edges", "styles"],
+      "shape_count": 80
+    },
+    {
+      "name": "domain_assets.json",
+      "description": "Domain-specific assets (AI/ML, DevOps, Network, Microservices, Business)",
+      "categories": ["ai_ml", "devops", "network", "microservices", "business"],
+      "component_count": 100
+    }
+  ],
+  "quick_lookup": {
+    "by_use_case": {
+      "microservice_architecture": {
+        "recommended": ["aws_api_gateway", "k8s_pod", "k8s_service", "k8s_deployment", "microservice", "message_broker", "sql_db"],
+        "container": "k8s_namespace",
+        "edge_style": "orthogonal"
+      },
+      "ai_ml_pipeline": {
+        "recommended": ["frozen_model", "trainable_model", "input_data", "output_data", "feature_vector", "loss_function"],
+        "container": "group_box",
+        "edge_style": "data_flow"
+      },
+      "network_topology": {
+        "recommended": ["router", "switch_l2", "firewall", "server", "load_balancer"],
+        "container": "vpc",
+        "edge_style": "ethernet"
+      },
+      "cicd_pipeline": {
+        "recommended": ["source", "build", "test", "security_scan", "deploy_staging", "approval", "deploy_prod"],
+        "container": "swimlane_horizontal",
+        "edge_style": "orthogonal_arrow"
+      },
+      "cloud_architecture": {
+        "recommended": ["aws_vpc", "aws_ec2", "aws_rds", "aws_s3", "aws_lambda", "aws_elb"],
+        "container": "vpc",
+        "edge_style": "orthogonal_arrow"
+      },
+      "transformer_model": {
+        "recommended": ["attention", "layer_norm", "feedforward", "residual", "softmax"],
+        "container": "group_box",
+        "edge_style": "data_flow"
+      },
+      "data_lake": {
+        "recommended": ["aws_s3", "aws_redshift", "aws_lambda", "gcp_bigquery", "aws_kinesis"],
+        "container": "swimlane_horizontal",
+        "edge_style": "data_flow"
+      },
+      "kubernetes_deployment": {
+        "recommended": ["k8s_cluster", "k8s_node", "k8s_namespace", "k8s_deployment", "k8s_service", "k8s_ingress", "k8s_configmap", "k8s_pvc"],
+        "container": "k8s_namespace",
+        "edge_style": "orthogonal_arrow"
+      }
+    },
+    "by_keyword": {
+      "database": ["aws_rds", "aws_dynamodb", "azure_sql", "gcp_cloud_sql", "gcp_bigquery", "cylinder", "sql_db", "nosql_db"],
+      "serverless": ["aws_lambda", "azure_functions", "gcp_functions", "gcp_cloud_run"],
+      "container": ["docker_container", "docker_image", "k8s_pod", "k8s_deployment", "aws_ecs", "azure_aks", "gcp_gke"],
+      "storage": ["aws_s3", "azure_storage", "gcp_storage", "aws_ebs", "aws_efs", "k8s_pv", "k8s_pvc"],
+      "messaging": ["aws_sqs", "aws_sns", "azure_service_bus", "azure_event_hub", "gcp_pubsub", "message_broker"],
+      "api": ["aws_api_gateway", "azure_api_management", "api_gateway"],
+      "load_balancer": ["aws_elb", "azure_lb", "gcp_load_balancing", "load_balancer"],
+      "security": ["aws_iam", "aws_waf", "azure_ad", "azure_key_vault", "firewall", "k8s_secret"],
+      "monitoring": ["aws_cloudwatch", "prometheus", "grafana", "alert"],
+      "ai_ml": ["aws_sagemaker", "azure_ml", "gcp_vertex_ai", "frozen_model", "trainable_model", "attention"]
+    }
+  },
+  "style_presets": {
+    "frozen_model": {
+      "description": "Frozen/pretrained model style",
+      "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#1565C0;gradientColor=#0D47A1;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+      "icon": "❄"
+    },
+    "trainable_model": {
+      "description": "Trainable/fine-tuning model style",
+      "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FF5722;gradientColor=#E64A19;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;",
+      "icon": "🔥"
+    },
+    "data_card": {
+      "description": "Data/output card style",
+      "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=#FF7043;gradientColor=#E64A19;gradientDirection=south;strokeColor=none;fontColor=#FFFFFF;arcSize=25;shadow=1;"
+    },
+    "container_dashed": {
+      "description": "Dashed container/group box",
+      "style": "rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9E9E9E;strokeWidth=2;dashed=1;dashPattern=8 8;"
+    },
+    "success_badge": {
+      "description": "Success indicator",
+      "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#4CAF50;strokeColor=none;fontColor=#FFFFFF;",
+      "icon": "✓"
+    },
+    "warning_badge": {
+      "description": "Warning indicator",
+      "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#FF9800;strokeColor=none;fontColor=#FFFFFF;",
+      "icon": "!"
+    },
+    "error_badge": {
+      "description": "Error indicator",
+      "style": "ellipse;whiteSpace=wrap;html=1;fillColor=#F44336;strokeColor=none;fontColor=#FFFFFF;",
+      "icon": "✕"
+    }
+  },
+  "color_schemes": {
+    "tech_blue": {
+      "primary": "#1565C0",
+      "secondary": "#0D47A1",
+      "accent": "#00BCD4",
+      "light": "#E3F2FD"
+    },
+    "success_green": {
+      "primary": "#2E7D32",
+      "secondary": "#1B5E20",
+      "accent": "#4CAF50",
+      "light": "#C8E6C9"
+    },
+    "warning_orange": {
+      "primary": "#F57C00",
+      "secondary": "#E65100",
+      "accent": "#FF9800",
+      "light": "#FFE0B2"
+    },
+    "error_red": {
+      "primary": "#C62828",
+      "secondary": "#B71C1C",
+      "accent": "#F44336",
+      "light": "#FFCDD2"
+    },
+    "ai_purple": {
+      "primary": "#7B1FA2",
+      "secondary": "#4A148C",
+      "accent": "#9C27B0",
+      "light": "#E1D5E7"
+    },
+    "kubernetes": {
+      "primary": "#326CE5",
+      "secondary": "#1E3A8A",
+      "accent": "#5C8EE5",
+      "light": "#E8EAF6"
+    },
+    "aws_orange": {
+      "primary": "#FF9900",
+      "secondary": "#FF6600",
+      "accent": "#FFCC00",
+      "light": "#FFF3E0"
+    },
+    "azure_blue": {
+      "primary": "#0078D4",
+      "secondary": "#005A9E",
+      "accent": "#50E6FF",
+      "light": "#E6F2FA"
+    },
+    "gcp_colors": {
+      "blue": "#4285F4",
+      "red": "#DB4437",
+      "yellow": "#F4B400",
+      "green": "#0F9D58"
+    }
+  },
+  "layout_hints": {
+    "horizontal_flow": {
+      "elk_direction": "RIGHT",
+      "suitable_for": ["pipeline", "process", "data flow", "CI/CD"]
+    },
+    "vertical_flow": {
+      "elk_direction": "DOWN",
+      "suitable_for": ["architecture", "hierarchy", "layers"]
+    },
+    "radial": {
+      "elk_algorithm": "force",
+      "suitable_for": ["network topology", "high connectivity"]
+    },
+    "layered": {
+      "elk_algorithm": "layered",
+      "suitable_for": ["microservices", "cloud architecture", "3-tier"]
+    }
+  }
+}
