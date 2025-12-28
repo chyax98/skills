@@ -6,9 +6,108 @@ license: Apache-2.0
 
 # DrawIO 图表生成器
 
-根据用户描述直接生成 DrawIO XML 文件（.drawio）。
+根据用户描述生成 DrawIO XML 文件（.drawio），采用多 Agent 协作架构。
 
-## 工作流程
+## 多 Agent 工作流程
+
+```
+用户需求 → Planner → Layout → Element → Generator → Validator → .drawio
+              ↑                                          │
+              └──────── 迭代修复 (最多 3 轮) ─────────────┘
+```
+
+### Phase 1: 需求规划 (Planner Agent)
+
+**触发**: 用户描述图表需求
+
+**任务**: 使用 Task tool 调用 sub-agent 分析需求，输出 DiagramSpec JSON
+
+**Prompt 模板**:
+```
+分析用户的图表需求，输出结构化的 DiagramSpec JSON。
+
+用户需求: {user_input}
+
+输出格式:
+{
+  "diagram_type": "flowchart|architecture|uml|er|network|mindmap",
+  "title": "图表标题",
+  "nodes": [
+    {"id": "唯一ID", "label": "显示文字", "type": "节点类型", "group": null}
+  ],
+  "edges": [
+    {"id": "边ID", "source": "源节点ID", "target": "目标节点ID", "label": null, "type": "arrow|dashed|bidirectional"}
+  ],
+  "groups": [],
+  "layout_hint": "horizontal|vertical|radial|grid|auto",
+  "theme": "professional|tech|minimal|colorful|dark"
+}
+
+节点类型参考: gateway, service, database, user, client, decision, process, start, end, cache, queue, loadbalancer, firewall, server, cloud
+```
+
+### Phase 2: 布局计算 (Layout Agent)
+
+**工具**: `scripts/layout_agent.py`
+
+```bash
+# 将 DiagramSpec 保存为 spec.json 后执行
+python scripts/layout_agent.py --spec spec.json --output layout.json
+
+# 可选参数
+--algorithm auto|layered|horizontal|radial|grid  # 布局算法
+--spacing 120                                      # 节点间距
+--width 800 --height 600                          # 画布尺寸
+```
+
+**输出**: LayoutResult JSON (节点位置 + 边路径 + 锚点)
+
+### Phase 3: 样式匹配 (Element Agent)
+
+**工具**: `scripts/element_agent.py`
+
+```bash
+python scripts/element_agent.py --spec spec.json --theme professional --output styles.json
+
+# 查看可用主题和节点类型
+python scripts/element_agent.py --list-themes
+python scripts/element_agent.py --list-types
+```
+
+**输出**: ElementStyles JSON (每个节点的形状和样式字符串)
+
+### Phase 4: XML 生成 (Generator Agent)
+
+**工具**: `scripts/generator_agent.py`
+
+```bash
+# 分离输入
+python scripts/generator_agent.py --layout layout.json --styles styles.json --spec spec.json --output diagram.drawio
+
+# 或合并输入
+python scripts/generator_agent.py --all-in-one combined.json --output diagram.drawio
+```
+
+**输出**: 完整的 .drawio XML 文件
+
+### Phase 5: 验证修正 (Validator Agent)
+
+**工具**: `scripts/validate_drawio.py`
+
+```bash
+python scripts/validate_drawio.py diagram.drawio
+```
+
+**迭代策略** (最多 3 轮):
+- 结构错误 → 重新生成 (Phase 4)
+- 布局问题 (重叠/间距) → 调整布局 (Phase 2)
+- 覆盖不全 → 重新规划 (Phase 1)
+
+---
+
+## 简化模式
+
+对于简单图表，可跳过工具直接生成 XML：
 
 1. **分析需求** → 确定图表类型、节点数量、连接关系
 2. **规划布局** → 先规划节点位置，预判连线路径，避免交叉
@@ -16,6 +115,56 @@ license: Apache-2.0
 4. **生成 XML** → 按规则生成完整 XML，遵守硬性规则
 5. **验证** → 运行验证脚本检查 XML 格式
 6. **保存** → 输出 .drawio 文件
+
+## 数据接口规范
+
+### DiagramSpec (Planner 输出)
+
+```json
+{
+  "diagram_type": "architecture",
+  "title": "微服务架构图",
+  "nodes": [
+    {"id": "gw", "label": "API Gateway", "type": "gateway"},
+    {"id": "db", "label": "MySQL", "type": "database"}
+  ],
+  "edges": [
+    {"id": "e1", "source": "gw", "target": "db", "type": "arrow"}
+  ],
+  "layout_hint": "vertical",
+  "theme": "professional"
+}
+```
+
+### LayoutResult (Layout Agent 输出)
+
+```json
+{
+  "nodes": [
+    {"id": "gw", "x": 340, "y": 40, "width": 120, "height": 60}
+  ],
+  "edges": [
+    {"id": "e1", "source": "gw", "target": "db",
+     "exit_x": 0.5, "exit_y": 1, "entry_x": 0.5, "entry_y": 0,
+     "waypoints": []}
+  ],
+  "canvas": {"width": 800, "height": 600}
+}
+```
+
+### ElementStyles (Element Agent 输出)
+
+```json
+{
+  "node_styles": {
+    "gw": {"shape": "rounded_rect", "style": "rounded=1;fillColor=#d5e8d4;..."},
+    "db": {"shape": "cylinder", "style": "shape=cylinder3;fillColor=#f5f5f5;..."}
+  },
+  "edge_style": "edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=classic;strokeColor=#666666;"
+}
+```
+
+---
 
 ## 语法规则索引
 
@@ -30,6 +179,12 @@ license: Apache-2.0
 | **数据可视化组件** | `references/data_viz.md` |
 | **信息图模板** | `references/infographic.md` |
 | **配色方案** | `references/color_schemes.md` |
+| **🧠 AI/ML 专用资源** | `references/ai_ml_assets.md` |
+| **📐 UML 图形（类图/序列图/状态图）** | `references/uml.md` |
+| **🔧 DevOps/开源生态** | `references/devops.md` |
+| **💼 业务流程（金融/电商/HR）** | `references/business.md` |
+| **🌐 网络拓扑** | `references/network.md` |
+| **🤖 多 Agent 架构详解** | `docs/agent-architecture.md` |
 
 ## XML 基础结构
 
@@ -133,6 +288,43 @@ python scripts/validate_drawio.py <file.drawio>
 - **玻璃态**：透明模糊效果
 - **新拟态**：柔和凸凹效果
 - **动画提示**：通过颜色变化暗示流程
+
+## 素材检索
+
+使用语义检索从素材库查找相关样式、形状、配色：
+
+```bash
+# 构建索引（首次使用）
+python scripts/asset_search.py --build
+
+# 语义搜索
+python scripts/asset_search.py --query "数据库圆柱形状"
+python scripts/asset_search.py --query "蓝色渐变配色" --top 5
+
+# JSON 格式输出（供工具链使用）
+python scripts/asset_search.py --query "箭头连线" --json
+```
+
+---
+
+## 依赖安装
+
+```bash
+# 核心依赖（布局算法）
+pip install grandalf
+
+# 可选依赖（素材检索）
+pip install sentence-transformers
+```
+
+| 依赖 | 用途 | 必需 |
+|------|------|------|
+| grandalf | Sugiyama 层级布局算法 | 推荐 |
+| sentence-transformers | 素材语义检索 | 可选 |
+
+无依赖时自动回退到简单实现。
+
+---
 
 ## 参考来源
 
